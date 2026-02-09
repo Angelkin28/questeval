@@ -23,8 +23,9 @@ Implementation of interfaces defined in Application.
 ### `src/presentation`
 Entry points and UI.
 - **`api/`**: REST Controllers/Routes.
-- **`web/`**: Web Application.
-- **`mobile/`**: Mobile Application code.
+- **`web/`**: Web Application (legacy).
+- **`web-app/`**: Web Application (React + Vite + Supabase).
+- **`mobile/`**: Mobile Application (Flutter).
 - **`kiosk/`**: Kiosk Mode specific code.
 
 ---
