@@ -578,107 +578,291 @@ Exception (otros) → 500 Internal Server Error
 
 ## 4. Testing Automatizado
 
-### 🧪 test-api.js
+### 🧪 ApiTests.cs
 
-**Ubicación:** `QuestEval.Api/test-api.js`
+**Ubicación:** `QuestEval.Api/Tests/ApiTests.cs`
 
 **Ejecución:**
 ```bash
-node test-api.js
+# Opción 1: Ejecutar desde Visual Studio
+Dotnet Test
+
+# Opción 2: Desde línea de comandos
+cd QuestEval.Api
+dotnet test
+```
+
+### 📋 Estructura de Pruebas en C#
+
+**Clase de Pruebas:**
+```csharp
+public class ApiTestsData
+{
+    private static readonly HttpClient _client = new HttpClient();
+    private const string BaseUrl = "http://localhost:5122";
+
+    // Datos de prueba
+    private readonly Dictionary<string, object> _validCriterion = new()
+    {
+        { "name", "Code Quality" },
+        { "description", "Evaluates code quality and maintainability" },
+        { "maxScore", 100 }
+    };
+
+    // Método para hacer requests
+    private async Task<(int StatusCode, T? Data)> MakeRequestAsync<T>(
+        string method,
+        string endpoint,
+        object? body = null)
+    {
+        var requestUri = new Uri(BaseUrl + endpoint);
+        using var request = new HttpRequestMessage(new HttpMethod(method), requestUri);
+        
+        if (body != null)
+        {
+            var json = JsonSerializer.Serialize(body);
+            request.Content = new StringContent(json, Encoding.UTF8, "application/json");
+        }
+
+        var response = await _client.SendAsync(request);
+        var data = await response.Content.ReadAsAsync<T>();
+        
+        return ((int)response.StatusCode, data);
+    }
+
+    // Método para registrar resultados
+    private void LogTest(string testName, bool passed, string details = "")
+    {
+        var icon = passed ? "✅" : "❌";
+        Console.WriteLine($"{icon} {testName}");
+        if (!string.IsNullOrEmpty(details))
+            Console.WriteLine($"   {details}");
+    }
+}
 ```
 
 ### 📋 Casos de Prueba Implementados
 
 #### Criteria Endpoints (10 tests)
-1. ✅ POST valid criterion → 201
-2. ❌ POST missing fields → 400
-3. ❌ POST invalid data (out of range) → 400
-4. ✅ GET all criteria → 200
-5. ✅ GET by valid ID → 200
-6. ✅ PUT valid update → 204
-7. ❌ GET invalid ID format → 400
-8. ❌ GET non-existent ID → 404
-9. ✅ POST edge case (maxScore=1) → 201
-10. ✅ POST edge case (maxScore=1000) → 201
+```csharp
+public async Task TestCriteriaEndpointsAsync()
+{
+    Console.WriteLine("\n=== TESTING CRITERIA ENDPOINTS ===\n");
 
-#### Groups Endpoints (10 tests)
-1. ✅ POST valid group → 201
-2. ❌ POST missing data → 400
-3. ❌ POST short access code → 400
-4. ❌ POST invalid characters in code → 400
-5. ✅ GET all groups → 200
-6. ✅ GET by ID → 200
-7. ✅ PUT valid update → 204
-8. ❌ GET invalid ID → 400
-9. ❌ PUT non-existent ID → 404
-10. ✅ POST duplicate code handling → 201/409
+    // Test 1: POST valid criterion → 201
+    var (status1, data1) = await MakeRequestAsync<dynamic>(
+        "POST",
+        "/api/Criteria",
+        _validCriterion);
+    LogTest("POST /api/Criteria - Valid request", status1 == 201);
 
-#### Users Endpoints (10 tests)
-1. ✅ POST valid registration → 201
-2. ❌ POST invalid email → 400
-3. ❌ POST short password → 400
-4. ❌ POST duplicate email → 400
-5. ✅ POST login valid credentials → 200
-6. ❌ POST login invalid credentials → 401
-7. ❌ POST login non-existent email → 401
-8. ✅ GET all users → 200
-9. ❌ POST invalid role → 400
-10. ❌ POST missing fields → 400
+    // Test 2: POST missing fields → 400
+    var (status2, _) = await MakeRequestAsync<dynamic>("POST", "/api/Criteria", new { });
+    LogTest("POST /api/Criteria - Missing fields", status2 == 400);
 
-### 📊 Cobertura Total: 30+ Tests
+    // Test 3: POST invalid data (out of range) → 400
+    var (status3, _) = await MakeRequestAsync<dynamic>(
+        "POST",
+        "/api/Criteria",
+        _invalidCriterion);
+    LogTest("POST /api/Criteria - Invalid data", status3 == 400);
 
----
+    // Test 4: GET all criteria → 200
+    var (status4, _) = await MakeRequestAsync<dynamic>("GET", "/api/Criteria");
+    LogTest("GET /api/Criteria - Returns list", status4 == 200);
 
-## 5. Recomendaciones para el Frontend
-
-### 🎨 Mejores Prácticas de Integración
-
-#### 1. **Manejo de Errores**
-
-**Estructura de Error Esperada:**
-```javascript
-try {
-  const response = await fetch('/api/Criteria', {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify(criterionData)
-  });
-
-  if (!response.ok) {
-    const error = await response.json();
-    // error.title → Título del error
-    // error.detail → Descripción específica
-    // error.errors → Validaciones de campos (si es 400)
-    showErrorToUser(error.detail || error.title);
-  }
-} catch (err) {
-  showErrorToUser('Error de conexión con el servidor');
+    // Test 5: GET by valid ID → 200
+    // Test 6: PUT valid update → 204
+    // Test 7: GET invalid ID format → 400
+    // Test 8: GET non-existent ID → 404
+    // Test 9: POST edge case (maxScore=1) → 201
+    // Test 10: POST edge case (maxScore=1000) → 201
+    // ... más tests
 }
 ```
 
-#### 2. **Validación en el Frontend**
+#### Groups Endpoints (10 tests)
+```csharp
+public async Task TestGroupsEndpointsAsync()
+{
+    Console.WriteLine("\n=== TESTING GROUPS ENDPOINTS ===\n");
+
+    // Test 1: POST valid group → 201
+    var (status1, data1) = await MakeRequestAsync<dynamic>(
+        "POST",
+        "/api/Groups",
+        _validGroup);
+    LogTest("POST /api/Groups - Valid request", status1 == 201);
+
+    // Test 2: POST missing data → 400
+    var (status2, _) = await MakeRequestAsync<dynamic>("POST", "/api/Groups", new { });
+    LogTest("POST /api/Groups - Missing data", status2 == 400);
+
+    // Test 3: POST short access code → 400
+    var (status3, _) = await MakeRequestAsync<dynamic>(
+        "POST",
+        "/api/Groups",
+        new { name = "Test Group", accessCode = "ABC" });
+    LogTest("POST /api/Groups - Short access code", status3 == 400);
+
+    // Test 4: POST invalid characters → 400
+    var (status4, _) = await MakeRequestAsync<dynamic>(
+        "POST",
+        "/api/Groups",
+        new { name = "Test Group", accessCode = "ABC-123!" });
+    LogTest("POST /api/Groups - Invalid characters", status4 == 400);
+
+    // Test 5-10: Más tests...
+}
+```
+
+#### Users Endpoints (10 tests)
+```csharp
+public async Task TestUsersEndpointsAsync()
+{
+    Console.WriteLine("\n=== TESTING USERS ENDPOINTS ===\n");
+
+    // Test 1: POST valid registration → 201
+    var (status1, _) = await MakeRequestAsync<dynamic>(
+        "POST",
+        "/api/Users/register",
+        _validUser);
+    LogTest("POST /api/Users/register - Valid registration", status1 == 201);
+
+    // Test 2: POST invalid email → 400
+    var invalidEmail = new Dictionary<string, object>(_validUser)
+    {
+        { "email", "invalid-email" }
+    };
+    var (status2, _) = await MakeRequestAsync<dynamic>(
+        "POST",
+        "/api/Users/register",
+        invalidEmail);
+    LogTest("POST /api/Users/register - Invalid email", status2 == 400);
+
+    // Test 3: POST short password → 400
+    var shortPass = new Dictionary<string, object>(_validUser)
+    {
+        { "password", "12345" }
+    };
+    var (status3, _) = await MakeRequestAsync<dynamic>(
+        "POST",
+        "/api/Users/register",
+        shortPass);
+    LogTest("POST /api/Users/register - Short password", status3 == 400);
+
+    // Test 4-10: Más tests...
+}
+```
+
+### 📊 Cobertura Total: 30+ Tests
+
+**Para ejecutar todos los tests:**
+```csharp
+var tests = new ApiTestsData();
+await tests.RunAllTestsAsync();
+
+// Output esperado:
+// ========================================
+//   QUEST_EVAL API COMPREHENSIVE TESTS
+// ========================================
+// ✅ POST /api/Criteria - Valid request
+// ❌ POST /api/Criteria - Missing fields
+// ✅ GET /api/Criteria - Returns list
+// ✅ POST /api/Groups - Valid request
+// ... más resultados
+// ========================================
+//   TESTS COMPLETED
+// ========================================
+```
+
+---
+
+## 5. Recomendaciones para Integración del Frontend
+
+### 🎨 Mejores Prácticas de Integración
+
+#### 1. **Manejo de Errores en C#**
+
+**Estructura de Error Esperada:**
+```csharp
+try
+{
+    var client = new HttpClient();
+    var request = new HttpRequestMessage(HttpMethod.Post, "http://localhost:5122/api/Criteria");
+    
+    var json = JsonSerializer.Serialize(criterionData);
+    request.Content = new StringContent(json, Encoding.UTF8, "application/json");
+    
+    var response = await client.SendAsync(request);
+    
+    if (!response.IsSuccessStatusCode)
+    {
+        var errorContent = await response.Content.ReadAsStringAsync();
+        var errorData = JsonSerializer.Deserialize<ProblemDetails>(errorContent);
+        
+        // errorData.Title → Título del error
+        // errorData.Detail → Descripción específica
+        // errorData.Extensions → Validaciones de campos (si es 400)
+        
+        ShowErrorToUser(errorData?.Detail ?? errorData?.Title ?? "Error desconocido");
+    }
+}
+catch (HttpRequestException ex)
+{
+    ShowErrorToUser("Error de conexión con el servidor: " + ex.Message);
+}
+```
+
+**Clase ProblemDetails:**
+```csharp
+public class ProblemDetails
+{
+    public string? Type { get; set; }
+    public string? Title { get; set; }
+    public int Status { get; set; }
+    public string? Detail { get; set; }
+    public Dictionary<string, object?>? Extensions { get; set; }
+}
+```
+
+#### 2. **Validación en Servicios C#**
 
 Replica las validaciones del backend para mejor UX:
 
-```javascript
-const criterionValidation = {
-  name: {
-    required: true,
-    minLength: 3,
-    maxLength: 100,
-    message: "El nombre debe tener entre 3 y 100 caracteres"
-  },
-  description: {
-    required: true,
-    minLength: 10,
-    maxLength: 500
-  },
-  maxScore: {
-    required: true,
-    min: 1,
-    max: 1000
-  }
-};
+```csharp
+public class CriterionValidator
+{
+    public static ValidationResult ValidateCriterion(CreateCriterionRequest request)
+    {
+        var errors = new List<string>();
+        
+        if (string.IsNullOrWhiteSpace(request.Name))
+            errors.Add("El nombre es requerido.");
+        else if (request.Name.Length < 3 || request.Name.Length > 100)
+            errors.Add("El nombre debe tener entre 3 y 100 caracteres.");
+        
+        if (string.IsNullOrWhiteSpace(request.Description))
+            errors.Add("La descripción es requerida.");
+        else if (request.Description.Length < 10 || request.Description.Length > 500)
+            errors.Add("La descripción debe tener entre 10 y 500 caracteres.");
+        
+        if (request.MaxScore < 1 || request.MaxScore > 1000)
+            errors.Add("El puntaje máximo debe estar entre 1 y 1000.");
+        
+        return new ValidationResult
+        {
+            IsValid = errors.Count == 0,
+            Errors = errors
+        };
+    }
+}
+
+public class ValidationResult
+{
+    public bool IsValid { get; set; }
+    public List<string> Errors { get; set; } = new();
+}
 ```
 
 #### 3. **Códigos de Estado HTTP**
@@ -697,10 +881,16 @@ const criterionValidation = {
 #### 4. **Formato de Fechas**
 
 El API retorna fechas en formato ISO 8601:
-```javascript
+```csharp
 // Backend envía: "2024-02-10T07:30:00Z"
-const date = new Date(response.createdAt);
-const formatted = date.toLocaleDateString('es-MX');
+var dateString = response.CreatedAt; // "2024-02-10T07:30:00Z"
+var date = DateTime.Parse(dateString, null, System.Globalization.DateTimeStyles.RoundtripKind);
+var formatted = date.ToString("dd/MM/yyyy", new System.Globalization.CultureInfo("es-MX"));
+
+// O usando DateTimeOffset para timezone awareness
+var dateOffset = DateTimeOffset.Parse(dateString);
+var localDate = dateOffset.LocalDateTime.ToString("dd/MM/yyyy", 
+    new System.Globalization.CultureInfo("es-MX"));
 ```
 
 #### 5. **IDs de MongoDB**
@@ -716,40 +906,81 @@ const formatted = date.toLocaleDateString('es-MX');
 
 ### 🔐 Alta Prioridad
 
-#### 1. **Autenticación JWT**
+#### 1. **Autenticación JWT en C#**
 ```csharp
-// Implementar en UsersController
-services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
-    .AddJwtBearer(options => {
+// En Program.cs
+builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
+    .AddJwtBearer(options =>
+    {
         options.TokenValidationParameters = new TokenValidationParameters
         {
             ValidateIssuer = true,
             ValidateAudience = true,
             ValidateLifetime = true,
             ValidateIssuerSigningKey = true,
-            ValidIssuer = Configuration["Jwt:Issuer"],
-            ValidAudience = Configuration["Jwt:Audience"],
+            ValidIssuer = builder.Configuration["Jwt:Issuer"],
+            ValidAudience = builder.Configuration["Jwt:Audience"],
             IssuerSigningKey = new SymmetricSecurityKey(
-                Encoding.UTF8.GetBytes(Configuration["Jwt:Key"]))
+                Encoding.UTF8.GetBytes(builder.Configuration["Jwt:Key"]))
         };
     });
+
+builder.Services.AddAuthorization();
+
+// En controlador
+[Authorize]
+[HttpGet]
+public async Task<ActionResult<List<CriterionResponse>>> Get()
+{
+    // Solo usuarios autenticados pueden acceder
+    var criteria = await _service.GetCriteriaAsync();
+    return Ok(criteria);
+}
 ```
 
 **Beneficios:**
 - Sesiones seguras
 - Protección de endpoints
-- Roles y permisos
+- Roles y permisos integrados
 
 #### 2. **Password Hashing Mejorado**
 ```csharp
-// Reemplazar SHA256 con BCrypt
+// Instalar NuGet Package: BCrypt.Net-Core
+// dotnet add package BCrypt.Net-Core
+
 using BCrypt.Net;
 
-// Al registrar
-string hashedPassword = BCrypt.HashPassword(password);
+public class PasswordService
+{
+    // Al registrar usuario
+    public string HashPassword(string password)
+    {
+        return BCrypt.HashPassword(password);
+    }
 
-// Al verificar
-bool isValid = BCrypt.Verify(password, hashedPasswordFromDB);
+    // Al verificar credenciales
+    public bool VerifyPassword(string password, string hashedPassword)
+    {
+        return BCrypt.Verify(password, hashedPassword);
+    }
+}
+
+// En UsersController
+[HttpPost("register")]
+public async Task<ActionResult<UserResponse>> Register(RegisterRequest request)
+{
+    var hashedPassword = _passwordService.HashPassword(request.Password);
+    var user = new User
+    {
+        Email = request.Email,
+        PasswordHash = hashedPassword,
+        FullName = request.FullName,
+        Role = request.Role
+    };
+    
+    await _service.CreateUserAsync(user);
+    return StatusCode(StatusCodes.Status201Created);
+}
 ```
 
 **Beneficios:**
@@ -757,17 +988,46 @@ bool isValid = BCrypt.Verify(password, hashedPasswordFromDB);
 - Protección contra rainbow tables
 - Estándar de la industria
 
-#### 3. **Validación de Referencias (Foreign Keys)**
+#### 3. **Validación de Referencias en C#**
 ```csharp
-// Antes de crear un Project
-var group = await _service.GetGroupAsync(request.GroupId);
-if (group == null)
+// En ProjectsController
+[HttpPost]
+[ProducesResponseType(typeof(ProjectResponse), StatusCodes.Status201Created)]
+[ProducesResponseType(StatusCodes.Status400BadRequest)]
+public async Task<ActionResult<ProjectResponse>> Post(CreateProjectRequest request)
 {
-    return BadRequest(new ProblemDetails
+    try
     {
-        Title = "Invalid Group",
-        Detail = $"Group with ID '{request.GroupId}' does not exist."
-    });
+        ValidationHelper.ValidateObjectId(request.GroupId, "GroupId");
+        
+        // Validar que el grupo existe
+        var group = await _service.GetGroupAsync(request.GroupId);
+        if (group == null)
+        {
+            return BadRequest(new ProblemDetails
+            {
+                Title = "Invalid Group",
+                Detail = $"Group with ID '{request.GroupId}' does not exist.",
+                Status = StatusCodes.Status400BadRequest
+            });
+        }
+        
+        var project = new Project
+        {
+            Name = request.Name,
+            Description = request.Description,
+            GroupId = request.GroupId,
+            Status = request.Status
+        };
+        
+        var createdProject = await _service.CreateProjectAsync(project);
+        return StatusCode(StatusCodes.Status201Created, 
+            new ProjectResponse { Id = createdProject.Id, /* ... */ });
+    }
+    catch (ArgumentException ex)
+    {
+        return BadRequest(new ProblemDetails { Detail = ex.Message });
+    }
 }
 ```
 
@@ -778,101 +1038,283 @@ if (group == null)
 
 ### 📊 Media Prioridad
 
-#### 4. **Paginación**
+#### 4. **Paginación en C#**
 ```csharp
+// DTO para respuesta paginada
+public class PagedResult<T>
+{
+    public List<T> Items { get; set; } = new();
+    public int Page { get; set; }
+    public int PageSize { get; set; }
+    public int TotalCount { get; set; }
+    public int TotalPages => (int)Math.Ceiling(TotalCount / (double)PageSize);
+}
+
+// En CriteriaController
 [HttpGet]
+[ProducesResponseType(typeof(PagedResult<CriterionResponse>), StatusCodes.Status200OK)]
 public async Task<ActionResult<PagedResult<CriterionResponse>>> Get(
     [FromQuery] int page = 1,
     [FromQuery] int pageSize = 20)
 {
+    if (page < 1) page = 1;
+    if (pageSize < 1 || pageSize > 100) pageSize = 20;
+    
+    var skip = (page - 1) * pageSize;
     var total = await _service.GetCriteriaCountAsync();
-    var criteria = await _service.GetCriteriaPaginatedAsync(page, pageSize);
+    var criteria = await _service.GetCriteriaPaginatedAsync(skip, pageSize);
     
     return Ok(new PagedResult<CriterionResponse>
     {
-        Items = criteria.Select(c => new CriterionResponse {...}).ToList(),
+        Items = criteria.Select(c => new CriterionResponse { /* ... */ }).ToList(),
         Page = page,
         PageSize = pageSize,
-        TotalCount = total,
-        TotalPages = (int)Math.Ceiling(total / (double)pageSize)
+        TotalCount = total
     });
 }
 ```
 
-#### 5. **Filtros y Búsqueda**
+#### 5. **Filtros y Búsqueda en C#**
 ```csharp
-[HttpGet]
-public async Task<ActionResult<List<ProjectResponse>>> Get(
+[HttpGet("search")]
+[ProducesResponseType(typeof(List<ProjectResponse>), StatusCodes.Status200OK)]
+public async Task<ActionResult<List<ProjectResponse>>> Search(
     [FromQuery] string? groupId = null,
     [FromQuery] string? status = null,
     [FromQuery] string? search = null)
 {
     var projects = await _service.GetProjectsFilteredAsync(groupId, status, search);
-    // ...
+    return Ok(projects.Select(p => new ProjectResponse { /* ... */ }).ToList());
+}
+
+// En el servicio
+public async Task<List<Project>> GetProjectsFilteredAsync(
+    string? groupId, string? status, string? search)
+{
+    var filter = Builders<Project>.Filter.Empty;
+    
+    if (!string.IsNullOrWhiteSpace(groupId))
+        filter &= Builders<Project>.Filter.Eq(p => p.GroupId, groupId);
+    
+    if (!string.IsNullOrWhiteSpace(status))
+        filter &= Builders<Project>.Filter.Eq(p => p.Status, status);
+    
+    if (!string.IsNullOrWhiteSpace(search))
+    {
+        var searchFilter = Builders<Project>.Filter.Or(
+            Builders<Project>.Filter.Regex(p => p.Name, $".*{search}.*", "i"),
+            Builders<Project>.Filter.Regex(p => p.Description, $".*{search}.*", "i")
+        );
+        filter &= searchFilter;
+    }
+    
+    return await _database.GetCollection<Project>("projects")
+        .Find(filter)
+        .ToListAsync();
 }
 ```
 
-#### 6. **Rate Limiting**
+#### 6. **Rate Limiting en C#**
 ```csharp
-services.AddRateLimiter(options =>
+// En Program.cs (.NET 7+)
+builder.Services.AddRateLimiter(options =>
 {
     options.GlobalLimiter = PartitionedRateLimiter.Create<HttpContext, string>(httpContext =>
-        RateLimitPartition.GetFixedWindowLimiter(
-            partitionKey: httpContext.User.Identity?.Name ?? httpContext.Request.Headers.Host.ToString(),
+    {
+        var userId = httpContext.User.FindFirst("sub")?.Value ?? 
+                     httpContext.Connection.RemoteIpAddress?.ToString() ?? "unknown";
+        
+        return RateLimitPartition.GetFixedWindowLimiter(
+            partitionKey: userId,
             factory: partition => new FixedWindowRateLimiterOptions
             {
                 AutoReplenishment = true,
-                PermitLimit = 100,
+                PermitLimit = 100,    // 100 requests
                 QueueLimit = 0,
-                Window = TimeSpan.FromMinutes(1)
-            }));
+                Window = TimeSpan.FromMinutes(1)  // por minuto
+            }
+        );
+    });
+    
+    options.RejectionStatusCode = StatusCodes.Status429TooManyRequests;
 });
+
+// Aplicar middleware
+app.UseRateLimiter();
 ```
 
 ### 🔍 Baja Prioridad
 
-#### 7. **Logging Avanzado**
+#### 7. **Logging Avanzado con Serilog**
 ```csharp
-// Usar Serilog
+// En Program.cs
+using Serilog;
+
 Log.Logger = new LoggerConfiguration()
+    .MinimumLevel.Information()
     .WriteTo.Console()
-    .WriteTo.File("logs/questevaI-.txt", rollingInterval: RollingInterval.Day)
+    .WriteTo.File(
+        path: "logs/questeval-.txt",
+        rollingInterval: RollingInterval.Day,
+        outputTemplate: "{Timestamp:yyyy-MM-dd HH:mm:ss.fff} [{Level:u3}] {Message:lj}{NewLine}{Exception}")
     .CreateLogger();
-```
 
-#### 8. **CORS Más Restrictivo**
-```csharp
-// En producción, especificar dominio exacto
-options.AddPolicy("Production", policy =>
+try
 {
-    policy.WithOrigins("https://questeval.com")
-          .AllowAnyMethod()
-          .AllowAnyHeader();
+    Log.Information("Starting application");
+    await builder.Build().RunAsync();
+}
+catch (Exception ex)
+{
+    Log.Fatal(ex, "Application terminated unexpectedly");
+}
+finally
+{
+    Log.CloseAndFlush();
+}
+
+// En controladores
+private readonly ILogger<CriteriaController> _logger;
+
+public async Task<ActionResult<CriterionResponse>> PostAsync(CreateCriterionRequest request)
+{
+    _logger.LogInformation("Creating criterion: {Name}", request.Name);
+    
+    try
+    {
+        // ...
+        _logger.LogInformation("Criterion created successfully with ID: {CriterionId}", criterion.Id);
+    }
+    catch (Exception ex)
+    {
+        _logger.LogError(ex, "Error creating criterion");
+        throw;
+    }
+}
+```
+
+#### 8. **CORS Más Restrictivo en C#**
+```csharp
+// En Program.cs
+builder.Services.AddCors(options =>
+{
+    // Configuración de Desarrollo
+    options.AddPolicy("Development", policy => 
+    {
+        policy.AllowAnyOrigin()
+              .AllowAnyMethod()
+              .AllowAnyHeader();
+    });
+    
+    // Configuración de Producción
+    options.AddPolicy("Production", policy =>
+    {
+        policy.WithOrigins(
+            "https://www.questeval.com",
+            "https://questeval.com")
+              .AllowAnyMethod()
+              .AllowAnyHeader()
+              .AllowCredentials()
+              .WithExposedHeaders("Content-Disposition");
+    });
 });
+
+// Aplicar CORS basado en environment
+var environment = app.Environment.IsProduction() ? "Production" : "Development";
+app.UseCors(environment);
 ```
 
-#### 9. **Health Checks**
+#### 9. **Health Checks en C#**
 ```csharp
-services.AddHealthChecks()
-    .AddMongoDb(mongoConnectionString, name: "mongodb");
+// En Program.cs
+builder.Services.AddHealthChecks()
+    .AddMongoDb(
+        mongoConnectionString: builder.Configuration["QuestEvalDatabase:ConnectionString"],
+        name: "mongodb",
+        timeout: TimeSpan.FromSeconds(3),
+        tags: new[] { "ready" })
+    .AddDiskStorageHealthCheck(s =>
+    {
+        s.AddDrive("C:\\", 1024); // Verificar que hay más de 1GB libre
+    }, name: "disk_storage", tags: new[] { "ready" });
 
+// Mapear endpoints de health check
 app.MapHealthChecks("/health");
+app.MapHealthChecks("/health/ready", new HealthCheckOptions
+{
+    Predicate = healthCheck => healthCheck.Tags.Contains("ready")
+});
+
+// Uso desde cliente
+var client = new HttpClient();
+var response = await client.GetAsync("http://localhost:5122/health");
+if (response.IsSuccessStatusCode)
+{
+    Console.WriteLine("API está sana");
+}
+else
+{
+    Console.WriteLine("API tiene problemas");
+}
 ```
 
-#### 10. **Soft Deletes**
+#### 10. **Soft Deletes en C#**
 ```csharp
+// Modelo MongoDB
 public class Criterion
 {
+    [BsonId]
+    [BsonRepresentation(BsonType.ObjectId)]
     public string? Id { get; set; }
+    
+    [BsonElement("name")]
     public string Name { get; set; } = null!;
+    
+    [BsonElement("description")]
+    public string Description { get; set; } = null!;
+    
+    [BsonElement("maxScore")]
+    public int MaxScore { get; set; }
+    
+    [BsonElement("isDeleted")]
     public bool IsDeleted { get; set; } = false;
+    
+    [BsonElement("deletedAt")]
     public DateTime? DeletedAt { get; set; }
 }
 
-// En vez de eliminar
-criterion.IsDeleted = true;
-criterion.DeletedAt = DateTime.UtcNow;
-await _service.UpdateCriterionAsync(id, criterion);
+// En servicio - eliminar (soft delete)
+public async Task DeleteCriterionAsync(string id)
+{
+    ValidationHelper.ValidateObjectId(id, "CriterionId");
+    
+    var filter = Builders<Criterion>.Filter.Eq(c => c.Id, id);
+    var update = Builders<Criterion>.Update
+        .Set(c => c.IsDeleted, true)
+        .Set(c => c.DeletedAt, DateTime.UtcNow);
+    
+    await _collection.UpdateOneAsync(filter, update);
+}
+
+// En servicio - obtener (excluir eliminados)
+public async Task<List<Criterion>> GetCriteriaAsync()
+{
+    var filter = Builders<Criterion>.Filter.Eq(c => c.IsDeleted, false);
+    return await _collection.Find(filter).ToListAsync();
+}
+
+// En servicio - recuperar (restore)
+public async Task RestoreCriterionAsync(string id)
+{
+    ValidationHelper.ValidateObjectId(id, "CriterionId");
+    
+    var filter = Builders<Criterion>.Filter.Eq(c => c.Id, id);
+    var update = Builders<Criterion>.Update
+        .Set(c => c.IsDeleted, false)
+        .Unset(c => c.DeletedAt);
+    
+    await _collection.UpdateOneAsync(filter, update);
+}
 ```
 
 ---
@@ -941,14 +1383,38 @@ QuestEval.Shared/
 
 ---
 
-## 🚀 Próximos Pasos para Integración Frontend
+---
 
-1. **Revisar Swagger UI** en `http://localhost:5122/swagger`
-2. **Ejecutar tests** con `node test-api.js`
-3. **Implementar cliente HTTP** en frontend (Axios/Fetch)
-4. **Replicar validaciones** en formularios
-5. **Manejar errores** según códigos de estado
-6. **Implementar autenticación** JWT (prioridad alta)
+## 🚀 Próximos Pasos
+
+### 1. **Ejecutar los Tests**
+```bash
+cd C:\Home\QuestEval-\QuestEval.Api
+dotnet build
+dotnet test  # O ejecutar desde Visual Studio Test Explorer
+```
+
+### 2. **Revisar Swagger UI**
+```
+http://localhost:5122/swagger
+```
+
+### 3. **Verificar la Estructura del Proyecto**
+- 💫 `QuestEval.Api/Tests/ApiTests.cs` - Pruebas en C#
+- 💫 `QuestEval.Api/Controllers/` - 7 controladores completamente documentados
+- 💫 `QuestEval.Api/Middlewares/GlobalExceptionHandler.cs` - Manejo centralizado de errores
+- 💫 `QuestEval.Api/Helpers/ValidationHelper.cs` - Validaciones de ObjectId
+- 💫 `QuestEval.Shared/DTOs.cs` - DTOs con validación completa
+
+### 4. **Integrar con Frontend**
+- Usar `HttpClient` en C# o consumir desde JavaScript/TypeScript
+- Ver códigos de estado HTTP esperados
+- Implementar manejo de errores basado en ProblemDetails
+
+### 5. **Implementar Mejoras de Alta Prioridad**
+- 🔐 Autenticación JWT
+- 🔐 Password Hashing con BCrypt
+- 🔐 Validación de referencias (Foreign Keys)
 
 ---
 
@@ -957,10 +1423,12 @@ QuestEval.Shared/
 Para cualquier duda sobre la API, consultar:
 - Swagger UI: `http://localhost:5122/swagger`
 - Este documento de mejoras
-- Tests automatizados en `test-api.js`
+- Tests automatizados en `QuestEval.Api/Tests/ApiTests.cs`
 
 ---
 
 **Última actualización:** 2026-02-10  
 **Versión API:** v1.0  
-**Estado:** Listo para integración con frontend ✅
+**Estado:** Convertido a C# ✅
+**Lenguaje de Ejemplos:** C# (Actualizado desde JavaScript)
+

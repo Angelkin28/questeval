@@ -5,7 +5,7 @@ var e=!1;const t=async()=>WebAssembly.validate(new Uint8Array([0,97,115,109,1,0,
   "mainAssemblyName": "QuestEval.Web.Client",
   "applicationEnvironment": "Development",
   "resources": {
-    "hash": "sha256-M+IwmqgaG1KuRnNDwfUAwrpPjfvq8SmmC+pCbNpQf/M=",
+    "hash": "sha256-TJTNxcmwKKx7gmq9eTCGIKFfAUv4DFGiSaazIyXFzL8=",
     "jsModuleNative": [
       {
         "name": "dotnet.native.87vtjjdetb.js"
@@ -1248,28 +1248,28 @@ var e=!1;const t=async()=>WebAssembly.validate(new Uint8Array([0,97,115,109,1,0,
       },
       {
         "virtualPath": "QuestEval.Shared.wasm",
-        "name": "QuestEval.Shared.t19gwpqvy8.wasm",
-        "integrity": "sha256-0RUd9zENLFIrKt9YbQLYXeLo0WvwxuB6T3bAig+bFPk=",
+        "name": "QuestEval.Shared.mbecuqphld.wasm",
+        "integrity": "sha256-gili/U+oi3Jc9Z6IRIrktea8EU2G72oRh9kqTXbrKIc=",
         "cache": "force-cache"
       },
       {
         "virtualPath": "QuestEval.Web.Client.wasm",
-        "name": "QuestEval.Web.Client.gm2cozqzmm.wasm",
-        "integrity": "sha256-SHy8hJV1jxUwMwKjl2THk4AaXnmRIB3VOd3K3w+bcOs=",
+        "name": "QuestEval.Web.Client.2hfx17tdnb.wasm",
+        "integrity": "sha256-lvm8sghEOqNTVxFdhsNUaX4DySb4+WuK5pmOgCMiU8A=",
         "cache": "force-cache"
       }
     ],
     "pdb": [
       {
         "virtualPath": "QuestEval.Shared.pdb",
-        "name": "QuestEval.Shared.2m0gm20328.pdb",
-        "integrity": "sha256-GkUBqnVBT1oYy3wDjEV1P7K0QFaCjwj2U1gfuEgso0c=",
+        "name": "QuestEval.Shared.a5zo3j824k.pdb",
+        "integrity": "sha256-Eim+jh5fJs/rITgEwltFNJbpyaz7WIxds4DgYKrA7tA=",
         "cache": "force-cache"
       },
       {
         "virtualPath": "QuestEval.Web.Client.pdb",
-        "name": "QuestEval.Web.Client.eejdq5rzro.pdb",
-        "integrity": "sha256-dqFts4jjE/w6bR9BgE5Y/FzBKWM4fql3jaCbXYSq6rE=",
+        "name": "QuestEval.Web.Client.q94yls3k61.pdb",
+        "integrity": "sha256-4mAv7vFD8TXCTUMXVwaWmixbd77URzTbZnhqxC8Fw7Y=",
         "cache": "force-cache"
       }
     ],

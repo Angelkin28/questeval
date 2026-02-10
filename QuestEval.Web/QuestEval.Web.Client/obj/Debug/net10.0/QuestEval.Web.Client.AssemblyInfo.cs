@@ -13,7 +13,7 @@ using System.Reflection;
 [assembly: System.Reflection.AssemblyCompanyAttribute("QuestEval.Web.Client")]
 [assembly: System.Reflection.AssemblyConfigurationAttribute("Debug")]
 [assembly: System.Reflection.AssemblyFileVersionAttribute("1.0.0.0")]
-[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+28e3c610e91ef42ec1ab1e56c8a6a20a4bbe33bd")]
+[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+f32cd770f1c44d42816b50a2df466cd4b2ee3e37")]
 [assembly: System.Reflection.AssemblyProductAttribute("QuestEval.Web.Client")]
 [assembly: System.Reflection.AssemblyTitleAttribute("QuestEval.Web.Client")]
 [assembly: System.Reflection.AssemblyVersionAttribute("1.0.0.0")]

@@ -1,0 +1,466 @@
+<?xml version="1.0"?>
+<doc>
+    <assembly>
+        <name>QuestEval.Shared</name>
+    </assembly>
+    <members>
+        <member name="T:QuestEval.Shared.Models.CreateCriterionRequest">
+            <summary>
+            Request to create a new criterion
+            </summary>
+        </member>
+        <member name="P:QuestEval.Shared.Models.CreateCriterionRequest.Name">
+            <summary>
+            Name of the criterion
+            </summary>
+            <example>Code Quality</example>
+        </member>
+        <member name="P:QuestEval.Shared.Models.CreateCriterionRequest.Description">
+            <summary>
+            Detailed description of what this criterion evaluates
+            </summary>
+            <example>Evaluates the quality, readability, and maintainability of the code</example>
+        </member>
+        <member name="P:QuestEval.Shared.Models.CreateCriterionRequest.MaxScore">
+            <summary>
+            Maximum possible score for this criterion
+            </summary>
+            <example>100</example>
+        </member>
+        <member name="T:QuestEval.Shared.Models.CriterionResponse">
+            <summary>
+            Response containing criterion details
+            </summary>
+        </member>
+        <member name="P:QuestEval.Shared.Models.CriterionResponse.Id">
+            <summary>
+            Unique identifier of the criterion
+            </summary>
+            <example>507f1f77bcf86cd799439011</example>
+        </member>
+        <member name="P:QuestEval.Shared.Models.CriterionResponse.Name">
+            <summary>
+            Name of the criterion
+            </summary>
+            <example>Code Quality</example>
+        </member>
+        <member name="P:QuestEval.Shared.Models.CriterionResponse.Description">
+            <summary>
+            Detailed description
+            </summary>
+            <example>Evaluates the quality, readability, and maintainability of the code</example>
+        </member>
+        <member name="P:QuestEval.Shared.Models.CriterionResponse.MaxScore">
+            <summary>
+            Maximum possible score
+            </summary>
+            <example>100</example>
+        </member>
+        <member name="T:QuestEval.Shared.Models.CreateGroupRequest">
+            <summary>
+            Request to create a new group
+            </summary>
+        </member>
+        <member name="P:QuestEval.Shared.Models.CreateGroupRequest.Name">
+            <summary>
+            Name of the group
+            </summary>
+            <example>Software Engineering 2024</example>
+        </member>
+        <member name="P:QuestEval.Shared.Models.CreateGroupRequest.AccessCode">
+            <summary>
+            Access code for students to join the group
+            </summary>
+            <example>SE2024ABC</example>
+        </member>
+        <member name="T:QuestEval.Shared.Models.UpdateGroupRequest">
+            <summary>
+            Request to update an existing group
+            </summary>
+        </member>
+        <member name="P:QuestEval.Shared.Models.UpdateGroupRequest.Name">
+            <summary>
+            Updated name of the group
+            </summary>
+            <example>Software Engineering 2024 - Spring</example>
+        </member>
+        <member name="P:QuestEval.Shared.Models.UpdateGroupRequest.AccessCode">
+            <summary>
+            Updated access code
+            </summary>
+            <example>SE2024SPRING</example>
+        </member>
+        <member name="T:QuestEval.Shared.Models.GroupResponse">
+            <summary>
+            Response containing group details
+            </summary>
+        </member>
+        <member name="P:QuestEval.Shared.Models.GroupResponse.Id">
+            <summary>
+            Unique identifier of the group
+            </summary>
+            <example>507f1f77bcf86cd799439011</example>
+        </member>
+        <member name="P:QuestEval.Shared.Models.GroupResponse.Name">
+            <summary>
+            Name of the group
+            </summary>
+            <example>Software Engineering 2024</example>
+        </member>
+        <member name="P:QuestEval.Shared.Models.GroupResponse.AccessCode">
+            <summary>
+            Access code for joining
+            </summary>
+            <example>SE2024ABC</example>
+        </member>
+        <member name="P:QuestEval.Shared.Models.GroupResponse.CreatedAt">
+            <summary>
+            Date and time when the group was created
+            </summary>
+        </member>
+        <member name="T:QuestEval.Shared.Models.CreateProjectRequest">
+            <summary>
+            Request to create a new project
+            </summary>
+        </member>
+        <member name="P:QuestEval.Shared.Models.CreateProjectRequest.Name">
+            <summary>
+            Project name
+            </summary>
+            <example>E-commerce Website</example>
+        </member>
+        <member name="P:QuestEval.Shared.Models.CreateProjectRequest.Description">
+            <summary>
+            Detailed project description
+            </summary>
+            <example>A full-stack e-commerce platform with user authentication and payment integration</example>
+        </member>
+        <member name="P:QuestEval.Shared.Models.CreateProjectRequest.GroupId">
+            <summary>
+            ID of the group this project belongs to
+            </summary>
+            <example>507f1f77bcf86cd799439011</example>
+        </member>
+        <member name="P:QuestEval.Shared.Models.CreateProjectRequest.Status">
+            <summary>
+            Project status
+            </summary>
+            <example>Active</example>
+        </member>
+        <member name="T:QuestEval.Shared.Models.ProjectResponse">
+            <summary>
+            Response containing project details
+            </summary>
+        </member>
+        <member name="P:QuestEval.Shared.Models.ProjectResponse.Id">
+            <summary>
+            Unique identifier of the project
+            </summary>
+            <example>507f1f77bcf86cd799439011</example>
+        </member>
+        <member name="P:QuestEval.Shared.Models.ProjectResponse.Name">
+            <summary>
+            Project name
+            </summary>
+            <example>E-commerce Website</example>
+        </member>
+        <member name="P:QuestEval.Shared.Models.ProjectResponse.Description">
+            <summary>
+            Project description
+            </summary>
+            <example>A full-stack e-commerce platform with user authentication and payment integration</example>
+        </member>
+        <member name="P:QuestEval.Shared.Models.ProjectResponse.GroupId">
+            <summary>
+            Group ID
+            </summary>
+            <example>507f1f77bcf86cd799439011</example>
+        </member>
+        <member name="P:QuestEval.Shared.Models.ProjectResponse.Status">
+            <summary>
+            Current status
+            </summary>
+            <example>Active</example>
+        </member>
+        <member name="P:QuestEval.Shared.Models.ProjectResponse.CreatedAt">
+            <summary>
+            Creation timestamp
+            </summary>
+        </member>
+        <member name="P:QuestEval.Shared.Models.ProjectResponse.UpdatedAt">
+            <summary>
+            Last update timestamp
+            </summary>
+        </member>
+        <member name="T:QuestEval.Shared.Models.CreateEvaluationRequest">
+            <summary>
+            Request to create a new evaluation
+            </summary>
+        </member>
+        <member name="P:QuestEval.Shared.Models.CreateEvaluationRequest.ProjectId">
+            <summary>
+            ID of the project being evaluated
+            </summary>
+            <example>507f1f77bcf86cd799439011</example>
+        </member>
+        <member name="P:QuestEval.Shared.Models.CreateEvaluationRequest.EvaluatorId">
+            <summary>
+            ID of the user performing the evaluation
+            </summary>
+            <example>auth0|123456789</example>
+        </member>
+        <member name="P:QuestEval.Shared.Models.CreateEvaluationRequest.Details">
+            <summary>
+            List of scores for each criterion
+            </summary>
+        </member>
+        <member name="T:QuestEval.Shared.Models.EvaluationDetailRequest">
+            <summary>
+            Score for a specific criterion
+            </summary>
+        </member>
+        <member name="P:QuestEval.Shared.Models.EvaluationDetailRequest.CriterionId">
+            <summary>
+            ID of the criterion being evaluated
+            </summary>
+            <example>507f1f77bcf86cd799439011</example>
+        </member>
+        <member name="P:QuestEval.Shared.Models.EvaluationDetailRequest.CriterionName">
+            <summary>
+            Name of the criterion (snapshot)
+            </summary>
+            <example>Code Quality</example>
+        </member>
+        <member name="P:QuestEval.Shared.Models.EvaluationDetailRequest.Score">
+            <summary>
+            Score assigned
+            </summary>
+            <example>85</example>
+        </member>
+        <member name="T:QuestEval.Shared.Models.EvaluationResponse">
+            <summary>
+            Response containing evaluation details
+            </summary>
+        </member>
+        <member name="P:QuestEval.Shared.Models.EvaluationResponse.Id">
+            <summary>
+            Unique identifier
+            </summary>
+            <example>507f1f77bcf86cd799439011</example>
+        </member>
+        <member name="P:QuestEval.Shared.Models.EvaluationResponse.ProjectId">
+            <summary>
+            Project ID
+            </summary>
+            <example>507f1f77bcf86cd799439011</example>
+        </member>
+        <member name="P:QuestEval.Shared.Models.EvaluationResponse.EvaluatorId">
+            <summary>
+            Evaluator ID
+            </summary>
+            <example>auth0|123456789</example>
+        </member>
+        <member name="P:QuestEval.Shared.Models.EvaluationResponse.FinalScore">
+            <summary>
+            Final calculated score
+            </summary>
+            <example>87.5</example>
+        </member>
+        <member name="P:QuestEval.Shared.Models.EvaluationResponse.Details">
+            <summary>
+            Detailed scores per criterion
+            </summary>
+        </member>
+        <member name="P:QuestEval.Shared.Models.EvaluationResponse.CreatedAt">
+            <summary>
+            Creation timestamp
+            </summary>
+        </member>
+        <member name="P:QuestEval.Shared.Models.EvaluationResponse.UpdatedAt">
+            <summary>
+            Last update timestamp
+            </summary>
+        </member>
+        <member name="T:QuestEval.Shared.Models.EvaluationDetailResponse">
+            <summary>
+            Score details for a criterion in response
+            </summary>
+        </member>
+        <member name="P:QuestEval.Shared.Models.EvaluationDetailResponse.CriterionId">
+            <summary>
+            Criterion ID
+            </summary>
+            <example>507f1f77bcf86cd799439011</example>
+        </member>
+        <member name="P:QuestEval.Shared.Models.EvaluationDetailResponse.CriterionName">
+            <summary>
+            Criterion name snapshot
+            </summary>
+            <example>Code Quality</example>
+        </member>
+        <member name="P:QuestEval.Shared.Models.EvaluationDetailResponse.Score">
+            <summary>
+            Score assigned
+            </summary>
+            <example>85</example>
+        </member>
+        <member name="T:QuestEval.Shared.Models.CreateFeedbackRequest">
+            <summary>
+            Request to create feedback
+            </summary>
+        </member>
+        <member name="P:QuestEval.Shared.Models.CreateFeedbackRequest.EvaluationId">
+            <summary>
+            ID of the evaluation this feedback is for
+            </summary>
+            <example>507f1f77bcf86cd799439011</example>
+        </member>
+        <member name="P:QuestEval.Shared.Models.CreateFeedbackRequest.Comment">
+            <summary>
+            Feedback comment
+            </summary>
+            <example>Great work on the user interface! Consider adding more unit tests.</example>
+        </member>
+        <member name="P:QuestEval.Shared.Models.CreateFeedbackRequest.IsPublic">
+            <summary>
+            Whether this feedback is visible to students
+            </summary>
+            <example>true</example>
+        </member>
+        <member name="T:QuestEval.Shared.Models.FeedbackResponse">
+            <summary>
+            Response containing feedback details
+            </summary>
+        </member>
+        <member name="P:QuestEval.Shared.Models.FeedbackResponse.Id">
+            <summary>
+            Unique identifier
+            </summary>
+            <example>507f1f77bcf86cd799439011</example>
+        </member>
+        <member name="P:QuestEval.Shared.Models.FeedbackResponse.EvaluationId">
+            <summary>
+            Evaluation ID
+            </summary>
+            <example>507f1f77bcf86cd799439011</example>
+        </member>
+        <member name="P:QuestEval.Shared.Models.FeedbackResponse.Comment">
+            <summary>
+            Feedback comment
+            </summary>
+            <example>Great work on the user interface! Consider adding more unit tests.</example>
+        </member>
+        <member name="P:QuestEval.Shared.Models.FeedbackResponse.IsPublic">
+            <summary>
+            Visibility status
+            </summary>
+            <example>true</example>
+        </member>
+        <member name="P:QuestEval.Shared.Models.FeedbackResponse.CreatedAt">
+            <summary>
+            Creation timestamp
+            </summary>
+        </member>
+        <member name="T:QuestEval.Shared.Models.CreateMembershipRequest">
+            <summary>
+            Request to create a membership (join a group)
+            </summary>
+        </member>
+        <member name="P:QuestEval.Shared.Models.CreateMembershipRequest.UserId">
+            <summary>
+            User ID joining the group
+            </summary>
+            <example>auth0|123456789</example>
+        </member>
+        <member name="P:QuestEval.Shared.Models.CreateMembershipRequest.GroupId">
+            <summary>
+            Group ID to join
+            </summary>
+            <example>507f1f77bcf86cd799439011</example>
+        </member>
+        <member name="T:QuestEval.Shared.Models.MembershipResponse">
+            <summary>
+            Response containing membership details
+            </summary>
+        </member>
+        <member name="P:QuestEval.Shared.Models.MembershipResponse.Id">
+            <summary>
+            Unique identifier
+            </summary>
+            <example>507f1f77bcf86cd799439011</example>
+        </member>
+        <member name="P:QuestEval.Shared.Models.MembershipResponse.UserId">
+            <summary>
+            User ID
+            </summary>
+            <example>auth0|123456789</example>
+        </member>
+        <member name="P:QuestEval.Shared.Models.MembershipResponse.GroupId">
+            <summary>
+            Group ID
+            </summary>
+            <example>507f1f77bcf86cd799439011</example>
+        </member>
+        <member name="P:QuestEval.Shared.Models.MembershipResponse.JoinedAt">
+            <summary>
+            Join timestamp
+            </summary>
+        </member>
+        <member name="T:QuestEval.Shared.Models.RegisterRequest">
+            <summary>
+            Request to register a new user
+            </summary>
+        </member>
+        <member name="P:QuestEval.Shared.Models.RegisterRequest.Email">
+            <summary>
+            User email address
+            </summary>
+            <example>student@example.com</example>
+        </member>
+        <member name="P:QuestEval.Shared.Models.RegisterRequest.Password">
+            <summary>
+            User password
+            </summary>
+            <example>SecurePassword123!</example>
+        </member>
+        <member name="P:QuestEval.Shared.Models.RegisterRequest.FullName">
+            <summary>
+            Full name of the user
+            </summary>
+            <example>Juan Pérez</example>
+        </member>
+        <member name="P:QuestEval.Shared.Models.RegisterRequest.Role">
+            <summary>
+            User role (Alumno, Profesor, Admin)
+            </summary>
+            <example>Alumno</example>
+        </member>
+        <member name="T:QuestEval.Shared.Models.LoginRequest">
+            <summary>
+            Request to login
+            </summary>
+        </member>
+        <member name="P:QuestEval.Shared.Models.LoginRequest.Email">
+            <summary>
+            User email address
+            </summary>
+            <example>student@example.com</example>
+        </member>
+        <member name="P:QuestEval.Shared.Models.LoginRequest.Password">
+            <summary>
+            User password
+            </summary>
+            <example>SecurePassword123!</example>
+        </member>
+        <member name="T:QuestEval.Shared.Models.LoginResponse">
+            <summary>
+            Login response containing user information and token
+            </summary>
+        </member>
+        <member name="T:QuestEval.Shared.Models.UserResponse">
+            <summary>
+            User response containing user information
+            </summary>
+        </member>
+    </members>
+</doc>

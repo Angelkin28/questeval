@@ -1,31 +1,25 @@
 {
   "format": 1,
   "restore": {
-    "C:\\Code\\Questeval\\QuestEval-\\QuestEval.Web\\QuestEval.Web.Client\\QuestEval.Web.Client.csproj": {}
+    "C:\\Home\\QuestEval-\\QuestEval.Web\\QuestEval.Web.Client\\QuestEval.Web.Client.csproj": {}
   },
   "projects": {
-    "C:\\Code\\Questeval\\QuestEval-\\QuestEval.Shared\\QuestEval.Shared.csproj": {
+    "C:\\Home\\QuestEval-\\QuestEval.Shared\\QuestEval.Shared.csproj": {
       "version": "1.0.0",
       "restore": {
-        "projectUniqueName": "C:\\Code\\Questeval\\QuestEval-\\QuestEval.Shared\\QuestEval.Shared.csproj",
+        "projectUniqueName": "C:\\Home\\QuestEval-\\QuestEval.Shared\\QuestEval.Shared.csproj",
         "projectName": "QuestEval.Shared",
-        "projectPath": "C:\\Code\\Questeval\\QuestEval-\\QuestEval.Shared\\QuestEval.Shared.csproj",
-        "packagesPath": "C:\\Users\\jfytr\\.nuget\\packages\\",
-        "outputPath": "C:\\Code\\Questeval\\QuestEval-\\QuestEval.Shared\\obj\\",
+        "projectPath": "C:\\Home\\QuestEval-\\QuestEval.Shared\\QuestEval.Shared.csproj",
+        "packagesPath": "C:\\Users\\hmgd1\\.nuget\\packages\\",
+        "outputPath": "C:\\Home\\QuestEval-\\QuestEval.Shared\\obj\\",
         "projectStyle": "PackageReference",
-        "fallbackFolders": [
-          "C:\\Program Files (x86)\\Microsoft Visual Studio\\Shared\\NuGetPackages"
-        ],
         "configFilePaths": [
-          "C:\\Users\\jfytr\\AppData\\Roaming\\NuGet\\NuGet.Config",
-          "C:\\Program Files (x86)\\NuGet\\Config\\Microsoft.VisualStudio.FallbackLocation.config",
-          "C:\\Program Files (x86)\\NuGet\\Config\\Microsoft.VisualStudio.Offline.config"
+          "C:\\Users\\hmgd1\\AppData\\Roaming\\NuGet\\NuGet.Config"
         ],
         "originalTargetFrameworks": [
           "net10.0"
         ],
         "sources": {
-          "C:\\Program Files (x86)\\Microsoft SDKs\\NuGetPackages\\": {},
           "https://api.nuget.org/v3/index.json": {}
         },
         "frameworks": {
@@ -349,36 +343,30 @@
         }
       }
     },
-    "C:\\Code\\Questeval\\QuestEval-\\QuestEval.Web\\QuestEval.Web.Client\\QuestEval.Web.Client.csproj": {
+    "C:\\Home\\QuestEval-\\QuestEval.Web\\QuestEval.Web.Client\\QuestEval.Web.Client.csproj": {
       "version": "1.0.0",
       "restore": {
-        "projectUniqueName": "C:\\Code\\Questeval\\QuestEval-\\QuestEval.Web\\QuestEval.Web.Client\\QuestEval.Web.Client.csproj",
+        "projectUniqueName": "C:\\Home\\QuestEval-\\QuestEval.Web\\QuestEval.Web.Client\\QuestEval.Web.Client.csproj",
         "projectName": "QuestEval.Web.Client",
-        "projectPath": "C:\\Code\\Questeval\\QuestEval-\\QuestEval.Web\\QuestEval.Web.Client\\QuestEval.Web.Client.csproj",
-        "packagesPath": "C:\\Users\\jfytr\\.nuget\\packages\\",
-        "outputPath": "C:\\Code\\Questeval\\QuestEval-\\QuestEval.Web\\QuestEval.Web.Client\\obj\\",
+        "projectPath": "C:\\Home\\QuestEval-\\QuestEval.Web\\QuestEval.Web.Client\\QuestEval.Web.Client.csproj",
+        "packagesPath": "C:\\Users\\hmgd1\\.nuget\\packages\\",
+        "outputPath": "C:\\Home\\QuestEval-\\QuestEval.Web\\QuestEval.Web.Client\\obj\\",
         "projectStyle": "PackageReference",
-        "fallbackFolders": [
-          "C:\\Program Files (x86)\\Microsoft Visual Studio\\Shared\\NuGetPackages"
-        ],
         "configFilePaths": [
-          "C:\\Users\\jfytr\\AppData\\Roaming\\NuGet\\NuGet.Config",
-          "C:\\Program Files (x86)\\NuGet\\Config\\Microsoft.VisualStudio.FallbackLocation.config",
-          "C:\\Program Files (x86)\\NuGet\\Config\\Microsoft.VisualStudio.Offline.config"
+          "C:\\Users\\hmgd1\\AppData\\Roaming\\NuGet\\NuGet.Config"
         ],
         "originalTargetFrameworks": [
           "net10.0"
         ],
         "sources": {
-          "C:\\Program Files (x86)\\Microsoft SDKs\\NuGetPackages\\": {},
           "https://api.nuget.org/v3/index.json": {}
         },
         "frameworks": {
           "net10.0": {
             "targetAlias": "net10.0",
             "projectReferences": {
-              "C:\\Code\\Questeval\\QuestEval-\\QuestEval.Shared\\QuestEval.Shared.csproj": {
-                "projectPath": "C:\\Code\\Questeval\\QuestEval-\\QuestEval.Shared\\QuestEval.Shared.csproj"
+              "C:\\Home\\QuestEval-\\QuestEval.Shared\\QuestEval.Shared.csproj": {
+                "projectPath": "C:\\Home\\QuestEval-\\QuestEval.Shared\\QuestEval.Shared.csproj"
               }
             }
           }
