@@ -27,7 +27,25 @@ Este documento detalla las correcciones y mejoras realizadas en el proyecto Ques
 
 ---
 
-### 2. **Corrección de Error "Failed to Fetch" en el Frontend**
+### 2. **Migración a .NET 10**
+**Objetivo:**
+- Actualizar el framework del proyecto de .NET 8 a .NET 10 (Preview/Stable).
+
+**Cambios realizados:**
+- Actualizados todos los archivos `.csproj` (`QuestEval.Api`, `QuestEval.Shared`, `QuestEval.Web`, `QuestEval.Web.Client`) para usar `<TargetFramework>net10.0</TargetFramework>`.
+- Actualizados paquetes NuGet como `MongoDB.Driver` y `Microsoft.AspNetCore.*` a versiones compatibles.
+- **Nota Temporal:** Se ha deshabilitado Swagger en `Program.cs` debido a incompatibilidades actuales de `Swashbuckle.AspNetCore` con .NET 10. El backend funciona correctamente sin la UI de Swagger.
+
+**Archivos modificados:**
+- `QuestEval.Api/QuestEval.Api.csproj`
+- `QuestEval.Api/Program.cs`
+- `QuestEval.Shared/QuestEval.Shared.csproj`
+- `QuestEval.Web/QuestEval.Web/QuestEval.Web.csproj`
+- `QuestEval.Web/QuestEval.Web.Client/QuestEval.Web.Client.csproj`
+
+---
+
+### 3. **Corrección de Error "Failed to Fetch" en el Frontend**
 **Problema:**
 - El dashboard mostraba el error "Failed to fetch" al intentar cargar proyectos
 - El frontend enviaba `Authorization: Bearer null` cuando no había token en localStorage
