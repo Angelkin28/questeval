@@ -1,0 +1,10 @@
+{
+  "version": 2,
+  "dgSpecHash": "4g7+mcww6yo=",
+  "success": true,
+  "projectFilePath": "C:\\Code\\Questeval\\QuestEval-\\QuestEval.Shared\\QuestEval.Shared.csproj",
+  "expectedPackageFiles": [
+    "C:\\Users\\jfytr\\.nuget\\packages\\mongodb.bson\\3.6.0\\mongodb.bson.3.6.0.nupkg.sha512"
+  ],
+  "logs": []
+}
