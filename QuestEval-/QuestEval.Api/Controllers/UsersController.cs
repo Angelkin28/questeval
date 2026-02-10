@@ -32,6 +32,7 @@ public class UsersController : ControllerBase
         var newUser = new User
         {
             Email = request.Email,
+            Enrollment = request.Enrollment,
             PasswordHash = passwordHash,
             FullName = request.FullName,
             Role = request.Role,
@@ -45,6 +46,7 @@ public class UsersController : ControllerBase
         {
             Id = newUser.Id!,
             Email = newUser.Email,
+            Enrollment = newUser.Enrollment,
             FullName = newUser.FullName,
             Role = newUser.Role,
             AvatarUrl = newUser.AvatarUrl,
@@ -68,6 +70,7 @@ public class UsersController : ControllerBase
         {
             UserId = user.Id!,
             Email = user.Email,
+            Enrollment = user.Enrollment,
             FullName = user.FullName,
             Role = user.Role,
             AvatarUrl = user.AvatarUrl,
@@ -85,6 +88,7 @@ public class UsersController : ControllerBase
         {
             Id = u.Id!,
             Email = u.Email,
+            Enrollment = u.Enrollment,
             FullName = u.FullName,
             Role = u.Role,
             AvatarUrl = u.AvatarUrl,
@@ -106,6 +110,7 @@ public class UsersController : ControllerBase
         {
             Id = user.Id!,
             Email = user.Email,
+            Enrollment = user.Enrollment,
             FullName = user.FullName,
             Role = user.Role,
             AvatarUrl = user.AvatarUrl,

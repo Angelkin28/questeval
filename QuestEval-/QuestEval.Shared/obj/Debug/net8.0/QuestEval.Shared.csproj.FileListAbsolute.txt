@@ -1,0 +1,13 @@
+C:\Users\angel\Desktop\QuestEval\QuestEval-\QuestEval.Shared\bin\Debug\net8.0\QuestEval.Shared.deps.json
+C:\Users\angel\Desktop\QuestEval\QuestEval-\QuestEval.Shared\bin\Debug\net8.0\QuestEval.Shared.dll
+C:\Users\angel\Desktop\QuestEval\QuestEval-\QuestEval.Shared\bin\Debug\net8.0\QuestEval.Shared.pdb
+C:\Users\angel\Desktop\QuestEval\QuestEval-\QuestEval.Shared\obj\Debug\net8.0\QuestEval.Shared.csproj.AssemblyReference.cache
+C:\Users\angel\Desktop\QuestEval\QuestEval-\QuestEval.Shared\obj\Debug\net8.0\QuestEval.Shared.GeneratedMSBuildEditorConfig.editorconfig
+C:\Users\angel\Desktop\QuestEval\QuestEval-\QuestEval.Shared\obj\Debug\net8.0\QuestEval.Shared.AssemblyInfoInputs.cache
+C:\Users\angel\Desktop\QuestEval\QuestEval-\QuestEval.Shared\obj\Debug\net8.0\QuestEval.Shared.AssemblyInfo.cs
+C:\Users\angel\Desktop\QuestEval\QuestEval-\QuestEval.Shared\obj\Debug\net8.0\QuestEval.Shared.csproj.CoreCompileInputs.cache
+C:\Users\angel\Desktop\QuestEval\QuestEval-\QuestEval.Shared\obj\Debug\net8.0\QuestEval.Shared.sourcelink.json
+C:\Users\angel\Desktop\QuestEval\QuestEval-\QuestEval.Shared\obj\Debug\net8.0\QuestEval.Shared.dll
+C:\Users\angel\Desktop\QuestEval\QuestEval-\QuestEval.Shared\obj\Debug\net8.0\refint\QuestEval.Shared.dll
+C:\Users\angel\Desktop\QuestEval\QuestEval-\QuestEval.Shared\obj\Debug\net8.0\QuestEval.Shared.pdb
+C:\Users\angel\Desktop\QuestEval\QuestEval-\QuestEval.Shared\obj\Debug\net8.0\ref\QuestEval.Shared.dll

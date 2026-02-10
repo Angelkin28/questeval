@@ -1,0 +1,257 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    /* QuestEval Brand Colors - Beige/Gold Palette */
+    --primary: 43 74% 49%;
+    /* Dorado/Mostaza #C9A961 */
+    --primary-foreground: 0 0% 100%;
+
+    /* Secondary Colors */
+    --secondary: 40 20% 92%;
+    /* Beige claro */
+    --secondary-foreground: 30 10% 20%;
+
+    /* Accent Colors */
+    --accent: 43 74% 49%;
+    /* Dorado */
+    --accent-foreground: 0 0% 100%;
+
+    /* Background & Foreground */
+    --background: 40 25% 95%;
+    /* Crema/Beige #F5F1E8 */
+    --foreground: 0 0% 10%;
+    /* Negro suave #1A1A1A */
+
+    /* Muted */
+    --muted: 40 15% 88%;
+    /* Beige medio */
+    --muted-foreground: 30 5% 45%;
+
+    /* Card */
+    --card: 0 0% 100%;
+    /* Blanco para cards */
+    --card-foreground: 0 0% 10%;
+
+    /* Popover */
+    --popover: 0 0% 100%;
+    --popover-foreground: 0 0% 10%;
+
+    /* Border & Input */
+    --border: 40 15% 85%;
+    /* Beige border */
+    --input: 40 15% 90%;
+    --ring: 43 74% 49%;
+    /* Dorado para focus */
+
+    /* Destructive */
+    --destructive: 0 72% 51%;
+    --destructive-foreground: 0 0% 100%;
+
+    /* Chart Colors - Warm palette */
+    --chart-1: 43 74% 49%;
+    /* Dorado */
+    --chart-2: 30 60% 55%;
+    /* Naranja suave */
+    --chart-3: 20 70% 60%;
+    /* Coral */
+    --chart-4: 50 80% 65%;
+    /* Amarillo cálido */
+    --chart-5: 35 65% 50%;
+    /* Terracota */
+
+    /* Border Radius */
+    --radius: 0.5rem;
+  }
+
+  .dark {
+    /* Primary Colors */
+    --primary: 217.2 91.2% 59.8%;
+    --primary-foreground: 222.2 47.4% 11.2%;
+
+    /* Secondary Colors */
+    --secondary: 217.2 32.6% 17.5%;
+    --secondary-foreground: 210 40% 98%;
+
+    /* Accent Colors */
+    --accent: 217.2 32.6% 17.5%;
+    /* QuestEval Dark Mode - Warm Dark Palette */
+    --primary: 43 74% 55%;
+    /* Dorado más brillante */
+    --primary-foreground: 0 0% 10%;
+
+    --secondary: 30 15% 15%;
+    /* Beige oscuro */
+    --secondary-foreground: 40 20% 90%;
+
+    --accent: 43 74% 55%;
+    --accent-foreground: 0 0% 10%;
+
+    --background: 30 10% 8%;
+    /* Negro cálido */
+    --foreground: 40 20% 95%;
+
+    --muted: 30 10% 15%;
+    --muted-foreground: 40 10% 60%;
+
+    --card: 30 10% 12%;
+    --card-foreground: 40 20% 95%;
+
+    --popover: 30 10% 12%;
+    --popover-foreground: 40 20% 95%;
+
+    --border: 30 10% 20%;
+    --input: 30 10% 20%;
+    --ring: 43 74% 55%;
+
+    --destructive: 0 72% 51%;
+    --destructive-foreground: 0 0% 100%;
+
+    --chart-1: 43 74% 55%;
+    --chart-2: 30 60% 60%;
+    --chart-3: 20 70% 65%;
+    --chart-4: 50 80% 70%;
+    --chart-5: 35 65% 55%;
+  }
+}
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+
+  body {
+    @apply bg-background text-foreground;
+    font-feature-settings: "rlig" 1, "calt" 1;
+  }
+
+  /* Smooth scrolling */
+  html {
+    scroll-behavior: smooth;
+  }
+
+  /* Custom scrollbar */
+  ::-webkit-scrollbar {
+    width: 8px;
+    height: 8px;
+  }
+
+  ::-webkit-scrollbar-track {
+    @apply bg-secondary;
+  }
+
+  ::-webkit-scrollbar-thumb {
+    @apply bg-primary/30 rounded-full;
+  }
+
+  ::-webkit-scrollbar-thumb:hover {
+    @apply bg-primary/50;
+  }
+}
+
+/* Animations */
+@keyframes accordion-down {
+  from {
+    height: 0;
+  }
+
+  to {
+    height: var(--radix-accordion-content-height);
+  }
+}
+
+@keyframes accordion-up {
+  from {
+    height: var(--radix-accordion-content-height);
+  }
+
+  to {
+    height: 0;
+  }
+}
+
+@keyframes fade-in {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes slide-in-right {
+  from {
+    opacity: 0;
+    transform: translateX(20px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+@keyframes pulse-glow {
+
+  0%,
+  100% {
+    box-shadow: 0 0 20px hsl(var(--primary) / 0.3);
+  }
+
+  50% {
+    box-shadow: 0 0 40px hsl(var(--primary) / 0.6);
+  }
+}
+
+.animate-accordion-down {
+  animation: accordion-down 0.2s ease-out;
+}
+
+.animate-accordion-up {
+  animation: accordion-up 0.2s ease-out;
+}
+
+.animate-fade-in {
+  animation: fade-in 0.5s ease-out;
+}
+
+.animate-slide-in-right {
+  animation: slide-in-right 0.4s ease-out;
+}
+
+.animate-pulse-glow {
+  animation: pulse-glow 2s ease-in-out infinite;
+}
+
+/* Glassmorphism effect */
+.glass {
+  background: rgba(255, 255, 255, 0.1);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+}
+
+.dark .glass {
+  background: rgba(0, 0, 0, 0.2);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+/* Gradient text - Gold tones */
+.gradient-text {
+  background: linear-gradient(135deg, #C9A961 0%, #D4AF37 50%, #B8860B 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+/* Serif titles */
+.title-serif {
+  font-family: var(--font-playfair), serif;
+  font-weight: 600;
+  letter-spacing: -0.02em;
+}

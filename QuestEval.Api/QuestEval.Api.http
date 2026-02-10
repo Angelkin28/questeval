@@ -1,6 +1,0 @@
-@QuestEval.Api_HostAddress = http://localhost:5122
-
-GET {{QuestEval.Api_HostAddress}}/weatherforecast/
-Accept: application/json
-
-###

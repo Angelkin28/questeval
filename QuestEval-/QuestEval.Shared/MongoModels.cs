@@ -23,6 +23,7 @@ public class User
     public string? Id { get; set; }
 
     public string Email { get; set; } = null!;
+    public string Enrollment { get; set; } = null!;
     public string PasswordHash { get; set; } = null!; // Hashed password
     public string FullName { get; set; } = null!;
     public string Role { get; set; } = "Alumno"; // Alumno, Profesor, Admin

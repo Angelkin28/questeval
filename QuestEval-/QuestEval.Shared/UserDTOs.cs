@@ -4,6 +4,7 @@ namespace QuestEval.Shared.Models;
 public class RegisterRequest
 {
     public string Email { get; set; } = null!;
+    public string Enrollment { get; set; } = null!;
     public string Password { get; set; } = null!;
     public string FullName { get; set; } = null!;
     public string Role { get; set; } = "Alumno"; // Default role
@@ -19,6 +20,7 @@ public class LoginResponse
 {
     public string UserId { get; set; } = null!;
     public string Email { get; set; } = null!;
+    public string Enrollment { get; set; } = null!;
     public string FullName { get; set; } = null!;
     public string Role { get; set; } = null!;
     public string? AvatarUrl { get; set; }
@@ -29,6 +31,7 @@ public class UserResponse
 {
     public string Id { get; set; } = null!;
     public string Email { get; set; } = null!;
+    public string Enrollment { get; set; } = null!;
     public string FullName { get; set; } = null!;
     public string Role { get; set; } = null!;
     public string? AvatarUrl { get; set; }
