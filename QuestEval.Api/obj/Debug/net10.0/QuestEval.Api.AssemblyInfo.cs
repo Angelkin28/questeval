@@ -13,7 +13,7 @@ using System.Reflection;
 [assembly: System.Reflection.AssemblyCompanyAttribute("QuestEval.Api")]
 [assembly: System.Reflection.AssemblyConfigurationAttribute("Debug")]
 [assembly: System.Reflection.AssemblyFileVersionAttribute("1.0.0.0")]
-[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+28e3c610e91ef42ec1ab1e56c8a6a20a4bbe33bd")]
+[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+8e9c75c0063c2ac42d496d82ba150018366a68c9")]
 [assembly: System.Reflection.AssemblyProductAttribute("QuestEval.Api")]
 [assembly: System.Reflection.AssemblyTitleAttribute("QuestEval.Api")]
 [assembly: System.Reflection.AssemblyVersionAttribute("1.0.0.0")]

@@ -1,0 +1,377 @@
+<?xml version="1.0"?>
+<doc>
+    <assembly>
+        <name>QuestEval.Api</name>
+    </assembly>
+    <members>
+        <member name="T:QuestEval.Api.Controllers.CriteriaController">
+            <summary>
+            Manages evaluation criteria
+            </summary>
+        </member>
+        <member name="M:QuestEval.Api.Controllers.CriteriaController.Get">
+            <summary>
+            Get all criteria
+            </summary>
+            <returns>List of all criteria</returns>
+            <response code="200">Returns the list of criteria</response>
+        </member>
+        <member name="M:QuestEval.Api.Controllers.CriteriaController.Get(System.String)">
+            <summary>
+            Get a specific criterion by ID
+            </summary>
+            <param name="id">The criterion ID</param>
+            <returns>The requested criterion</returns>
+            <response code="200">Returns the criterion</response>
+            <response code="404">If the criterion is not found</response>
+        </member>
+        <member name="M:QuestEval.Api.Controllers.CriteriaController.Post(QuestEval.Shared.Models.CreateCriterionRequest)">
+            <summary>
+            Create a new criterion
+            </summary>
+            <param name="request">Criterion details</param>
+            <returns>The created criterion</returns>
+            <response code="201">Returns the newly created criterion</response>
+            <response code="400">If the request is invalid</response>
+        </member>
+        <member name="M:QuestEval.Api.Controllers.CriteriaController.Update(System.String,QuestEval.Shared.Models.CreateCriterionRequest)">
+            <summary>
+            Update an existing criterion
+            </summary>
+            <param name="id">The criterion ID</param>
+            <param name="request">Updated criterion details</param>
+            <returns>No content</returns>
+            <response code="204">If the criterion was updated successfully</response>
+            <response code="404">If the criterion is not found</response>
+        </member>
+        <member name="M:QuestEval.Api.Controllers.CriteriaController.Delete(System.String)">
+            <summary>
+            Delete a criterion
+            </summary>
+            <param name="id">The criterion ID</param>
+            <returns>No content</returns>
+            <response code="204">If the criterion was deleted successfully</response>
+            <response code="404">If the criterion is not found</response>
+        </member>
+        <member name="T:QuestEval.Api.Controllers.EvaluationsController">
+            <summary>
+            Manages project evaluations
+            </summary>
+        </member>
+        <member name="M:QuestEval.Api.Controllers.EvaluationsController.Get">
+            <summary>
+            Get all evaluations
+            </summary>
+            <returns>List of all evaluations</returns>
+            <response code="200">Returns the list of evaluations</response>
+        </member>
+        <member name="M:QuestEval.Api.Controllers.EvaluationsController.Get(System.String)">
+            <summary>
+            Get a specific evaluation by ID
+            </summary>
+            <param name="id">The evaluation ID</param>
+            <returns>The requested evaluation</returns>
+            <response code="200">Returns the evaluation</response>
+            <response code="404">If the evaluation is not found</response>
+        </member>
+        <member name="M:QuestEval.Api.Controllers.EvaluationsController.Post(QuestEval.Shared.Models.CreateEvaluationRequest)">
+            <summary>
+            Create a new evaluation
+            </summary>
+            <param name="request">Evaluation details</param>
+            <returns>The created evaluation</returns>
+            <response code="201">Returns the newly created evaluation</response>
+            <response code="400">If the request is invalid</response>
+        </member>
+        <member name="M:QuestEval.Api.Controllers.EvaluationsController.Delete(System.String)">
+            <summary>
+            Delete an evaluation
+            </summary>
+            <param name="id">The evaluation ID</param>
+            <returns>No content</returns>
+            <response code="204">If the evaluation was deleted successfully</response>
+            <response code="404">If the evaluation is not found</response>
+        </member>
+        <member name="T:QuestEval.Api.Controllers.FeedbackController">
+            <summary>
+            Manages evaluation feedback
+            </summary>
+        </member>
+        <member name="M:QuestEval.Api.Controllers.FeedbackController.Get">
+            <summary>
+            Get all feedback
+            </summary>
+            <returns>List of all feedback</returns>
+            <response code="200">Returns the list of feedback</response>
+        </member>
+        <member name="M:QuestEval.Api.Controllers.FeedbackController.Get(System.String)">
+            <summary>
+            Get a specific feedback by ID
+            </summary>
+            <param name="id">The feedback ID</param>
+            <returns>The requested feedback</returns>
+            <response code="200">Returns the feedback</response>
+            <response code="404">If the feedback is not found</response>
+        </member>
+        <member name="M:QuestEval.Api.Controllers.FeedbackController.Post(QuestEval.Shared.Models.CreateFeedbackRequest)">
+            <summary>
+            Create new feedback
+            </summary>
+            <param name="request">Feedback details</param>
+            <returns>The created feedback</returns>
+            <response code="201">Returns the newly created feedback</response>
+            <response code="400">If the request is invalid</response>
+        </member>
+        <member name="M:QuestEval.Api.Controllers.FeedbackController.Delete(System.String)">
+            <summary>
+            Delete feedback
+            </summary>
+            <param name="id">The feedback ID</param>
+            <returns>No content</returns>
+            <response code="204">If the feedback was deleted successfully</response>
+            <response code="404">If the feedback is not found</response>
+        </member>
+        <member name="T:QuestEval.Api.Controllers.GroupsController">
+            <summary>
+            Manages student groups
+            </summary>
+        </member>
+        <member name="M:QuestEval.Api.Controllers.GroupsController.Get">
+            <summary>
+            Get all groups
+            </summary>
+            <returns>List of all groups</returns>
+            <response code="200">Returns the list of groups</response>
+        </member>
+        <member name="M:QuestEval.Api.Controllers.GroupsController.Get(System.String)">
+            <summary>
+            Get a specific group by ID
+            </summary>
+            <param name="id">The group ID</param>
+            <returns>The requested group</returns>
+            <response code="200">Returns the group</response>
+            <response code="404">If the group is not found</response>
+        </member>
+        <member name="M:QuestEval.Api.Controllers.GroupsController.Post(QuestEval.Shared.Models.CreateGroupRequest)">
+            <summary>
+            Create a new group
+            </summary>
+            <param name="request">Group details</param>
+            <returns>The created group</returns>
+            <response code="201">Returns the newly created group</response>
+            <response code="400">If the request is invalid</response>
+        </member>
+        <member name="M:QuestEval.Api.Controllers.GroupsController.Update(System.String,QuestEval.Shared.Models.UpdateGroupRequest)">
+            <summary>
+            Update an existing group
+            </summary>
+            <param name="id">The group ID</param>
+            <param name="request">Updated group details</param>
+            <returns>No content</returns>
+            <response code="204">If the group was updated successfully</response>
+            <response code="404">If the group is not found</response>
+        </member>
+        <member name="M:QuestEval.Api.Controllers.GroupsController.Delete(System.String)">
+            <summary>
+            Delete a group
+            </summary>
+            <param name="id">The group ID</param>
+            <returns>No content</returns>
+            <response code="204">If the group was deleted successfully</response>
+            <response code="404">If the group is not found</response>
+        </member>
+        <member name="T:QuestEval.Api.Controllers.MembershipsController">
+            <summary>
+            Manages group memberships
+            </summary>
+        </member>
+        <member name="M:QuestEval.Api.Controllers.MembershipsController.Get">
+            <summary>
+            Get all memberships
+            </summary>
+            <returns>List of all memberships</returns>
+            <response code="200">Returns the list of memberships</response>
+        </member>
+        <member name="M:QuestEval.Api.Controllers.MembershipsController.Get(System.String)">
+            <summary>
+            Get a specific membership by ID
+            </summary>
+            <param name="id">The membership ID</param>
+            <returns>The requested membership</returns>
+            <response code="200">Returns the membership</response>
+            <response code="404">If the membership is not found</response>
+        </member>
+        <member name="M:QuestEval.Api.Controllers.MembershipsController.Post(QuestEval.Shared.Models.CreateMembershipRequest)">
+            <summary>
+            Create a new membership (join a group)
+            </summary>
+            <param name="request">Membership details</param>
+            <returns>The created membership</returns>
+            <response code="201">Returns the newly created membership</response>
+            <response code="400">If the request is invalid</response>
+        </member>
+        <member name="M:QuestEval.Api.Controllers.MembershipsController.Delete(System.String)">
+            <summary>
+            Delete a membership (leave a group)
+            </summary>
+            <param name="id">The membership ID</param>
+            <returns>No content</returns>
+            <response code="204">If the membership was deleted successfully</response>
+            <response code="404">If the membership is not found</response>
+        </member>
+        <member name="T:QuestEval.Api.Controllers.ProjectsController">
+            <summary>
+            Manages student projects
+            </summary>
+        </member>
+        <member name="M:QuestEval.Api.Controllers.ProjectsController.Get">
+            <summary>
+            Get all projects
+            </summary>
+            <returns>List of all projects</returns>
+            <response code="200">Returns the list of projects</response>
+        </member>
+        <member name="M:QuestEval.Api.Controllers.ProjectsController.Get(System.String)">
+            <summary>
+            Get a specific project by ID
+            </summary>
+            <param name="id">The project ID</param>
+            <returns>The requested project</returns>
+            <response code="200">Returns the project</response>
+            <response code="404">If the project is not found</response>
+        </member>
+        <member name="M:QuestEval.Api.Controllers.ProjectsController.Post(QuestEval.Shared.Models.CreateProjectRequest)">
+            <summary>
+            Create a new project
+            </summary>
+            <param name="request">Project details</param>
+            <returns>The created project</returns>
+            <response code="201">Returns the newly created project</response>
+            <response code="400">If the request is invalid</response>
+        </member>
+        <member name="M:QuestEval.Api.Controllers.ProjectsController.Update(System.String,QuestEval.Shared.Models.CreateProjectRequest)">
+            <summary>
+            Update an existing project
+            </summary>
+            <param name="id">The project ID</param>
+            <param name="request">Updated project details</param>
+            <returns>No content</returns>
+            <response code="204">If the project was updated successfully</response>
+            <response code="404">If the project is not found</response>
+        </member>
+        <member name="M:QuestEval.Api.Controllers.ProjectsController.Delete(System.String)">
+            <summary>
+            Delete a project
+            </summary>
+            <param name="id">The project ID</param>
+            <returns>No content</returns>
+            <response code="204">If the project was deleted successfully</response>
+            <response code="404">If the project is not found</response>
+        </member>
+        <member name="T:QuestEval.Api.Controllers.UsersController">
+            <summary>
+            Manages user authentication and registration
+            </summary>
+        </member>
+        <member name="M:QuestEval.Api.Controllers.UsersController.Register(QuestEval.Shared.Models.RegisterRequest)">
+            <summary>
+            Register a new user
+            </summary>
+            <param name="request">User registration details</param>
+            <returns>The created user</returns>
+            <response code="201">Returns the newly created user</response>
+            <response code="400">If the request is invalid or email already exists</response>
+        </member>
+        <member name="M:QuestEval.Api.Controllers.UsersController.Login(QuestEval.Shared.Models.LoginRequest)">
+            <summary>
+            Login with email and password
+            </summary>
+            <param name="request">Login credentials</param>
+            <returns>User information and authentication token</returns>
+            <response code="200">Returns user information and token</response>
+            <response code="401">If credentials are invalid</response>
+            <response code="400">If the request is invalid</response>
+        </member>
+        <member name="M:QuestEval.Api.Controllers.UsersController.Get">
+            <summary>
+            Get all users
+            </summary>
+            <returns>List of all users</returns>
+            <response code="200">Returns the list of users</response>
+        </member>
+        <member name="T:QuestEval.Api.Helpers.ValidationHelper">
+            <summary>
+            Helper methods for validating MongoDB ObjectIds and other common validations
+            </summary>
+        </member>
+        <member name="M:QuestEval.Api.Helpers.ValidationHelper.IsValidObjectId(System.String)">
+            <summary>
+            Validates if a string is a valid MongoDB ObjectId format
+            </summary>
+        </member>
+        <member name="M:QuestEval.Api.Helpers.ValidationHelper.ValidateObjectId(System.String,System.String)">
+            <summary>
+            Validates if a string is a valid MongoDB ObjectId and throws if not
+            </summary>
+        </member>
+        <member name="M:QuestEval.Api.Helpers.ValidationHelper.ValidateObjectIds(System.ValueTuple{System.String,System.String}[])">
+            <summary>
+            Validates multiple ObjectIds at once
+            </summary>
+        </member>
+        <member name="T:QuestEval.Api.Middlewares.GlobalExceptionHandler">
+            <summary>
+            Global exception handler to catch unhandled exceptions and return consistent error responses
+            </summary>
+        </member>
+        <member name="T:Program">
+            <summary>
+            Auto-generated public partial Program class for top-level statement apps.
+            </summary>
+        </member>
+        <member name="M:Microsoft.AspNetCore.OpenApi.Generated.DocumentationCommentIdHelper.CreateDocumentationId(System.Type)">
+            <summary>
+            Generates a documentation comment ID for a type.
+            Example: T:Namespace.Outer+Inner`1 becomes T:Namespace.Outer.Inner`1
+            </summary>
+        </member>
+        <member name="M:Microsoft.AspNetCore.OpenApi.Generated.DocumentationCommentIdHelper.CreateDocumentationId(System.Reflection.PropertyInfo)">
+            <summary>
+            Generates a documentation comment ID for a property.
+            Example: P:Namespace.ContainingType.PropertyName or for an indexer P:Namespace.ContainingType.Item(System.Int32)
+            </summary>
+        </member>
+        <member name="M:Microsoft.AspNetCore.OpenApi.Generated.DocumentationCommentIdHelper.CreateDocumentationId(System.Type,System.String)">
+            <summary>
+            Generates a documentation comment ID for a property given its container type and property name.
+            Example: P:Namespace.ContainingType.PropertyName
+            </summary>
+        </member>
+        <member name="M:Microsoft.AspNetCore.OpenApi.Generated.DocumentationCommentIdHelper.CreateDocumentationId(System.Reflection.MethodInfo)">
+            <summary>
+            Generates a documentation comment ID for a method (or constructor).
+            For example:
+              M:Namespace.ContainingType.MethodName(ParamType1,ParamType2)~ReturnType
+              M:Namespace.ContainingType.#ctor(ParamType)
+            </summary>
+        </member>
+        <member name="M:Microsoft.AspNetCore.OpenApi.Generated.DocumentationCommentIdHelper.GetTypeDocId(System.Type,System.Boolean,System.Boolean)">
+            <summary>
+            Generates a documentation ID string for a type.
+            This method handles nested types (replacing '+' with '.'),
+            generic types, arrays, pointers, by-ref types, and generic parameters.
+            The <paramref name="includeGenericArguments"/> flag controls whether
+            constructed generic type arguments are emitted, while <paramref name="omitGenericArity"/>
+            controls whether the generic arity marker (e.g. "`1") is appended.
+            </summary>
+        </member>
+        <member name="M:Microsoft.AspNetCore.OpenApi.Generated.DocumentationCommentIdHelper.NormalizeDocId(System.String)">
+            <summary>
+            Normalizes a documentation comment ID to match the compiler-style format.
+            Strips the return type suffix for ordinary methods but retains it for conversion operators.
+            </summary>
+            <param name="docId">The documentation comment ID to normalize.</param>
+            <returns>The normalized documentation comment ID.</returns>
+        </member>
+    </members>
+</doc>

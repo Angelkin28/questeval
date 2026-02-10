@@ -68,34 +68,70 @@ public class QuestEvalService
     public async Task<List<Membership>> GetMembershipsAsync() =>
         await _membershipsCollection.Find(_ => true).ToListAsync();
 
+    public async Task<Membership?> GetMembershipAsync(string id) =>
+        await _membershipsCollection.Find(x => x.Id == id).FirstOrDefaultAsync();
+
     public async Task CreateMembershipAsync(Membership newMembership) =>
         await _membershipsCollection.InsertOneAsync(newMembership);
+
+    public async Task RemoveMembershipAsync(string id) =>
+        await _membershipsCollection.DeleteOneAsync(x => x.Id == id);
 
     // Projects
     public async Task<List<Project>> GetProjectsAsync() =>
         await _projectsCollection.Find(_ => true).ToListAsync();
 
+    public async Task<Project?> GetProjectAsync(string id) =>
+        await _projectsCollection.Find(x => x.Id == id).FirstOrDefaultAsync();
+
     public async Task CreateProjectAsync(Project newProject) =>
         await _projectsCollection.InsertOneAsync(newProject);
+
+    public async Task UpdateProjectAsync(string id, Project updatedProject) =>
+        await _projectsCollection.ReplaceOneAsync(x => x.Id == id, updatedProject);
+
+    public async Task RemoveProjectAsync(string id) =>
+        await _projectsCollection.DeleteOneAsync(x => x.Id == id);
 
     // Criteria
     public async Task<List<Criterion>> GetCriteriaAsync() =>
         await _criteriaCollection.Find(_ => true).ToListAsync();
 
+    public async Task<Criterion?> GetCriterionAsync(string id) =>
+        await _criteriaCollection.Find(x => x.Id == id).FirstOrDefaultAsync();
+
     public async Task CreateCriterionAsync(Criterion newCriterion) =>
         await _criteriaCollection.InsertOneAsync(newCriterion);
+
+    public async Task UpdateCriterionAsync(string id, Criterion updatedCriterion) =>
+        await _criteriaCollection.ReplaceOneAsync(x => x.Id == id, updatedCriterion);
+
+    public async Task RemoveCriterionAsync(string id) =>
+        await _criteriaCollection.DeleteOneAsync(x => x.Id == id);
 
     // Evaluations
     public async Task<List<Evaluation>> GetEvaluationsAsync() =>
         await _evaluationsCollection.Find(_ => true).ToListAsync();
 
+    public async Task<Evaluation?> GetEvaluationAsync(string id) =>
+        await _evaluationsCollection.Find(x => x.Id == id).FirstOrDefaultAsync();
+
     public async Task CreateEvaluationAsync(Evaluation newEvaluation) =>
         await _evaluationsCollection.InsertOneAsync(newEvaluation);
+
+    public async Task RemoveEvaluationAsync(string id) =>
+        await _evaluationsCollection.DeleteOneAsync(x => x.Id == id);
 
     // Feedback
     public async Task<List<Feedback>> GetFeedbackAsync() =>
         await _feedbackCollection.Find(_ => true).ToListAsync();
 
+    public async Task<Feedback?> GetFeedbackByIdAsync(string id) =>
+        await _feedbackCollection.Find(x => x.Id == id).FirstOrDefaultAsync();
+
     public async Task CreateFeedbackAsync(Feedback newFeedback) =>
         await _feedbackCollection.InsertOneAsync(newFeedback);
+
+    public async Task RemoveFeedbackAsync(string id) =>
+        await _feedbackCollection.DeleteOneAsync(x => x.Id == id);
 }

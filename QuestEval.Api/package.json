@@ -3,5 +3,8 @@
     "@tailwindcss/vite": "^4.1.18",
     "axios": "^1.13.5",
     "tailwindcss": "^4.1.18"
+  },
+  "devDependencies": {
+    "@types/node": "^25.2.2"
   }
 }
