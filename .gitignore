@@ -2,3 +2,39 @@
 .env
 .env.local
 .env.*.local
+
+# Build outputs - Backend
+Backend/bin/
+Backend/obj/
+*.dll
+*.pdb
+
+# Build outputs - Frontend
+Frontend/node_modules/
+Frontend/dist/
+Frontend/build/
+
+# IDE y editores
+.vs/
+.vscode/
+.idea/
+*.user
+*.suo
+*.userprefs
+
+# Logs
+*.log
+build-log.txt
+build_detail.log
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Test coverage
+coverage/
+*.coverage
+
+# Agents
+.agents/
+.agent/
