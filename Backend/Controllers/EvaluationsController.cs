@@ -1,4 +1,4 @@
-using Microsoft.AspNetCore.Mvc;
+Ôªøusing Microsoft.AspNetCore.Mvc;
 using Backend.Models;
 using Backend.Services.Interfaces;
 
@@ -21,7 +21,7 @@ public class EvaluationsController : ControllerBase
     /// Obtener todos los evaluations
     /// </summary>
     /// <returns>Lista de todas las evaluaciones</returns>
-    /// <response code="200">Retorna la lista de evaluations</response>
+    /// <response code=\200\>Retorna la lista de evaluations</response>
     [HttpGet]
     [ProducesResponseType(typeof(List<EvaluationResponse>), StatusCodes.Status200OK)]
     public async Task<ActionResult<List<EvaluationResponse>>> Get()
@@ -48,10 +48,10 @@ public class EvaluationsController : ControllerBase
     /// <summary>
     /// Obtener un evaluation by ID
     /// </summary>
-    /// <param name="id">El ID de la evaluaciÛn</param>
+    /// <param name=\id\>El ID de la evaluaci√≥n</param>
     /// <returns>El recurso solicitado de evaluation</returns>
-    /// <response code="200">Retorna el evaluation</response>
-    /// <response code="404">Si el recurso no se encuentra</response>
+    /// <response code=\200\>Retorna el evaluation</response>
+    /// <response code=\404\>Si el recurso no se encuentra</response>
     [HttpGet("{id:length(24)}")]
     [ProducesResponseType(typeof(EvaluationResponse), StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
@@ -82,14 +82,42 @@ public class EvaluationsController : ControllerBase
 
         return Ok(response);
     }
+    
+    /// <summary>
+    /// Obtener evaluaciones de un proyecto
+    /// </summary>
+    /// <param name=\projectId\>El ID del proyecto</param>
+    /// <returns>Lista de evaluaciones del proyecto</returns>
+    [HttpGet("project/{projectId}")]
+    [ProducesResponseType(typeof(List<EvaluationResponse>), StatusCodes.Status200OK)]
+    public async Task<ActionResult<List<EvaluationResponse>>> GetByProject(string projectId)
+    {
+        var evaluations = await _service.GetByProjectIdAsync(projectId);
+        var response = evaluations.Select(e => new EvaluationResponse
+        {
+            Id = e.Id!,
+            ProjectId = e.ProjectId,
+            EvaluatorId = e.EvaluatorId,
+            FinalScore = e.FinalScore,
+            Details = e.Details.Select(d => new EvaluationDetailResponse
+            {
+                CriterionId = d.CriterionId,
+                CriterionName = d.CriterionName,
+                Score = d.Score
+            }).ToList(),
+            CreatedAt = e.CreatedAt,
+            UpdatedAt = e.UpdatedAt
+        }).ToList();
+        return Ok(response);
+    }
 
     /// <summary>
     /// Crear un nuevo evaluation
     /// </summary>
-    /// <param name="request">Detalles de la evaluaciÛn</param>
+    /// <param name=\request\>Detalles de la evaluaci√≥n</param>
     /// <returns>The created evaluation</returns>
-    /// <response code="201">Retorna el newly created evaluation</response>
-    /// <response code="400">Si la solicitud es inv·lida</response>
+    /// <response code=\201\>Retorna el newly created evaluation</response>
+    /// <response code=\400\>Si la solicitud es inv√°lida</response>
     [HttpPost]
     [ProducesResponseType(typeof(EvaluationResponse), StatusCodes.Status201Created)]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
@@ -134,10 +162,10 @@ public class EvaluationsController : ControllerBase
     /// <summary>
     /// Eliminar un evaluation
     /// </summary>
-    /// <param name="id">El ID de la evaluaciÛn</param>
+    /// <param name=\id\>El ID de la evaluaci√≥n</param>
     /// <returns>Sin contenido</returns>
-    /// <response code="204">Si se completÛ exitosamente</response>
-    /// <response code="404">Si el recurso no se encuentra</response>
+    /// <response code=\204\>Si se complet√≥ exitosamente</response>
+    /// <response code=\404\>Si el recurso no se encuentra</response>
     [HttpDelete("{id:length(24)}")]
     [ProducesResponseType(StatusCodes.Status204NoContent)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]

@@ -51,6 +51,13 @@ public class EvaluationsService : IEvaluationsService
         await _collection.Find(x => x.Id == id).FirstOrDefaultAsync();
 
     /// <summary>
+    /// Obtiene evaluaciones por ProjectId.
+    /// </summary>
+    /// <param name="projectId">ID del proyecto</param>
+    public async Task<List<Evaluation>> GetByProjectIdAsync(string projectId) =>
+        await _collection.Find(x => x.ProjectId == projectId).ToListAsync();
+
+    /// <summary>
     /// Crea una nueva evaluación de un proyecto.
     /// 
     /// VALIDACIONES IMPORTANTES ANTES DE LLAMAR:

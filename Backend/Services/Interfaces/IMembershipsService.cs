@@ -20,6 +20,10 @@ public interface IMembershipsService
     /// <param name="id">ID de la membresía (MongoDB ObjectId)</param>
     /// <returns>La membresía encontrada o null si no existe</returns>
     Task<Membership?> GetByIdAsync(string id);
+    
+    Task<List<Membership>> GetByUserIdAsync(string userId);
+    
+    Task<List<Membership>> GetByGroupIdAsync(string groupId);
 
     /// <summary>
     /// Crea una nueva membresía (usuario se une a un grupo).

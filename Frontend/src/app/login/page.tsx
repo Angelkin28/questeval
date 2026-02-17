@@ -35,8 +35,34 @@ export default function LoginPage() {
                 email: formData.email,
                 password: formData.password
             });
+
+            // Guardar token inmediatamente
             localStorage.setItem('token', response.token);
             localStorage.setItem('user', JSON.stringify(response));
+
+            // Lógica de verificación y aprobación
+            if (response.emailVerified === false) {
+                router.push(`/verify-otp?email=${encodeURIComponent(formData.email)}&role=${response.role}`);
+                return;
+            }
+
+            if (response.role === 'Admin') {
+                router.push('/admin/dashboard');
+                return;
+            }
+
+            if (response.role === 'Profesor' && response.verificationStatus === 'pending') {
+                router.push('/waiting-approval');
+                return;
+            }
+
+            if (response.role === 'Profesor' && response.verificationStatus === 'rejected') {
+                setError('Tu cuenta ha sido rechazada. Contacta al administrador.');
+                localStorage.removeItem('token'); // Limpiar token si fue rechazado
+                localStorage.removeItem('user');
+                return;
+            }
+
             router.push('/dashboard');
         } catch (err: any) {
             // Demo fallback si falla API

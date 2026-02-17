@@ -34,6 +34,12 @@ public class User
     public string Role { get; set; } = "Alumno"; // Alumno, Profesor, Admin
     public string? AvatarUrl { get; set; }
     
+    // Campos de verificación de email y aprobación
+    public bool EmailVerified { get; set; } = false; // Si el email fue verificado con OTP
+    public string VerificationStatus { get; set; } = "pending"; // pending, approved, rejected (solo para Profesores)
+    public DateTime? ApprovedAt { get; set; } // Fecha de aprobación por admin
+    public string? ApprovedBy { get; set; } // ID del admin que aprobó
+    
     public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
     public DateTime UpdatedAt { get; set; } = DateTime.UtcNow;
 }
@@ -84,6 +90,10 @@ public class Project
 
     public string Name { get; set; } = null!;
     public string Description { get; set; } = null!;
+    public string Category { get; set; } = "Integrador"; // New field
+    public string? VideoUrl { get; set; }
+    public string? ThumbnailUrl { get; set; }
+    public List<string> TeamMembers { get; set; } = new List<string>();
 
     [BsonRepresentation(BsonType.ObjectId)]
     public string GroupId { get; set; } = null!;

@@ -19,7 +19,8 @@ import {
     Loader2
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
-import { api } from '@/lib/api';
+import { api, Group } from '@/lib/api';
+import { useEffect } from 'react';
 
 export default function NewProjectPage() {
     const router = useRouter();
@@ -35,6 +36,27 @@ export default function NewProjectPage() {
         coverImage: null as File | null,
         teamMembers: [] as string[]
     });
+
+
+
+    // Add group selection state
+    const [groups, setGroups] = useState<Group[]>([]);
+    const [selectedGroupId, setSelectedGroupId] = useState('');
+
+    useEffect(() => {
+        const fetchGroups = async () => {
+            try {
+                const myGroups = await api.groups.getMyGroups();
+                setGroups(myGroups);
+                if (myGroups.length > 0) {
+                    setSelectedGroupId(myGroups[0].id);
+                }
+            } catch (err) {
+                console.error("Error loading groups", err);
+            }
+        };
+        fetchGroups();
+    }, []);
 
     const [memberInput, setMemberInput] = useState('');
 
@@ -66,22 +88,44 @@ export default function NewProjectPage() {
     const handleSubmit = async () => {
         setIsLoading(true);
         try {
+            let coverImageUrl = '';
+
+            // Subir imagen si existe
+            if (formData.coverImage) {
+                try {
+                    const uploadResult = await api.storage.upload(formData.coverImage);
+                    coverImageUrl = uploadResult.url;
+                } catch (uploadError) {
+                    console.error('Error al subir imagen:', uploadError);
+                    // Podríamos mostrar un toast de error pero permitimos continuar sin imagen
+                    // o lanzar el error para detener el proceso
+                }
+            }
+
             // Llamada real a la API
+            if (!selectedGroupId) {
+                alert('Debes seleccionar un grupo para este proyecto.');
+                setIsLoading(false);
+                return;
+            }
+
             await api.projects.create({
                 name: formData.name,
                 description: formData.description,
                 category: formData.category,
                 status: 'In Progress',
                 videoUrl: formData.videoUrl,
-                // Nota: La subida de imagen real requeriría un endpoint de S3 o similar.
-                // Por ahora enviamos los datos textuales.
+                thumbnailUrl: coverImageUrl,
+                groupId: selectedGroupId,
+                teamMembers: formData.teamMembers
             });
 
             router.push('/dashboard');
         } catch (error) {
             console.error('Error al crear proyecto:', error);
-            // Fallback para demo si falla la API
-            setTimeout(() => router.push('/dashboard'), 1500);
+            // Fallback para demo si falla la API (comentado para forzar uso real)
+            // setTimeout(() => router.push('/dashboard'), 1500);
+            alert('Error al crear proyecto. Revisa la consola.');
         } finally {
             setIsLoading(false);
         }
@@ -130,6 +174,25 @@ export default function NewProjectPage() {
                                             value={formData.name}
                                             onChange={handleInputChange}
                                         />
+                                    </div>
+
+                                    <div>
+                                        <label className="text-sm font-medium mb-1 block">Grupo Académico</label>
+                                        <select
+                                            className="w-full h-10 px-3 rounded-md border border-input bg-background text-sm ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
+                                            value={selectedGroupId}
+                                            onChange={(e) => setSelectedGroupId(e.target.value)}
+                                        >
+                                            <option value="" disabled>Selecciona un grupo</option>
+                                            {groups.map(g => (
+                                                <option key={g.id} value={g.id}>{g.name} ({g.accessCode})</option>
+                                            ))}
+                                        </select>
+                                        {groups.length === 0 && (
+                                            <p className="text-xs text-destructive mt-1">
+                                                No estás inscrito en ningún grupo. Únete a uno primero.
+                                            </p>
+                                        )}
                                     </div>
 
                                     <div>

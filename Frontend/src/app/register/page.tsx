@@ -16,7 +16,7 @@ export default function RegisterPage() {
         email: '',
         password: '',
         confirmPassword: '',
-        role: 'Alumno' as 'Alumno' | 'Maestro'
+        role: 'Alumno' as 'Alumno' | 'Profesor'
     });
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState('');
@@ -53,8 +53,21 @@ export default function RegisterPage() {
                 fullName: formData.fullName,
                 role: formData.role
             });
-            // Redirigir al login tras éxito
-            router.push('/login');
+
+            // Enviar OTP automáticamente
+            try {
+                await fetch('http://localhost:5122/api/Users/send-otp', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ email: formData.email })
+                });
+            } catch (otpError) {
+                console.error('Error enviando OTP:', otpError);
+                // Continuamos aunque falle el envío automático, el usuario puede pedir reenvío
+            }
+
+            // Redirigir a verificación
+            router.push(`/verify-otp?email=${encodeURIComponent(formData.email)}&role=${formData.role}`);
         } catch (err: any) {
             setError(err.message || 'Error al registrarse');
         } finally {
@@ -107,8 +120,8 @@ export default function RegisterPage() {
                                 </button>
                                 <button
                                     type="button"
-                                    onClick={() => setFormData({ ...formData, role: 'Maestro' })}
-                                    className={`flex-1 h-10 text-[10px] font-bold uppercase tracking-widest rounded-lg border-2 transition-all ${formData.role === 'Maestro' ? 'bg-black text-white border-black' : 'bg-transparent text-muted-foreground border-muted-foreground/20'}`}
+                                    onClick={() => setFormData({ ...formData, role: 'Profesor' })}
+                                    className={`flex-1 h-10 text-[10px] font-bold uppercase tracking-widest rounded-lg border-2 transition-all ${formData.role === 'Profesor' ? 'bg-black text-white border-black' : 'bg-transparent text-muted-foreground border-muted-foreground/20'}`}
                                 >
                                     Maestro
                                 </button>

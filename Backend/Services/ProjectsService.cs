@@ -42,6 +42,13 @@ public class ProjectsService : IProjectsService
         await _collection.Find(x => x.Id == id).FirstOrDefaultAsync();
 
     /// <summary>
+    /// Obtiene todos los proyectos que pertenecen a un grupo especfico.
+    /// til para mostrar proyectos en la lista de grupos o en el perfil de usuario.
+    /// </summary>
+    public async Task<List<Project>> GetByGroupIdAsync(string groupId) =>
+        await _collection.Find(x => x.GroupId == groupId).ToListAsync();
+
+    /// <summary>
     /// Crea un nuevo proyecto en la base de datos.
     /// VALIDACIONES PREVIAS RECOMENDADAS:
     /// - Verificar que el GroupId exista

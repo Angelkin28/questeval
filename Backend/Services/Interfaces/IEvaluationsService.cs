@@ -20,6 +20,7 @@ public interface IEvaluationsService
     /// <param name="id">ID de la evaluación (MongoDB ObjectId)</param>
     /// <returns>La evaluación encontrada o null si no existe</returns>
     Task<Evaluation?> GetByIdAsync(string id);
+    Task<List<Evaluation>> GetByProjectIdAsync(string projectId);
 
     /// <summary>
     /// Crea una nueva evaluación para un proyecto.

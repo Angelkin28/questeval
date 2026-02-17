@@ -50,6 +50,18 @@ public class MembershipsService : IMembershipsService
         await _collection.Find(x => x.Id == id).FirstOrDefaultAsync();
 
     /// <summary>
+    /// Obtiene los grupos a los que pertenece un usuario.
+    /// </summary>
+    public async Task<List<Membership>> GetByUserIdAsync(string userId) =>
+        await _collection.Find(x => x.UserId == userId).ToListAsync();
+        
+    /// <summary>
+    /// Obtiene los usuarios que pertenecen a un grupo.
+    /// </summary>
+    public async Task<List<Membership>> GetByGroupIdAsync(string groupId) =>
+        await _collection.Find(x => x.GroupId == groupId).ToListAsync();
+
+    /// <summary>
     /// Crea una nueva membresía (usuario se une a un grupo).
     /// 
     /// VALIDACIONES PREVIAS RECOMENDADAS:

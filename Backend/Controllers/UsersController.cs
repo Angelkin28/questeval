@@ -1,31 +1,31 @@
-using Microsoft.AspNetCore.Mvc;
+ï»¿using Microsoft.AspNetCore.Mvc;
 using Backend.Models;
 using Backend.Services.Interfaces;
 using System.Security.Cryptography;
 using System.Text;
+using System.Security.Claims;
+using Microsoft.IdentityModel.Tokens;
+using System.IdentityModel.Tokens.Jwt;
+using Microsoft.AspNetCore.Authorization;
 
 namespace Backend.Controllers;
 
-/// <summary>
-/// Gestiona user authentication and registration
-/// </summary>
 [ApiController]
 [Route("api/[controller]")]
 [Produces("application/json")]
 public class UsersController : ControllerBase
 {
     private readonly IUsersService _service;
+    private readonly IOtpService _otpService;
+    private readonly IConfiguration _configuration;
 
-    public UsersController(IUsersService service) =>
+    public UsersController(IUsersService service, IOtpService otpService, IConfiguration configuration)
+    {
         _service = service;
+        _otpService = otpService;
+        _configuration = configuration;
+    }
 
-    /// <summary>
-    /// Registrar un nuevo usuario
-    /// </summary>
-    /// <param name="request">User registration details</param>
-    /// <returns>The created user</returns>
-    /// <response code="201">Retorna el newly created user</response>
-    /// <response code="400">Si la solicitud es inválida or email already exists</response>
     [HttpPost("register")]
     [ProducesResponseType(typeof(UserResponse), StatusCodes.Status201Created)]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
@@ -36,7 +36,6 @@ public class UsersController : ControllerBase
             return BadRequest(ModelState);
         }
 
-        // Check if user already exists
         var existingUser = await _service.GetByEmailAsync(request.Email);
         if (existingUser != null)
         {
@@ -49,10 +48,8 @@ public class UsersController : ControllerBase
             });
         }
 
-        // Hash password
         var passwordHash = HashPassword(request.Password);
 
-        // Crear nuevo user
         var newUser = new User
         {
             Email = request.Email,
@@ -60,7 +57,9 @@ public class UsersController : ControllerBase
             FullName = request.FullName,
             Role = request.Role,
             CreatedAt = DateTime.UtcNow,
-            UpdatedAt = DateTime.UtcNow
+            UpdatedAt = DateTime.UtcNow,
+            EmailVerified = false,
+            VerificationStatus = request.Role == "Profesor" ? "pending" : "approved"
         };
 
         await _service.CreateAsync(newUser);
@@ -72,20 +71,14 @@ public class UsersController : ControllerBase
             FullName = newUser.FullName,
             Role = newUser.Role,
             AvatarUrl = newUser.AvatarUrl,
-            CreatedAt = newUser.CreatedAt
+            CreatedAt = newUser.CreatedAt,
+            EmailVerified = newUser.EmailVerified,
+            VerificationStatus = newUser.VerificationStatus
         };
 
         return CreatedAtAction(nameof(GetById), new { id = newUser.Id }, response);
     }
 
-    /// <summary>
-    /// Iniciar sesión con email y contraseña
-    /// </summary>
-    /// <param name="request">Credenciales de inicio de sesión</param>
-    /// <returns>Información del usuario y token de autenticación</returns>
-    /// <response code="200">Retorna información del usuario y token</response>
-    /// <response code="401">Si las credenciales son inválidas</response>
-    /// <response code="400">Si la solicitud es inválida</response>
     [HttpPost("login")]
     [ProducesResponseType(typeof(LoginResponse), StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status401Unauthorized)]
@@ -98,56 +91,58 @@ public class UsersController : ControllerBase
         }
 
         var user = await _service.GetByEmailAsync(request.Email);
-        
-        if (user == null || !VerifyPassword(request.Password, user.PasswordHash))
+        if (user == null)
         {
-            return Unauthorized(new ProblemDetails
-            {
-                Type = "https://tools.ietf.org/html/rfc7231#section-6.5.2",
-                Title = "Invalid Credentials",
-                Status = StatusCodes.Status401Unauthorized,
-                Detail = "Email or password is incorrect."
-            });
+            return Unauthorized(new { error = "Credenciales invÃ¡lidas." });
         }
 
-        var response = new LoginResponse
+        if (!VerifyPassword(request.Password, user.PasswordHash))
+        {
+            return Unauthorized(new { error = "Credenciales invÃ¡lidas." });
+        }
+
+
+        var token = GenerateJwtToken(user);
+
+        return Ok(new LoginResponse
         {
             UserId = user.Id!,
             Email = user.Email,
             FullName = user.FullName,
             Role = user.Role,
             AvatarUrl = user.AvatarUrl,
-            Token = "dummy-token" // TODO: Implement JWT token generation
-        };
-
-        return Ok(response);
+            Token = token,
+            EmailVerified = user.EmailVerified,
+            VerificationStatus = user.VerificationStatus
+        });
     }
 
-    /// <summary>
-    /// Obtener todos los users
-    /// </summary>
-    /// <returns>Lista de todos los usuarios</returns>
-    /// <response code="200">Retorna la lista de users</response>
     [HttpGet]
-    public async Task<List<UserResponse>> Get()
+    [ProducesResponseType(typeof(List<UserResponse>), StatusCodes.Status200OK)]
+    public async Task<IActionResult> GetAll()
     {
         var users = await _service.GetAllAsync();
-        return users.Select(u => new UserResponse
+        var response = users.Select(u => new UserResponse
         {
             Id = u.Id!,
             Email = u.Email,
             FullName = u.FullName,
             Role = u.Role,
             AvatarUrl = u.AvatarUrl,
-            CreatedAt = u.CreatedAt
+            CreatedAt = u.CreatedAt,
+            EmailVerified = u.EmailVerified,
+            VerificationStatus = u.VerificationStatus
         }).ToList();
+
+        return Ok(response);
     }
 
     [HttpGet("{id}")]
-    public async Task<ActionResult<UserResponse>> GetById(string id)
+    [ProducesResponseType(typeof(UserResponse), StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
+    public async Task<IActionResult> GetById(string id)
     {
         var user = await _service.GetByIdAsync(id);
-
         if (user == null)
         {
             return NotFound();
@@ -160,33 +155,150 @@ public class UsersController : ControllerBase
             FullName = user.FullName,
             Role = user.Role,
             AvatarUrl = user.AvatarUrl,
-            CreatedAt = user.CreatedAt
+            CreatedAt = user.CreatedAt,
+            EmailVerified = user.EmailVerified,
+            VerificationStatus = user.VerificationStatus
         };
 
-        return response;
+        return Ok(response);
     }
 
     [HttpDelete("{id}")]
+    [ProducesResponseType(StatusCodes.Status204NoContent)]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
     public async Task<IActionResult> Delete(string id)
     {
         var user = await _service.GetByIdAsync(id);
-
         if (user == null)
         {
             return NotFound();
         }
 
         await _service.DeleteAsync(id);
-
         return NoContent();
     }
 
-    // Simple password hashing (use BCrypt or similar in production)
+    [HttpPost("send-otp")]
+    [ProducesResponseType(StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status400BadRequest)]
+    public async Task<IActionResult> SendOtp([FromBody] SendOtpRequest request)
+    {
+        if (!ModelState.IsValid)
+        {
+            return BadRequest(ModelState);
+        }
+
+        var success = await _otpService.SendOtpAsync(request.Email);
+        
+        if (success)
+        {
+            return Ok(new { message = "CÃ³digo OTP enviado al email." });
+        }
+        
+        return BadRequest(new { error = "No se pudo enviar el cÃ³digo OTP." });
+    }
+
+    [HttpPost("verify-otp")]
+    [ProducesResponseType(StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status400BadRequest)]
+    public async Task<IActionResult> VerifyOtp([FromBody] VerifyOtpRequest request)
+    {
+        if (!ModelState.IsValid)
+        {
+            return BadRequest(ModelState);
+        }
+
+        var isValid = await _otpService.VerifyOtpAsync(request.Email, request.OtpCode);
+        
+        if (isValid)
+        {
+            var user = await _service.GetByEmailAsync(request.Email);
+            if (user != null)
+            {
+                await _service.MarkEmailAsVerifiedAsync(user.Id!);
+                return Ok(new { message = "Email verificado exitosamente." });
+            }
+            
+            return BadRequest(new { error = "Usuario no encontrado." });
+        }
+        
+        return BadRequest(new { error = "CÃ³digo OTP invÃ¡lido o expirado." });
+    }
+
+    [HttpGet("pending-teachers")]
+    [Authorize(Roles = "Admin")]
+    [ProducesResponseType(typeof(List<PendingTeacherResponse>), StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status403Forbidden)]
+    [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+    public async Task<IActionResult> GetPendingTeachers()
+    {
+        var pendingTeachers = await _service.GetPendingTeachersAsync();
+        return Ok(pendingTeachers);
+    }
+
+    [HttpPost("approve-teacher")]
+    [Authorize(Roles = "Admin")]
+    [ProducesResponseType(StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(StatusCodes.Status403Forbidden)]
+    [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+    public async Task<IActionResult> ApproveTeacher([FromBody] ApproveTeacherRequest request)
+    {
+        if (!ModelState.IsValid)
+        {
+            return BadRequest(ModelState);
+        }
+
+        var adminId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+        if (string.IsNullOrEmpty(adminId))
+        {
+            return Unauthorized("Invalid token claims");
+        }
+        
+        var success = await _service.UpdateTeacherStatusAsync(
+            request.TeacherId, 
+            request.Status,
+            adminId
+        );
+        
+        if (success)
+        {
+            var statusText = request.Status == "approved" ? "aprobado" : "rechazado";
+            return Ok(new { message = $"Maestro {statusText} exitosamente." });
+        }
+        
+        return BadRequest(new { error = "No se pudo actualizar el estado del maestro." });
+    }
+
+    private string GenerateJwtToken(User user)
+    {
+        var securityKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(_configuration["Jwt:Key"]!));
+        var credentials = new SigningCredentials(securityKey, SecurityAlgorithms.HmacSha256);
+
+        var claims = new[]
+        {
+            new Claim(ClaimTypes.NameIdentifier, user.Id!),
+            new Claim(ClaimTypes.Email, user.Email),
+            new Claim(ClaimTypes.Role, user.Role), // Roles: "Alumno", "Profesor", "Admin"
+            new Claim("verificationStatus", user.VerificationStatus ?? "pending")
+        };
+
+        var token = new JwtSecurityToken(
+            issuer: _configuration["Jwt:Issuer"],
+            audience: _configuration["Jwt:Audience"],
+            claims: claims,
+            expires: DateTime.Now.AddDays(7), // Token vÃ¡lido por 7 dÃ­as
+            signingCredentials: credentials);
+
+        return new JwtSecurityTokenHandler().WriteToken(token);
+    }
+
     private static string HashPassword(string password)
     {
         using var sha256 = SHA256.Create();
-        var hashedBytes = sha256.ComputeHash(Encoding.UTF8.GetBytes(password));
-        return Convert.ToBase64String(hashedBytes);
+        var bytes = Encoding.UTF8.GetBytes(password);
+        var hash = sha256.ComputeHash(bytes);
+        return Convert.ToBase64String(hash);
     }
 
     private static bool VerifyPassword(string password, string hash)

@@ -44,6 +44,9 @@ builder.Services.AddScoped<Supabase.Client>(provider =>
     });
 });
 
+// Register OTP Service for email verification
+builder.Services.AddScoped<IOtpService, OtpService>();
+
 
 // ==================== MANEJO DE EXCEPCIONES ====================
 // GlobalExceptionHandler captura excepciones no manejadas y retorna RFC 7807 ProblemDetails
@@ -59,17 +62,35 @@ builder.Services.AddCors(options =>
     options.AddPolicy("AllowFrontend", policy =>
     {
         // Agregar URLs del frontend aquí (servidores dev, URLs de producción, etc.)
-        policy.WithOrigins("http://localhost:5173", "http://localhost:5248", "http://localhost:4200")
+        policy.WithOrigins("http://localhost:5173", "http://localhost:5248", "http://localhost:4200", "http://localhost:4201")
               .AllowAnyMethod()    // Permitir GET, POST, PUT, DELETE, etc.
               .AllowAnyHeader();   // Permitir todos los headers (Authorization, Content-Type, etc.)
     });
 });
 
+// ==================== AUTHENTICATION ====================
+builder.Services.AddAuthentication(options =>
+{
+    options.DefaultAuthenticateScheme = Microsoft.AspNetCore.Authentication.JwtBearer.JwtBearerDefaults.AuthenticationScheme;
+    options.DefaultChallengeScheme = Microsoft.AspNetCore.Authentication.JwtBearer.JwtBearerDefaults.AuthenticationScheme;
+})
+.AddJwtBearer(options =>
+{
+    options.TokenValidationParameters = new Microsoft.IdentityModel.Tokens.TokenValidationParameters
+    {
+        ValidateIssuer = true,
+        ValidateAudience = true,
+        ValidateLifetime = true,
+        ValidateIssuerSigningKey = true,
+        ValidIssuer = builder.Configuration["Jwt:Issuer"],
+        ValidAudience = builder.Configuration["Jwt:Audience"],
+        IssuerSigningKey = new Microsoft.IdentityModel.Tokens.SymmetricSecurityKey(
+            System.Text.Encoding.UTF8.GetBytes(builder.Configuration["Jwt:Key"]!))
+    };
+});
+
 // ==================== CONFIGURACIÓN DE CONTROLLERS ====================
 builder.Services.AddControllers()
-    // Preservar nombres de propiedades tal cual (no convertir a camelCase)
-    // Los documentos de MongoDB usan PascalCase, así que mantenemos las respuestas JSON consistentes
-    .AddJsonOptions(options => options.JsonSerializerOptions.PropertyNamingPolicy = null)
     .ConfigureApiBehaviorOptions(options =>
     {
         // Habilitar validación automática de modelo basada en DataAnnotations
@@ -138,10 +159,50 @@ app.UseHttpsRedirection();
 app.UseCors("AllowFrontend");
 
 // 5. Authorization - Verificar permisos de usuario (placeholder para futura autenticación JWT)
+// 5. Authentication & Authorization
+app.UseAuthentication();
 app.UseAuthorization();
 
 // 6. Controllers - Mapear solicitudes HTTP a acciones de controller
+// 6. Controllers - Mapear solicitudes HTTP a acciones de controller
 app.MapControllers();
+
+// ==================== SEEDING ====================
+using (var scope = app.Services.CreateScope())
+{
+    var usersService = scope.ServiceProvider.GetRequiredService<IUsersService>();
+    var logger = scope.ServiceProvider.GetRequiredService<ILogger<Program>>();
+    var adminEmail = "won.dorado.mid@gmail.com";
+    
+    var adminUser = await usersService.GetByEmailAsync(adminEmail);
+    logger.LogInformation("Recreating Admin user to ensure correct role and password...");
+
+    if (adminUser != null)
+    {
+        logger.LogInformation($"Admin user found (ID: {adminUser.Id}). Deleting...");
+        await usersService.DeleteAsync(adminUser.Id!);
+        logger.LogInformation("Existing admin user deleted.");
+    }
+
+    using var sha256 = System.Security.Cryptography.SHA256.Create();
+    var bytes = System.Text.Encoding.UTF8.GetBytes("admin123");
+    var hash = Convert.ToBase64String(sha256.ComputeHash(bytes));
+
+    var newAdmin = new User
+    {
+        Email = adminEmail,
+        PasswordHash = hash,
+        FullName = "Administrator",
+        Role = "Admin", // Explicitly set as Admin
+        CreatedAt = DateTime.UtcNow,
+        UpdatedAt = DateTime.UtcNow,
+        EmailVerified = true,
+        VerificationStatus = "approved"
+    };
+    
+    await usersService.CreateAsync(newAdmin);
+    logger.LogInformation("New Admin user created successfully.");
+}
 
 // ==================== INICIAR SERVIDOR ====================
 app.Run();

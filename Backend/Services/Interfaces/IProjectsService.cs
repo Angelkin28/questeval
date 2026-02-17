@@ -20,6 +20,8 @@ public interface IProjectsService
     /// <param name="id">ID del proyecto (MongoDB ObjectId)</param>
     /// <returns>El proyecto encontrado o null si no existe</returns>
     Task<Project?> GetByIdAsync(string id);
+    
+    Task<List<Project>> GetByGroupIdAsync(string groupId);
 
     /// <summary>
     /// Crea un nuevo proyecto asociado a un grupo.

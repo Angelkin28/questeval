@@ -52,4 +52,28 @@ public interface IUsersService
     /// <param name="id">ID del usuario a eliminar</param>
     /// <returns>Tarea asíncrona de eliminación</returns>
     Task DeleteAsync(string id);
+
+    /// <summary>
+    /// Marca el email de un usuario como verificado después de validar el OTP.
+    /// </summary>
+    /// <param name="userId">ID del usuario</param>
+    /// <returns>True si se actualizó correctamente</returns>
+    Task<bool> MarkEmailAsVerifiedAsync(string userId);
+
+    /// <summary>
+    /// Obtiene la lista de maestros pendientes de aprobación.
+    /// Solo incluye maestros con email verificado y estado "pending".
+    /// </summary>
+    /// <returns>Lista de maestros pendientes</returns>
+    Task<List<PendingTeacherResponse>> GetPendingTeachersAsync();
+
+    /// <summary>
+    /// Actualiza el estado de aprobación de un maestro.
+    /// </summary>
+    /// <param name="teacherId">ID del maestro</param>
+    /// <param name="status">Estado: "approved" o "rejected"</param>
+    /// <param name="adminId">ID del administrador que aprueba/rechaza</param>
+    /// <returns>True si se actualizó correctamente</returns>
+    Task<bool> UpdateTeacherStatusAsync(string teacherId, string status, string adminId);
 }
+

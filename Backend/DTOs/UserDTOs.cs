@@ -74,6 +74,8 @@ public class LoginResponse
     public string Role { get; set; } = null!;
     public string? AvatarUrl { get; set; }
     public string Token { get; set; } = null!; // Token JWT (opcional por ahora)
+    public bool EmailVerified { get; set; } // Si el email fue verificado con OTP
+    public string VerificationStatus { get; set; } = null!; // Estado de aprobación (para Profesores)
 }
 
 /// <summary>
@@ -87,4 +89,75 @@ public class UserResponse
     public string Role { get; set; } = null!;
     public string? AvatarUrl { get; set; }
     public DateTime CreatedAt { get; set; }
+    public bool EmailVerified { get; set; } // Nuevo campo
+    public string VerificationStatus { get; set; } = null!; // Nuevo campo
 }
+
+/// <summary>
+/// Solicitud para enviar código OTP
+/// </summary>
+public class SendOtpRequest
+{
+    /// <summary>
+    /// Email al que se enviará el código OTP
+    /// </summary>
+    /// <example>estudiante@ejemplo.com</example>
+    [Required(ErrorMessage = "El email es requerido.")]
+    [EmailAddress(ErrorMessage = "Formato de email inválido.")]
+    public string Email { get; set; } = null!;
+}
+
+/// <summary>
+/// Solicitud para verificar código OTP
+/// </summary>
+public class VerifyOtpRequest
+{
+    /// <summary>
+    /// Email del usuario
+    /// </summary>
+    /// <example>estudiante@ejemplo.com</example>
+    [Required(ErrorMessage = "El email es requerido.")]
+    [EmailAddress(ErrorMessage = "Formato de email inválido.")]
+    public string Email { get; set; } = null!;
+
+    /// <summary>
+    /// Código OTP de 6 dígitos
+    /// </summary>
+    /// <example>123456</example>
+    [Required(ErrorMessage = "El código OTP es requerido.")]
+    [StringLength(6, MinimumLength = 6, ErrorMessage = "El código debe tener 6 dígitos.")]
+    [RegularExpression(@"^\d{6}$", ErrorMessage = "El código debe contener solo números.")]
+    public string OtpCode { get; set; } = null!;
+}
+
+/// <summary>
+/// Solicitud para aprobar/rechazar un maestro
+/// </summary>
+public class ApproveTeacherRequest
+{
+    /// <summary>
+    /// ID del maestro a aprobar/rechazar
+    /// </summary>
+    [Required(ErrorMessage = "El ID del maestro es requerido.")]
+    public string TeacherId { get; set; } = null!;
+
+    /// <summary>
+    /// Estado de aprobación: "approved" o "rejected"
+    /// </summary>
+    /// <example>approved</example>
+    [Required(ErrorMessage = "El estado es requerido.")]
+    [RegularExpression(@"^(approved|rejected)$", ErrorMessage = "El estado debe ser 'approved' o 'rejected'.")]
+    public string Status { get; set; } = null!;
+}
+
+/// <summary>
+/// Respuesta con información de maestro pendiente de aprobación
+/// </summary>
+public class PendingTeacherResponse
+{
+    public string Id { get; set; } = null!;
+    public string Email { get; set; } = null!;
+    public string FullName { get; set; } = null!;
+    public DateTime CreatedAt { get; set; }
+}
+

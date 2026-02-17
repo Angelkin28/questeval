@@ -33,15 +33,31 @@ export default function DashboardPage() {
             try {
                 // 1. Obtener datos del usuario de localStorage
                 const userJson = localStorage.getItem('user');
-                if (userJson) {
-                    const userData = JSON.parse(userJson);
-                    setUserName(userData.fullName || 'Usuario');
-                    setUserRole(userData.role?.toLowerCase() === 'maestro' ? 'teacher' : 'student');
+                if (!userJson) {
+                    router.push('/login');
+                    return;
                 }
 
+                const userData = JSON.parse(userJson);
+
+                if (userData.verificationStatus === 'pending') {
+                    router.push('/waiting-approval');
+                    return;
+                }
+
+                setUserName(userData.fullName || 'Usuario');
+                const roleLower = userData.role?.toLowerCase();
+                const isTeacher = roleLower === 'maestro' || roleLower === 'profesor';
+                setUserRole(isTeacher ? 'teacher' : 'student');
+
                 // 2. Obtener proyectos de la API
-                const apiProjects = await api.projects.getAll();
-                setProjects(apiProjects);
+                if (isTeacher) {
+                    const apiProjects = await api.projects.getAll();
+                    setProjects(apiProjects);
+                } else {
+                    const apiProjects = await api.projects.getMyProjects();
+                    setProjects(apiProjects);
+                }
             } catch (error) {
                 console.error('Error cargando dashboard:', error);
                 // Fallback a mock data si falla la API (opcional, por ahora lo dejamos vacío)
@@ -71,7 +87,7 @@ export default function DashboardPage() {
             <div className="min-h-screen bg-background pb-20">
                 <Header title="QuestEval" />
                 <main className="container mx-auto px-4 py-8">
-                    <TeacherDashboard user={{ name: 'Profesor X' }} />
+                    <TeacherDashboard user={{ name: userName }} />
                 </main>
                 {/* Bottom Navigation (Mobile) - Teacher */}
                 <nav className="fixed bottom-0 left-0 right-0 bg-background border-t border-border h-16 flex items-center justify-around z-50 md:hidden">
@@ -159,7 +175,7 @@ export default function DashboardPage() {
 
                     {/* Project Cards */}
                     {filteredProjects.map((project, idx) => (
-                        <Card key={project.id || idx} className="overflow-hidden hover:shadow-lg transition-all group cursor-pointer border-border/50 bg-card">
+                        <Card key={project.id || idx} onClick={() => router.push(`/project/${project.id}`)} className="overflow-hidden hover:shadow-lg transition-all group cursor-pointer border-border/50 bg-card">
                             <div className="h-32 bg-secondary relative overflow-hidden">
                                 {project.thumbnailUrl ? (
                                     <div

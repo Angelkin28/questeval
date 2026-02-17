@@ -176,7 +176,16 @@ public class CreateProjectRequest
     /// Estado del proyecto
     /// </summary>
     /// <example>Activo</example>
+    /// <summary>
+    /// Estado del proyecto
+    /// </summary>
+    /// <example>Activo</example>
     public string Status { get; set; } = "Active";
+
+    public string Category { get; set; } = "Integrador";
+    public string? VideoUrl { get; set; }
+    public string? ThumbnailUrl { get; set; }
+    public List<string> TeamMembers { get; set; } = new List<string>();
 }
 
 /// <summary>
@@ -206,7 +215,16 @@ public class ProjectResponse
     /// ID del grupo
     /// </summary>
     /// <example>507f1f77bcf86cd799439011</example>
+    /// <summary>
+    /// ID del grupo
+    /// </summary>
+    /// <example>507f1f77bcf86cd799439011</example>
     public string GroupId { get; set; } = null!;
+
+    public string Category { get; set; } = null!;
+    public string? VideoUrl { get; set; }
+    public string? ThumbnailUrl { get; set; }
+    public List<string> TeamMembers { get; set; } = new List<string>();
 
     /// <summary>
     /// Estado actual

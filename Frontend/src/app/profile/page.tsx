@@ -60,21 +60,34 @@ export default function PerfilPage() {
         }
     }, [router]);
 
-    const handleAvatarChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const handleAvatarChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
         const file = e.target.files?.[0];
         if (file) {
-            const reader = new FileReader();
-            reader.onloadend = () => {
-                const base64String = reader.result as string;
-                setAvatar(base64String);
-                // In a real app, you'd upload this to the server
+            try {
+                // Mostrar preview mientras se sube (opciona, pero usando URL temporal)
+                const objectUrl = URL.createObjectURL(file);
+                setAvatar(objectUrl);
+
+                // Subir a Supabase
+                const uploadResult = await api.storage.upload(file);
+                const serverUrl = uploadResult.url;
+
+                setAvatar(serverUrl); // Actualizar con URL real
+
                 if (user) {
-                    const updatedUser = { ...user, avatarUrl: base64String };
+                    const updatedUser = { ...user, avatarUrl: serverUrl };
                     localStorage.setItem('user', JSON.stringify(updatedUser));
-                    // Optional: Call update user API
+
+                    // Aquí se debería llamar a la API para actualizar el usuario en el backend
+                    // await api.users.update(user.id, { avatarUrl: serverUrl });
+                    console.log('Avatar actualizado en servidor:', serverUrl);
                 }
-            };
-            reader.readAsDataURL(file);
+            } catch (error) {
+                console.error('Error al subir avatar:', error);
+                alert('No se pudo subir la imagen de perfil.');
+                // Revertir si es necesario
+                if (user) setAvatar(user.avatarUrl || null);
+            }
         }
     };
 
