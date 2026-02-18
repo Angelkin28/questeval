@@ -45,7 +45,12 @@ public class ProjectsController : ControllerBase
             Category = p.Category,
             VideoUrl = p.VideoUrl,
             ThumbnailUrl = p.ThumbnailUrl,
-            TeamMembers = p.TeamMembers
+            TeamMembers = p.TeamMembers,
+            ComprehensionQuestions = p.ComprehensionQuestions.Select(q => new QuestionAnswerDto
+            {
+                Question = q.Question,
+                Answer = q.Answer
+            }).ToList()
         }).ToList();
         return Ok(response);
     }
@@ -85,7 +90,12 @@ public class ProjectsController : ControllerBase
             Category = p.Category,
             VideoUrl = p.VideoUrl,
             ThumbnailUrl = p.ThumbnailUrl,
-            TeamMembers = p.TeamMembers
+            TeamMembers = p.TeamMembers,
+            ComprehensionQuestions = p.ComprehensionQuestions.Select(q => new QuestionAnswerDto
+            {
+                Question = q.Question,
+                Answer = q.Answer
+            }).ToList()
         }).ToList();
 
         return Ok(response);
@@ -122,7 +132,12 @@ public class ProjectsController : ControllerBase
             Category = project.Category,
             VideoUrl = project.VideoUrl,
             ThumbnailUrl = project.ThumbnailUrl,
-            TeamMembers = project.TeamMembers
+            TeamMembers = project.TeamMembers,
+            ComprehensionQuestions = project.ComprehensionQuestions.Select(q => new QuestionAnswerDto
+            {
+                Question = q.Question,
+                Answer = q.Answer
+            }).ToList()
         };
 
         return Ok(response);
@@ -151,7 +166,12 @@ public class ProjectsController : ControllerBase
             Category = request.Category,
             VideoUrl = request.VideoUrl,
             ThumbnailUrl = request.ThumbnailUrl,
-            TeamMembers = request.TeamMembers
+            TeamMembers = request.TeamMembers,
+            ComprehensionQuestions = request.ComprehensionQuestions.Select(q => new QuestionAnswer
+            {
+                Question = q.Question,
+                Answer = q.Answer
+            }).ToList()
         };
 
         await _service.CreateAsync(newProject);
@@ -206,7 +226,12 @@ public class ProjectsController : ControllerBase
             Category = request.Category,
             VideoUrl = request.VideoUrl,
             ThumbnailUrl = request.ThumbnailUrl,
-            TeamMembers = request.TeamMembers
+            TeamMembers = request.TeamMembers,
+            ComprehensionQuestions = request.ComprehensionQuestions.Select(q => new QuestionAnswer
+            {
+                Question = q.Question,
+                Answer = q.Answer
+            }).ToList()
         };
 
         await _service.UpdateAsync(id, updatedProject);

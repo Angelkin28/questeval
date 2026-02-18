@@ -19,7 +19,7 @@ import {
     Loader2
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
-import { api, Group } from '@/lib/api';
+import { api, Group, UserResponse } from '@/lib/api';
 import { useEffect } from 'react';
 
 export default function NewProjectPage() {
@@ -34,14 +34,17 @@ export default function NewProjectPage() {
         description: '',
         videoUrl: '',
         coverImage: null as File | null,
-        teamMembers: [] as string[]
+        teamMembers: [] as string[],
+        comprehensionQuestions: [] as { question: string, answer: string }[]
     });
 
 
 
-    // Add group selection state
     const [groups, setGroups] = useState<Group[]>([]);
     const [selectedGroupId, setSelectedGroupId] = useState('');
+    const [groupMembers, setGroupMembers] = useState<UserResponse[]>([]);
+    const [currentUser, setCurrentUser] = useState<any>(null);
+    const [questionError, setQuestionError] = useState('');
 
     useEffect(() => {
         const fetchGroups = async () => {
@@ -51,14 +54,47 @@ export default function NewProjectPage() {
                 if (myGroups.length > 0) {
                     setSelectedGroupId(myGroups[0].id);
                 }
+
+                // Get current user for auto-add and locking
+                const userJson = localStorage.getItem('user');
+                if (userJson) {
+                    const user = JSON.parse(userJson);
+                    setCurrentUser(user);
+                    if (user.fullName && formData.teamMembers.length === 0) {
+                        setFormData(prev => ({
+                            ...prev,
+                            teamMembers: [user.fullName]
+                        }));
+                    }
+                }
             } catch (err) {
-                console.error("Error loading groups", err);
+                console.error("Error loading groups or user", err);
             }
         };
         fetchGroups();
     }, []);
 
+    // Fetch members when group changes for the search/suggestions
+    useEffect(() => {
+        const fetchMembers = async () => {
+            if (!selectedGroupId) return;
+            try {
+                const members = await api.groups.getMembers(selectedGroupId);
+                // Filter only students and not the current user (already added)
+                const students = members.filter(m =>
+                    m.role === 'Alumno' &&
+                    m.fullName !== currentUser?.fullName
+                );
+                setGroupMembers(students);
+            } catch (err) {
+                console.error("Error fetching group members", err);
+            }
+        };
+        fetchMembers();
+    }, [selectedGroupId, currentUser]);
+
     const [memberInput, setMemberInput] = useState('');
+    const [newQuestion, setNewQuestion] = useState({ question: '', answer: '' });
 
     const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
         const { name, value } = e.target;
@@ -68,21 +104,54 @@ export default function NewProjectPage() {
         }));
     };
 
-    const handleAddMember = () => {
-        if (memberInput.trim()) {
+    const handleAddMember = (name?: string) => {
+        const memberName = name || memberInput.trim();
+        if (memberName && !formData.teamMembers.includes(memberName)) {
             setFormData(prev => ({
                 ...prev,
-                teamMembers: [...prev.teamMembers, memberInput.trim()]
+                teamMembers: [...prev.teamMembers, memberName]
             }));
             setMemberInput('');
         }
     };
 
     const handleRemoveMember = (index: number) => {
+        const memberName = formData.teamMembers[index];
+        // Don't allow removing yourself
+        if (currentUser && memberName === currentUser.fullName) {
+            return;
+        }
+
         setFormData(prev => ({
             ...prev,
             teamMembers: prev.teamMembers.filter((_, i) => i !== index)
         }));
+    };
+
+    const handleAddQuestion = () => {
+        if (newQuestion.question.trim() && newQuestion.answer.trim()) {
+            if (formData.comprehensionQuestions.length >= 10) {
+                setQuestionError('Máximo 10 preguntas permitidas.');
+                setTimeout(() => setQuestionError(''), 3000);
+                return;
+            }
+            setQuestionError('');
+            setFormData(prev => ({
+                ...prev,
+                comprehensionQuestions: [...prev.comprehensionQuestions, { ...newQuestion }]
+            }));
+            setNewQuestion({ question: '', answer: '' });
+        }
+    };
+
+    const handleRemoveQuestion = (index: number) => {
+        setFormData(prev => ({
+            ...prev,
+            comprehensionQuestions: prev.comprehensionQuestions.filter((_, i) => i !== index)
+        }));
+        if (formData.comprehensionQuestions.length <= 10) {
+            setQuestionError('');
+        }
     };
 
     const handleSubmit = async () => {
@@ -117,7 +186,8 @@ export default function NewProjectPage() {
                 videoUrl: formData.videoUrl,
                 thumbnailUrl: coverImageUrl,
                 groupId: selectedGroupId,
-                teamMembers: formData.teamMembers
+                teamMembers: formData.teamMembers,
+                comprehensionQuestions: formData.comprehensionQuestions
             });
 
             router.push('/dashboard');
@@ -131,7 +201,7 @@ export default function NewProjectPage() {
         }
     };
 
-    const nextStep = () => setStep(s => Math.min(s + 1, 3));
+    const nextStep = () => setStep(s => Math.min(s + 1, 4));
     const prevStep = () => setStep(s => Math.max(s - 1, 1));
 
     return (
@@ -143,7 +213,7 @@ export default function NewProjectPage() {
                 {/* Steps Indicator */}
                 <div className="flex justify-between mb-8 px-2 relative">
                     <div className="absolute top-1/2 left-0 right-0 h-0.5 bg-border -z-10 transform -translate-y-1/2 mx-4" />
-                    {[1, 2, 3].map((s) => (
+                    {[1, 2, 3, 4].map((s) => (
                         <div key={s} className="flex flex-col items-center bg-background px-2">
                             <div className={cn(
                                 "w-8 h-8 rounded-full flex items-center justify-center text-sm font-bold border-2 transition-all",
@@ -151,8 +221,8 @@ export default function NewProjectPage() {
                             )}>
                                 {step > s ? <CheckCircle2 className="w-5 h-5" /> : s}
                             </div>
-                            <span className="text-[10px] mt-1 font-medium text-muted-foreground">
-                                {s === 1 ? 'Detalles' : s === 2 ? 'Multimedia' : 'Revisar'}
+                            <span className="text-[10px] mt-1 font-medium text-muted-foreground text-center">
+                                {s === 1 ? 'Detalles' : s === 2 ? 'Multimedia' : s === 3 ? 'Preguntas' : 'Revisar'}
                             </span>
                         </div>
                     ))}
@@ -296,32 +366,126 @@ export default function NewProjectPage() {
                     </div>
                 )}
 
-                {/* Step 3: Team and Review */}
+                {/* Step 3: Comprehension Questions */}
                 {step === 3 && (
+                    <div className="space-y-4 animate-fade-in">
+                        <Card>
+                            <CardContent className="p-5">
+                                <h2 className="text-lg font-semibold mb-2">Preguntas de Comprensión</h2>
+                                <p className="text-xs text-muted-foreground mb-6">
+                                    Agrega hasta 10 preguntas clave sobre tu proyecto para que el evaluador las considere.
+                                </p>
+
+                                <div className="space-y-4 mb-6 p-4 bg-secondary/20 rounded-lg border border-border">
+                                    <div>
+                                        <label className="text-xs font-bold uppercase tracking-wider text-muted-foreground mb-1 block">Pregunta</label>
+                                        <Input
+                                            placeholder="¿Cuál es el problema principal que resuelve?"
+                                            value={newQuestion.question}
+                                            onChange={(e) => setNewQuestion(p => ({ ...p, question: e.target.value }))}
+                                        />
+                                    </div>
+                                    <div>
+                                        <label className="text-xs font-bold uppercase tracking-wider text-muted-foreground mb-1 block">Respuesta</label>
+                                        <Textarea
+                                            placeholder="Resuelve la falta de..."
+                                            className="min-h-[80px] resize-none"
+                                            value={newQuestion.answer}
+                                            onChange={(e) => setNewQuestion(p => ({ ...p, answer: e.target.value }))}
+                                        />
+                                    </div>
+                                    <Button
+                                        onClick={handleAddQuestion}
+                                        className="w-full gap-2"
+                                        disabled={!newQuestion.question.trim() || !newQuestion.answer.trim()}
+                                    >
+                                        <Save className="w-4 h-4" />
+                                        Agregar Pregunta ({formData.comprehensionQuestions.length}/10)
+                                    </Button>
+                                    {questionError && (
+                                        <p className="text-destructive text-sm font-medium mt-2 animate-bounce flex items-center gap-1">
+                                            <span>⚠️</span> {questionError}
+                                        </p>
+                                    )}
+                                </div>
+
+                                <div className="space-y-3">
+                                    <h3 className="text-sm font-semibold">Preguntas Agregadas</h3>
+                                    {formData.comprehensionQuestions.length === 0 ? (
+                                        <p className="text-sm text-muted-foreground italic text-center py-4">No has agregado preguntas aún.</p>
+                                    ) : (
+                                        formData.comprehensionQuestions.map((q, idx) => (
+                                            <div key={idx} className="bg-secondary/40 p-3 rounded-md border border-border relative group">
+                                                <button
+                                                    onClick={() => handleRemoveQuestion(idx)}
+                                                    className="absolute top-2 right-2 text-muted-foreground hover:text-destructive opacity-0 group-hover:opacity-100 transition-opacity"
+                                                >
+                                                    ×
+                                                </button>
+                                                <p className="text-sm font-bold pr-6">P{idx + 1}: {q.question}</p>
+                                                <p className="text-xs text-muted-foreground mt-1">R: {q.answer}</p>
+                                            </div>
+                                        ))
+                                    )}
+                                </div>
+                            </CardContent>
+                        </Card>
+                    </div>
+                )}
+
+                {/* Step 4: Team and Review */}
+                {step === 4 && (
                     <div className="space-y-4 animate-fade-in">
                         <Card>
                             <CardContent className="p-5">
                                 <h2 className="text-lg font-semibold mb-4">Miembros del Equipo</h2>
 
-                                <div className="flex gap-2 mb-4">
-                                    <Input
-                                        placeholder="Agregar miembro (Nombre o Matrícula)"
-                                        value={memberInput}
-                                        onChange={(e) => setMemberInput(e.target.value)}
-                                        onKeyDown={(e) => e.key === 'Enter' && handleAddMember()}
-                                    />
-                                    <Button onClick={handleAddMember} size="icon">
-                                        <Users className="w-4 h-4" />
-                                    </Button>
+                                <div className="relative group/search">
+                                    <div className="flex gap-2 mb-4">
+                                        <Input
+                                            placeholder="Buscar compañero del grupo..."
+                                            value={memberInput}
+                                            onChange={(e) => setMemberInput(e.target.value)}
+                                            onKeyDown={(e) => e.key === 'Enter' && handleAddMember()}
+                                        />
+                                        <Button onClick={() => handleAddMember()} size="icon">
+                                            <Users className="w-4 h-4" />
+                                        </Button>
+                                    </div>
+
+                                    {/* Suggestions List */}
+                                    {memberInput.trim() && groupMembers.filter(m =>
+                                        m.fullName.toLowerCase().includes(memberInput.toLowerCase())
+                                    ).length > 0 && (
+                                            <div className="absolute top-12 left-0 right-0 bg-background border border-border rounded-md shadow-lg z-50 max-h-48 overflow-y-auto">
+                                                {groupMembers.filter(m =>
+                                                    m.fullName.toLowerCase().includes(memberInput.toLowerCase())
+                                                ).map((member) => (
+                                                    <button
+                                                        key={member.id}
+                                                        className="w-full text-left px-4 py-2 hover:bg-secondary text-sm flex items-center gap-2 transition-colors"
+                                                        onClick={() => handleAddMember(member.fullName)}
+                                                    >
+                                                        <div className="w-6 h-6 rounded-full bg-primary/10 flex items-center justify-center text-[10px] font-bold">
+                                                            {member.fullName.charAt(0)}
+                                                        </div>
+                                                        <span>{member.fullName}</span>
+                                                        <span className="text-[10px] text-muted-foreground ml-auto">({member.enrollment})</span>
+                                                    </button>
+                                                ))}
+                                            </div>
+                                        )}
                                 </div>
 
                                 <div className="flex flex-wrap gap-2 mb-6">
                                     {formData.teamMembers.map((member, idx) => (
                                         <div key={idx} className="bg-secondary text-secondary-foreground px-3 py-1 rounded-full text-sm flex items-center gap-2">
                                             <span>{member}</span>
-                                            <button onClick={() => handleRemoveMember(idx)} className="hover:text-destructive">
-                                                ×
-                                            </button>
+                                            {currentUser?.fullName !== member && (
+                                                <button onClick={() => handleRemoveMember(idx)} className="hover:text-destructive text-lg leading-none">
+                                                    ×
+                                                </button>
+                                            )}
                                         </div>
                                     ))}
                                     {formData.teamMembers.length === 0 && (
@@ -334,6 +498,7 @@ export default function NewProjectPage() {
                                     <div className="space-y-1 text-sm">
                                         <p><span className="text-muted-foreground">Proyecto:</span> {formData.name || '-'}</p>
                                         <p><span className="text-muted-foreground">Categoría:</span> {formData.category}</p>
+                                        <p><span className="text-muted-foreground">Preguntas:</span> {formData.comprehensionQuestions.length}</p>
                                         <p><span className="text-muted-foreground">Miembros:</span> {formData.teamMembers.length}</p>
                                     </div>
                                 </div>
@@ -350,7 +515,7 @@ export default function NewProjectPage() {
                         </Button>
                     )}
 
-                    {step < 3 ? (
+                    {step < 4 ? (
                         <Button onClick={nextStep} className="flex-1" disabled={!formData.name && step === 1}>
                             Siguiente Paso <ChevronRight className="w-4 h-4 ml-1" />
                         </Button>
@@ -374,3 +539,4 @@ export default function NewProjectPage() {
         </div>
     );
 }
+

@@ -186,6 +186,7 @@ public class CreateProjectRequest
     public string? VideoUrl { get; set; }
     public string? ThumbnailUrl { get; set; }
     public List<string> TeamMembers { get; set; } = new List<string>();
+    public List<QuestionAnswerDto> ComprehensionQuestions { get; set; } = new();
 }
 
 /// <summary>
@@ -241,6 +242,15 @@ public class ProjectResponse
     /// Marca de tiempo de última actualización
     /// </summary>
     public DateTime UpdatedAt { get; set; }
+    public List<QuestionAnswerDto> ComprehensionQuestions { get; set; } = new();
+}
+
+public class QuestionAnswerDto
+{
+    [Required]
+    public string Question { get; set; } = null!;
+    [Required]
+    public string Answer { get; set; } = null!;
 }
 
 // ============================================

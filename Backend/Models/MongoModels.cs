@@ -102,6 +102,14 @@ public class Project
 
     public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
     public DateTime UpdatedAt { get; set; } = DateTime.UtcNow;
+
+    public List<QuestionAnswer> ComprehensionQuestions { get; set; } = new();
+}
+
+public class QuestionAnswer
+{
+    public string Question { get; set; } = null!;
+    public string Answer { get; set; } = null!;
 }
 
 /// <summary>

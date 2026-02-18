@@ -125,6 +125,27 @@ export default function ProjectDetailsPage() {
                     </CardContent>
                 </Card>
 
+                {/* Comprehension Questions Section */}
+                {project.comprehensionQuestions && project.comprehensionQuestions.length > 0 && (
+                    <Card className="mb-6 shadow-md border-border/50">
+                        <CardContent className="p-6">
+                            <div className="flex items-center gap-2 mb-4">
+                                <MessageSquare className="w-5 h-5 text-primary" />
+                                <h2 className="text-xl font-bold">Preguntas de Comprensión</h2>
+                            </div>
+                            <div className="space-y-4">
+                                {project.comprehensionQuestions.map((q, idx) => (
+                                    <div key={idx} className="p-4 bg-secondary/20 rounded-lg border border-border">
+                                        <p className="font-bold text-sm mb-1 text-primary">P{idx + 1}: {q.question}</p>
+                                        <p className="text-sm text-foreground/90">{q.answer}</p>
+                                    </div>
+                                ))}
+                            </div>
+                        </CardContent>
+                    </Card>
+                )}
+
+
                 {/* Evaluation Results Section */}
                 {evaluation ? (
                     <div className="animate-fade-in slide-in-from-bottom-4">

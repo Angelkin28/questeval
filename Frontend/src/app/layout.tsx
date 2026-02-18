@@ -1,4 +1,4 @@
-import type { Metadata } from "next";
+import type { Metadata, Viewport } from "next";
 import { Geist, Geist_Mono, Playfair_Display } from "next/font/google";
 import "./globals.css";
 
@@ -23,7 +23,11 @@ export const metadata: Metadata = {
   description: "Sistema de evaluación de proyectos académicos con rúbricas digitales",
   keywords: ["evaluación", "proyectos", "educación", "rúbricas", "calificaciones", "académico"],
   authors: [{ name: "QuestEval Team" }],
-  viewport: "width=device-width, initial-scale=1",
+};
+
+export const viewport: Viewport = {
+  width: "device-width",
+  initialScale: 1,
   themeColor: [
     { media: "(prefers-color-scheme: light)", color: "#F5F1E8" },
     { media: "(prefers-color-scheme: dark)", color: "#1A1410" },

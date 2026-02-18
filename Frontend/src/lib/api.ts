@@ -8,6 +8,11 @@ export interface RegisterRequest {
     role?: string;
 }
 
+export interface QuestionAnswer {
+    question: string;
+    answer: string;
+}
+
 export interface LoginRequest {
     email: string;
     password: string;
@@ -55,6 +60,7 @@ export interface Project {
     videoUrl?: string;
     createdAt?: string;
     groupId?: string;
+    comprehensionQuestions?: QuestionAnswer[];
 }
 
 export interface Group {
@@ -73,6 +79,7 @@ export interface CreateProjectRequest {
     videoUrl?: string;
     thumbnailUrl?: string;
     teamMembers: string[];
+    comprehensionQuestions: QuestionAnswer[];
 }
 
 export interface CreateGroupRequest {

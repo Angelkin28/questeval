@@ -405,18 +405,4 @@ namespace Backend.Tests
             Console.WriteLine("========================================\n");
         }
     }
-
-    /// <summary>
-    /// Usage:
-    /// var tests = new ApiTestsData();
-    /// await tests.RunAllTestsAsync();
-    /// </summary>
-    internal class Program
-    {
-        static async Task Main(string[] args)
-        {
-            var tests = new ApiTestsData();
-            await tests.RunAllTestsAsync();
-        }
-    }
 }

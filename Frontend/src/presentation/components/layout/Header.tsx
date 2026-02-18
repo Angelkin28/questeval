@@ -10,7 +10,8 @@ import {
     LogOut,
     User,
     Settings,
-    HelpCircle
+    HelpCircle,
+    ArrowLeft
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 
@@ -72,10 +73,23 @@ export default function Header({ title = "QuestEval", showBack = false }: Header
         <header className="bg-background border-b border-border sticky top-0 z-40 w-full animate-fade-in">
             <div className="container mx-auto px-4 h-16 flex items-center justify-between">
                 {/* Left: Logo or Title */}
-                <div className="flex items-center gap-3">
+                <div className="flex items-center gap-2 sm:gap-3">
+                    {/* Back Button (Only if NOT on dashboard or home) */}
+                    {(pathname !== '/dashboard' && pathname !== '/') && (
+                        <Button
+                            variant="ghost"
+                            size="icon"
+                            onClick={() => router.back()}
+                            className="p-2 h-9 w-9 text-muted-foreground hover:text-foreground hover:bg-secondary rounded-full transition-all active:scale-90"
+                            title="Volver"
+                        >
+                            <ArrowLeft className="w-5 h-5" />
+                        </Button>
+                    )}
+
                     {/* Mobile Menu Trigger */}
                     <button
-                        className="md:hidden p-2 -ml-2 hover:bg-secondary rounded-full transition-colors"
+                        className="md:hidden p-2 -ml-1 hover:bg-secondary rounded-full transition-colors"
                         onClick={() => setIsMenuOpen(!isMenuOpen)}
                     >
                         {isMenuOpen ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}

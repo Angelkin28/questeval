@@ -14,7 +14,8 @@ import {
     Users,
     UserCircle,
     Home as HomeIcon,
-    Award
+    Award,
+    ArrowLeft
 } from 'lucide-react';
 import { api, Project } from '@/lib/api';
 import { useEffect } from 'react';
@@ -25,6 +26,7 @@ export default function DashboardPage() {
     const router = useRouter();
     const [userRole, setUserRole] = useState<'student' | 'teacher'>('student');
     const [userName, setUserName] = useState('Usuario');
+    const [userEnrollment, setUserEnrollment] = useState('');
     const [projects, setProjects] = useState<Project[]>([]);
     const [isLoading, setIsLoading] = useState(true);
 
@@ -46,6 +48,7 @@ export default function DashboardPage() {
                 }
 
                 setUserName(userData.fullName || 'Usuario');
+                setUserEnrollment(userData.enrollment || '');
                 const roleLower = userData.role?.toLowerCase();
                 const isTeacher = roleLower === 'maestro' || roleLower === 'profesor';
                 setUserRole(isTeacher ? 'teacher' : 'student');
@@ -60,7 +63,6 @@ export default function DashboardPage() {
                 }
             } catch (error) {
                 console.error('Error cargando dashboard:', error);
-                // Fallback a mock data si falla la API (opcional, por ahora lo dejamos vacío)
             } finally {
                 setIsLoading(false);
             }
@@ -70,6 +72,7 @@ export default function DashboardPage() {
     }, []);
 
     const [filter, setFilter] = useState<'All' | 'Integrative' | 'Videogames'>('All');
+    const [searchQuery, setSearchQuery] = useState('');
 
     // Mapeo de categorías para visualización
     const categoryMap = {
@@ -77,10 +80,13 @@ export default function DashboardPage() {
         'Videojuegos': 'Videogames'
     };
 
-    // Filtrado
-    const filteredProjects = filter === 'All'
-        ? projects
-        : projects.filter(p => categoryMap[p.category as keyof typeof categoryMap] === filter);
+    // Filtrado combinado: Categoría + Buscador
+    const filteredProjects = projects.filter(p => {
+        const matchesFilter = filter === 'All' || categoryMap[p.category as keyof typeof categoryMap] === filter;
+        const matchesSearch = p.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+            (p.description?.toLowerCase().includes(searchQuery.toLowerCase()) ?? false);
+        return matchesFilter && matchesSearch;
+    });
 
     if (userRole === 'teacher') {
         return (
@@ -117,77 +123,97 @@ export default function DashboardPage() {
             <Header title="QuestEval" />
 
             <main className="container mx-auto px-4 py-6">
-                {/* Welcome Section */}
-                <div className="mb-8 animate-fade-in">
-                    <h1 className="text-3xl font-bold mb-2 title-serif">Hola, {userName.split(' ')[0]} 👋</h1>
-                    <p className="text-muted-foreground">Aquí tienes el resumen de tus proyectos actuales.</p>
+                {/* User Info Card Section */}
+                <div className="mb-10 animate-fade-in">
+                    <div className="bg-card border border-border/50 rounded-2xl p-6 flex flex-col sm:flex-row items-center gap-4 shadow-sm relative overflow-hidden group">
+                        <div className="absolute top-0 left-0 w-1.5 h-full bg-primary/40 rounded-l-2xl" />
+                        <div className="w-14 h-14 bg-secondary/80 rounded-full flex items-center justify-center text-primary shrink-0">
+                            <UserCircle className="w-8 h-8" />
+                        </div>
+                        <div className="text-center sm:text-left flex-1">
+                            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+                                <p className="text-xl font-bold">
+                                    Alumno: <span className="text-primary/90">{userName}</span>
+                                </p>
+                                <div className="bg-primary/10 px-3 py-1 rounded-full border border-primary/20">
+                                    <p className="text-xs font-bold text-primary uppercase tracking-tight">
+                                        Matrícula: <span className="text-foreground">{userEnrollment || 'N/A'}</span>
+                                    </p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
                 </div>
 
                 {/* Filters & Actions */}
-                <div className="flex flex-col gap-4 mb-6 sm:flex-row sm:items-center sm:justify-between animate-fade-in" style={{ animationDelay: '100ms' }}>
+                <div className="flex flex-col gap-4 mb-10 sm:flex-row sm:items-center sm:justify-between animate-fade-in" style={{ animationDelay: '100ms' }}>
+
+                    <div className="flex items-center gap-2 overflow-x-auto pb-2 sm:pb-0 scrollbar-hide">
+                        <Button
+                            variant={filter === 'All' ? 'default' : 'outline'}
+                            size="sm"
+                            onClick={() => setFilter('All')}
+                            className="rounded-full px-6"
+                        >
+                            Mis Proyectos
+                        </Button>
+                        <Button
+                            variant={filter === 'Integrative' ? 'default' : 'outline'}
+                            size="sm"
+                            onClick={() => setFilter('Integrative')}
+                            className="rounded-full px-6"
+                        >
+                            Integrador
+                        </Button>
+                        <Button
+                            variant={filter === 'Videogames' ? 'default' : 'outline'}
+                            size="sm"
+                            onClick={() => setFilter('Videogames')}
+                            className="rounded-full px-6"
+                        >
+                            Videojuegos
+                        </Button>
+                    </div>
 
                     {/* Search */}
                     <div className="relative w-full sm:w-64">
                         <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
                         <Input
                             placeholder="Buscar proyectos..."
-                            className="pl-9 bg-secondary/50 border-0 focus-visible:ring-1 focus-visible:ring-primary"
+                            value={searchQuery}
+                            onChange={(e) => setSearchQuery(e.target.value)}
+                            className="pl-9 bg-secondary/50 border-0 focus-visible:ring-1 focus-visible:ring-primary rounded-full"
                         />
                     </div>
+                </div>
 
-                    {/* Filter Tabs */}
-                    <div className="flex bg-secondary p-1 rounded-lg w-full sm:w-auto">
-                        <button
-                            onClick={() => setFilter('All')}
-                            className={`flex-1 sm:flex-none px-4 py-1.5 rounded-md text-sm font-medium transition-all ${filter === 'All' ? 'bg-background shadow-sm text-foreground' : 'text-muted-foreground hover:text-foreground'}`}
+                <div className="mb-8 flex flex-col sm:flex-row sm:items-end justify-between gap-4 animate-fade-in" style={{ animationDelay: '150ms' }}>
+                    <div>
+                        <h2 className="text-4xl font-bold title-serif">Proyectos</h2>
+                        <p className="text-muted-foreground mt-1">Revisa tus calificaciones y progresos académicos.</p>
+                    </div>
+
+                    <div className="flex items-center gap-3">
+                        <Button
+                            onClick={() => router.push('/groups/join')}
+                            variant="outline"
+                            className="gap-2 border-primary/20 hover:bg-primary/5"
                         >
-                            Todos
-                        </button>
-                        <button
-                            onClick={() => setFilter('Integrative')}
-                            className={`flex-1 sm:flex-none px-4 py-1.5 rounded-md text-sm font-medium transition-all ${filter === 'Integrative' ? 'bg-background shadow-sm text-foreground' : 'text-muted-foreground hover:text-foreground'}`}
+                            <Users className="w-4 h-4" />
+                            Unirse a un Grupo
+                        </Button>
+                        <Button
+                            onClick={() => router.push('/project/new')}
+                            className="gap-2"
                         >
-                            Integrador
-                        </button>
-                        <button
-                            onClick={() => setFilter('Videogames')}
-                            className={`flex-1 sm:flex-none px-4 py-1.5 rounded-md text-sm font-medium transition-all ${filter === 'Videogames' ? 'bg-background shadow-sm text-foreground' : 'text-muted-foreground hover:text-foreground'}`}
-                        >
-                            Videojuegos
-                        </button>
+                            <Plus className="w-4 h-4" />
+                            Crear Proyecto
+                        </Button>
                     </div>
                 </div>
 
                 {/* Projects Grid */}
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 animate-fade-in" style={{ animationDelay: '200ms' }}>
-
-                    {/* Action Cards */}
-                    <div className="md:contents grid grid-cols-1 gap-6">
-                        {/* New Project Card */}
-                        <button
-                            onClick={() => router.push('/project/new')}
-                            className="group border-2 border-dashed border-muted-foreground/25 rounded-xl flex flex-col items-center justify-center p-8 hover:border-primary hover:bg-primary/5 transition-all h-[280px]"
-                        >
-                            <div className="w-16 h-16 bg-primary/10 rounded-full flex items-center justify-center mb-4 group-hover:scale-110 transition-transform duration-300">
-                                <Plus className="w-8 h-8 text-primary" />
-                            </div>
-                            <h3 className="font-semibold text-lg">Crear Nuevo Proyecto</h3>
-                            <p className="text-sm text-muted-foreground mt-2 text-center max-w-[200px]">Inicia un proyecto Integrador o de Videojuegos</p>
-                        </button>
-
-                        {/* Join Group Card */}
-                        <button
-                            onClick={() => router.push('/groups/join')}
-                            className="group border-2 border-dashed border-secondary/60 rounded-xl flex flex-col items-center justify-center p-8 hover:border-primary hover:bg-primary/5 transition-all h-[280px] bg-secondary/10"
-                        >
-                            <div className="w-16 h-16 bg-primary/10 rounded-full flex items-center justify-center mb-4 group-hover:scale-110 transition-transform duration-300">
-                                <Users className="w-8 h-8 text-primary" />
-                            </div>
-                            <h3 className="font-semibold text-lg">Unirse a un Grupo</h3>
-                            <p className="text-sm text-muted-foreground mt-2 text-center max-w-[200px]">Ingresa un código de acceso para inscribirte en un curso</p>
-                        </button>
-                    </div>
-
                     {/* Project Cards */}
                     {filteredProjects.map((project, idx) => (
                         <Card key={project.id || idx} onClick={() => router.push(`/project/${project.id}`)} className="overflow-hidden hover:shadow-lg transition-all group cursor-pointer border-border/50 bg-card">
@@ -239,9 +265,25 @@ export default function DashboardPage() {
                         </Card>
                     ))}
 
+                    {filteredProjects.length === 0 && searchQuery && (
+                        <div className="col-span-full py-10 text-center">
+                            <p className="text-muted-foreground italic">No se encontraron proyectos que coincidan con "{searchQuery}".</p>
+                        </div>
+                    )}
+
                     {projects.length === 0 && !isLoading && (
                         <div className="col-span-full py-20 text-center bg-secondary/20 rounded-xl border-2 border-dashed">
-                            <p className="text-muted-foreground">Aún no tienes proyectos. ¡Crea el primero!</p>
+                            <div className="w-16 h-16 bg-muted rounded-full flex items-center justify-center mx-auto mb-4">
+                                <Plus className="w-8 h-8 text-muted-foreground" />
+                            </div>
+                            <p className="text-muted-foreground font-medium">Aún no tienes proyectos asignados.</p>
+                            <Button
+                                onClick={() => router.push('/project/new')}
+                                variant="link"
+                                className="mt-2 text-primary"
+                            >
+                                Crear mi primer proyecto
+                            </Button>
                         </div>
                     )}
                 </div>
