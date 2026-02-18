@@ -161,17 +161,32 @@ export default function DashboardPage() {
                 {/* Projects Grid */}
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 animate-fade-in" style={{ animationDelay: '200ms' }}>
 
-                    {/* New Project Card */}
-                    <button
-                        onClick={() => router.push('/project/new')}
-                        className="group border-2 border-dashed border-muted-foreground/25 rounded-xl flex flex-col items-center justify-center p-8 hover:border-primary hover:bg-primary/5 transition-all h-[280px]"
-                    >
-                        <div className="w-16 h-16 bg-primary/10 rounded-full flex items-center justify-center mb-4 group-hover:scale-110 transition-transform duration-300">
-                            <Plus className="w-8 h-8 text-primary" />
-                        </div>
-                        <h3 className="font-semibold text-lg">Crear Nuevo Proyecto</h3>
-                        <p className="text-sm text-muted-foreground mt-2 text-center max-w-[200px]">Inicia un proyecto Integrador o de Videojuegos</p>
-                    </button>
+                    {/* Action Cards */}
+                    <div className="md:contents grid grid-cols-1 gap-6">
+                        {/* New Project Card */}
+                        <button
+                            onClick={() => router.push('/project/new')}
+                            className="group border-2 border-dashed border-muted-foreground/25 rounded-xl flex flex-col items-center justify-center p-8 hover:border-primary hover:bg-primary/5 transition-all h-[280px]"
+                        >
+                            <div className="w-16 h-16 bg-primary/10 rounded-full flex items-center justify-center mb-4 group-hover:scale-110 transition-transform duration-300">
+                                <Plus className="w-8 h-8 text-primary" />
+                            </div>
+                            <h3 className="font-semibold text-lg">Crear Nuevo Proyecto</h3>
+                            <p className="text-sm text-muted-foreground mt-2 text-center max-w-[200px]">Inicia un proyecto Integrador o de Videojuegos</p>
+                        </button>
+
+                        {/* Join Group Card */}
+                        <button
+                            onClick={() => router.push('/groups/join')}
+                            className="group border-2 border-dashed border-secondary/60 rounded-xl flex flex-col items-center justify-center p-8 hover:border-primary hover:bg-primary/5 transition-all h-[280px] bg-secondary/10"
+                        >
+                            <div className="w-16 h-16 bg-primary/10 rounded-full flex items-center justify-center mb-4 group-hover:scale-110 transition-transform duration-300">
+                                <Users className="w-8 h-8 text-primary" />
+                            </div>
+                            <h3 className="font-semibold text-lg">Unirse a un Grupo</h3>
+                            <p className="text-sm text-muted-foreground mt-2 text-center max-w-[200px]">Ingresa un código de acceso para inscribirte en un curso</p>
+                        </button>
+                    </div>
 
                     {/* Project Cards */}
                     {filteredProjects.map((project, idx) => (
