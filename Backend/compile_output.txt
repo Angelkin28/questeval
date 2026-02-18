@@ -1,0 +1,15 @@
+﻿  Determinando los proyectos que se van a restaurar...
+  Todos los proyectos est├ín actualizados para la restauraci├│n.
+C:\Users\angel\Desktop\QuestEval\Backend\Controllers\UsersController_NEW.cs(24,6): error CS1513: Se esperaba } [C:\Users\angel\Desktop\QuestEval\Backend\Backend.csproj]
+C:\Users\angel\Desktop\QuestEval\Backend\Services\EvaluationsService.cs(61,48): warning CS1570: El comentario XML tiene c├│digo XML con formato incorrecto: 'Se esperaba un identificador.' [C:\Users\angel\Desktop\QuestEval\Backend\Backend.csproj]
+C:\Users\angel\Desktop\QuestEval\Backend\Services\EvaluationsService.cs(61,48): warning CS1570: El comentario XML tiene c├│digo XML con formato incorrecto: 'El/los car├ícter/caracteres '=' no se puede/n usar en esta ubicaci├│n.' [C:\Users\angel\Desktop\QuestEval\Backend\Backend.csproj]
+
+ERROR al compilar.
+
+C:\Users\angel\Desktop\QuestEval\Backend\Services\EvaluationsService.cs(61,48): warning CS1570: El comentario XML tiene c├│digo XML con formato incorrecto: 'Se esperaba un identificador.' [C:\Users\angel\Desktop\QuestEval\Backend\Backend.csproj]
+C:\Users\angel\Desktop\QuestEval\Backend\Services\EvaluationsService.cs(61,48): warning CS1570: El comentario XML tiene c├│digo XML con formato incorrecto: 'El/los car├ícter/caracteres '=' no se puede/n usar en esta ubicaci├│n.' [C:\Users\angel\Desktop\QuestEval\Backend\Backend.csproj]
+C:\Users\angel\Desktop\QuestEval\Backend\Controllers\UsersController_NEW.cs(24,6): error CS1513: Se esperaba } [C:\Users\angel\Desktop\QuestEval\Backend\Backend.csproj]
+    2 Advertencia(s)
+    1 Errores
+
+Tiempo transcurrido 00:00:01.92

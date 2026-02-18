@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { useRouter } from 'next/navigation';
+import { useRouter, useParams } from 'next/navigation';
 import { api, Project, EvaluationResponse } from '@/lib/api';
 import Header from '@/components/layout/Header';
 import { Card, CardContent } from '@/components/ui/card';
@@ -16,22 +16,27 @@ import {
     MessageSquare
 } from 'lucide-react';
 
-export default function ProjectDetailsPage({ params }: { params: { id: string } }) {
+export default function ProjectDetailsPage() {
     const router = useRouter();
+    const params = useParams();
+    const id = params?.id as string;
+
     const [project, setProject] = useState<Project | null>(null);
     const [evaluation, setEvaluation] = useState<EvaluationResponse | null>(null);
     const [loading, setLoading] = useState(true);
 
     useEffect(() => {
         const fetchDetails = async () => {
+            if (!id) return;
+
             try {
-                const projectData = await api.projects.getById(params.id);
+                const projectData = await api.projects.getById(id);
                 setProject(projectData);
 
                 // Fetch evaluations if project is evaluated
                 if (projectData.status === 'Evaluated' || projectData.status === 'Completed') {
                     try {
-                        const evaluations = await api.evaluations.getByProject(params.id);
+                        const evaluations = await api.evaluations.getByProject(id);
                         if (evaluations && evaluations.length > 0) {
                             // Assuming we show the latest one or the only one
                             setEvaluation(evaluations[evaluations.length - 1]);
@@ -47,10 +52,10 @@ export default function ProjectDetailsPage({ params }: { params: { id: string } 
             }
         };
 
-        if (params.id) {
+        if (id) {
             fetchDetails();
         }
-    }, [params.id]);
+    }, [id]);
 
     if (loading) return (
         <div className="flex justify-center items-center min-h-screen">
@@ -110,8 +115,8 @@ export default function ProjectDetailsPage({ params }: { params: { id: string } 
                         <div className="flex items-center gap-2 text-sm font-medium">
                             <span className="text-muted-foreground">Estatus:</span>
                             <span className={`px-2 py-0.5 rounded-full text-xs ${project.status === 'Completed' ? 'bg-green-100 text-green-700' :
-                                    project.status === 'Evaluated' ? 'bg-blue-100 text-blue-700' :
-                                        'bg-yellow-100 text-yellow-700'
+                                project.status === 'Evaluated' ? 'bg-blue-100 text-blue-700' :
+                                    'bg-yellow-100 text-yellow-700'
                                 }`}>
                                 {project.status === 'Active' ? 'En Progreso' :
                                     project.status === 'Completed' ? 'Entregado' : 'Evaluado'}

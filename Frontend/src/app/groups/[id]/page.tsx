@@ -1,14 +1,17 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { useRouter } from 'next/navigation';
+import { useRouter, useParams } from 'next/navigation';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { ArrowLeft, Users, Mail, UserPlus, Copy, Check, BookOpen, GraduationCap, Layout, ClipboardCheck } from 'lucide-react';
 import { api, Group, UserResponse, Project } from '@/lib/api';
 
-export default function GroupDetailsPage({ params }: { params: { id: string } }) {
+export default function GroupDetailsPage() {
     const router = useRouter();
+    const params = useParams();
+    const id = params?.id as string;
+
     const [group, setGroup] = useState<Group | null>(null);
     const [members, setMembers] = useState<UserResponse[]>([]);
     const [projects, setProjects] = useState<Project[]>([]);
@@ -28,11 +31,12 @@ export default function GroupDetailsPage({ params }: { params: { id: string } })
         }
 
         const fetchDetails = async () => {
+            if (!id) return;
             try {
                 const [groupData, membersData, projectsData] = await Promise.all([
-                    api.groups.getById(params.id),
-                    api.groups.getMembers(params.id),
-                    api.groups.getProjects(params.id)
+                    api.groups.getById(id),
+                    api.groups.getMembers(id),
+                    api.groups.getProjects(id)
                 ]);
                 setGroup(groupData);
                 setMembers(membersData);
@@ -44,10 +48,10 @@ export default function GroupDetailsPage({ params }: { params: { id: string } })
             }
         };
 
-        if (params.id) {
+        if (id) {
             fetchDetails();
         }
-    }, [params.id]);
+    }, [id]);
 
     const copyCode = () => {
         if (group?.accessCode) {
