@@ -28,6 +28,8 @@ public class User
     [BsonRepresentation(BsonType.ObjectId)]
     public string? Id { get; set; }
 
+    public string? IncrementalId { get; set; } // ID incremental corto ("1", "2", "3"...)
+
     public string Email { get; set; } = null!;
     public string PasswordHash { get; set; } = null!; // Password hasheado
     public string FullName { get; set; } = null!;
@@ -53,6 +55,8 @@ public class Group
     [BsonRepresentation(BsonType.ObjectId)]
     public string? Id { get; set; }
 
+    public string? IncrementalId { get; set; }
+
     public string Name { get; set; } = null!;
 
     public string AccessCode { get; set; } = null!;
@@ -69,8 +73,9 @@ public class Membership
     [BsonRepresentation(BsonType.ObjectId)]
     public string? Id { get; set; }
 
+    public string? IncrementalId { get; set; }
+
     // Almacena el ID externo del Usuario (ej., UUID de Supabase/Auth0) como string.
-    // No usa [BsonRepresentation(BsonType.ObjectId)] para permitir cualquier formato de string.
     public string UserId { get; set; } = null!; 
 
     [BsonRepresentation(BsonType.ObjectId)]
@@ -87,6 +92,8 @@ public class Project
     [BsonId]
     [BsonRepresentation(BsonType.ObjectId)]
     public string? Id { get; set; }
+
+    public string? IncrementalId { get; set; }
 
     public string Name { get; set; } = null!;
     public string Description { get; set; } = null!;
@@ -121,6 +128,8 @@ public class Criterion
     [BsonRepresentation(BsonType.ObjectId)]
     public string? Id { get; set; }
 
+    public string? IncrementalId { get; set; }
+
     public string Name { get; set; } = null!;
     public string Description { get; set; } = null!;
     public int MaxScore { get; set; }
@@ -135,10 +144,13 @@ public class Evaluation
     [BsonRepresentation(BsonType.ObjectId)]
     public string? Id { get; set; }
 
+    public string? IncrementalId { get; set; }
+
     [BsonRepresentation(BsonType.ObjectId)]
     public string ProjectId { get; set; } = null!;
 
     // Almacena el ID externo del Evaluador (ej., UUID) como string.
+    [BsonRepresentation(BsonType.ObjectId)]
     public string EvaluatorId { get; set; } = null!; 
 
     // Campo desnormalizado: Almacenar puntuación total calculada al momento de escritura
@@ -174,6 +186,8 @@ public class Feedback
     [BsonId]
     [BsonRepresentation(BsonType.ObjectId)]
     public string? Id { get; set; }
+
+    public string? IncrementalId { get; set; }
 
     [BsonRepresentation(BsonType.ObjectId)]
     public string EvaluationId { get; set; } = null!;

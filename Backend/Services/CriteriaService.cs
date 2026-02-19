@@ -13,83 +13,89 @@ namespace Backend.Services;
 public class CriteriaService : ICriteriaService
 {
     // Campo privado que mantiene la referencia a la colección de MongoDB
-    // Esta colección se usa en todos los métodos para realizar operaciones CRUD
     private readonly IMongoCollection<Criterion> _collection;
+    private readonly IMongoCollection<DatabaseCounters> _counters;
 
     /// <summary>
     /// Constructor que inicializa la conexión a MongoDB y obtiene la colección de criterios.
-    /// Se inyecta la configuración mediante IOptions para seguir el patrón de DI de ASP.NET Core.
     /// </summary>
     /// <param name="settings">Configuración de la base de datos desde appsettings.json</param>
     public CriteriaService(IOptions<QuestEvalDatabaseSettings> settings)
     {
-        // Crear cliente de MongoDB con la cadena de conexión de configuración
         var mongoClient = new MongoClient(settings.Value.ConnectionString);
-        
-        // Obtener la base de datos específica
         var database = mongoClient.GetDatabase(settings.Value.DatabaseName);
-        
-        // Obtener la colección de criterios usando el nombre configurado
         _collection = database.GetCollection<Criterion>(settings.Value.CriteriaCollectionName);
+        _counters = database.GetCollection<DatabaseCounters>("database_counters");
+    }
+
+    private async Task<string> GetNextIdAsync(string collectionName)
+    {
+        var filter = Builders<DatabaseCounters>.Filter.Eq(x => x.CollectionName, collectionName);
+        var update = Builders<DatabaseCounters>.Update.Inc(x => x.LastId, 1);
+        var options = new FindOneAndUpdateOptions<DatabaseCounters>
+        {
+            IsUpsert = true,
+            ReturnDocument = ReturnDocument.After
+        };
+
+        var counter = await _counters.FindOneAndUpdateAsync(filter, update, options);
+        return counter.LastId.ToString();
     }
 
     /// <summary>
     /// Obtiene todos los criterios de evaluación sin filtro.
     /// </summary>
-    /// <returns>Lista de todos los criterios en la base de datos</returns>
-    public async Task<List<Criterion>> GetAllAsync()
-    {
-        // Usar Find con filtro vacío (_=> true) para obtener todos los documentos
-        // ToListAsync() ejecuta la query de manera asíncrona
-        return await _collection.Find(_ => true).ToListAsync();
-    }
+    public async Task<List<Criterion>> GetAllAsync() =>
+        await _collection.Find(_ => true).ToListAsync();
 
     /// <summary>
     /// Busca un criterio específico por su ID único de MongoDB.
     /// </summary>
-    /// <param name="id">ID del criterio (string de 24 caracteres hexadecimales)</param>
-    /// <returns>El criterio encontrado o null si no existe</returns>
-    public async Task<Criterion?> GetByIdAsync(string id)
-    {
-        // Buscar usando expresión lambda que compara el Id
-        // FirstOrDefaultAsync retorna el primer match o null si no encuentra
-        return await _collection.Find(x => x.Id == id).FirstOrDefaultAsync();
-    }
+    public async Task<Criterion?> GetByIdAsync(string id) =>
+        await _collection.Find(x => x.Id == id).FirstOrDefaultAsync();
 
     /// <summary>
-    /// Inserta un nuevo criterio en la base de datos.
-    /// MongoDB generará automáticamente el ObjectId si no está presente.
+    /// Inserta un nuevo criterio en la base de datos con ID incremental.
     /// </summary>
-    /// <param name="criterion">Criterio a crear (sin ID, se genera automáticamente)</param>
     public async Task CreateAsync(Criterion criterion)
     {
-        // InsertOneAsync agrega el documento a la colección
-        // El driver de MongoDB asignará automáticamente un _id al documento
+        if (string.IsNullOrEmpty(criterion.IncrementalId))
+        {
+            criterion.IncrementalId = await GetNextIdAsync("criteria");
+        }
         await _collection.InsertOneAsync(criterion);
     }
 
     /// <summary>
     /// Reemplaza completamente un criterio existente con nuevos datos.
-    /// Todos los campos del criterio se sobrescriben.
     /// </summary>
-    /// <param name="id">ID del criterio a actualizar</param>
-    /// <param name="criterion">Nuevos datos del criterio</param>
     public async Task UpdateAsync(string id, Criterion criterion)
     {
-        // ReplaceOneAsync busca por Id y reemplaza el documento completo
-        // Esto es diferente a UpdateOneAsync que solo modifica campos específicos
+        criterion.Id = id;
         await _collection.ReplaceOneAsync(x => x.Id == id, criterion);
     }
 
     /// <summary>
     /// Elimina permanentemente un criterio de la base de datos.
-    /// Esta operación no se puede deshacer.
     /// </summary>
-    /// <param name="id">ID del criterio a eliminar</param>
-    public async Task DeleteAsync(string id)
-    {
-        // DeleteOneAsync elimina el primer documento que coincida con el filtro
-        // En este caso, como Id es único, solo se eliminará un documento
+    public async Task DeleteAsync(string id) =>
         await _collection.DeleteOneAsync(x => x.Id == id);
+
+    /// <summary>
+    /// Asigna IncrementalId a criterios existentes que no lo tengan.
+    /// </summary>
+    public async Task InitializeIncrementalIdsAsync()
+    {
+        var criteria = await _collection.Find(_ => true).ToListAsync();
+        foreach (var criterion in criteria)
+        {
+            if (string.IsNullOrEmpty(criterion.IncrementalId))
+            {
+                var newIncId = await GetNextIdAsync("criteria");
+                var filter = Builders<Criterion>.Filter.Eq(c => c.Id, criterion.Id);
+                var update = Builders<Criterion>.Update.Set(c => c.IncrementalId, newIncId);
+                await _collection.UpdateOneAsync(filter, update);
+            }
+        }
     }
 }

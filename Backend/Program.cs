@@ -202,6 +202,24 @@ using (var scope = app.Services.CreateScope())
     
     await usersService.CreateAsync(newAdmin);
     logger.LogInformation("New Admin user created successfully.");
+
+    // Initialize incremental IDs for existing data if any
+    logger.LogInformation("Initializing incremental IDs for existing data...");
+    
+    var groupsService = scope.ServiceProvider.GetRequiredService<IGroupsService>();
+    var projectsService = scope.ServiceProvider.GetRequiredService<IProjectsService>();
+    var criteriaService = scope.ServiceProvider.GetRequiredService<ICriteriaService>();
+    var evaluationsService = scope.ServiceProvider.GetRequiredService<IEvaluationsService>();
+    var feedbackService = scope.ServiceProvider.GetRequiredService<IFeedbackService>();
+
+    await usersService.InitializeIncrementalIdsAsync();
+    await groupsService.InitializeIncrementalIdsAsync();
+    await projectsService.InitializeIncrementalIdsAsync();
+    await criteriaService.InitializeIncrementalIdsAsync();
+    await evaluationsService.InitializeIncrementalIdsAsync();
+    await feedbackService.InitializeIncrementalIdsAsync();
+    
+    logger.LogInformation("ID initialization complete.");
 }
 
 // ==================== INICIAR SERVIDOR ====================

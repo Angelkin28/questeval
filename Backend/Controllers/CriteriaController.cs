@@ -44,7 +44,7 @@ public class CriteriaController : ControllerBase
     /// <returns>El criterio solicitado</returns>
     /// <response code="200">Retorna el criterio</response>
     /// <response code="404">Si el criterio no se encuentra</response>
-    [HttpGet("{id:length(24)}")]
+    [HttpGet("{id}")]
     [ProducesResponseType(typeof(CriterionResponse), StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
     public async Task<ActionResult<CriterionResponse>> Get(string id)
@@ -107,7 +107,7 @@ public class CriteriaController : ControllerBase
     /// <returns>Sin contenido</returns>
     /// <response code="204">Si el criterio fue actualizado exitosamente</response>
     /// <response code="404">Si el criterio no se encuentra</response>
-    [HttpPut("{id:length(24)}")]
+    [HttpPut("{id}")]
     [ProducesResponseType(StatusCodes.Status204NoContent)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
     public async Task<IActionResult> Update(string id, CreateCriterionRequest request)
@@ -139,7 +139,7 @@ public class CriteriaController : ControllerBase
     /// <returns>Sin contenido</returns>
     /// <response code="204">Si el criterio fue eliminado exitosamente</response>
     /// <response code="404">Si el criterio no se encuentra</response>
-    [HttpDelete("{id:length(24)}")]
+    [HttpDelete("{id}")]
     [ProducesResponseType(StatusCodes.Status204NoContent)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
     public async Task<IActionResult> Delete(string id)

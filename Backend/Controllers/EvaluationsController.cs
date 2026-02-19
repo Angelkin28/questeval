@@ -52,7 +52,7 @@ public class EvaluationsController : ControllerBase
     /// <returns>El recurso solicitado de evaluation</returns>
     /// <response code=\200\>Retorna el evaluation</response>
     /// <response code=\404\>Si el recurso no se encuentra</response>
-    [HttpGet("{id:length(24)}")]
+    [HttpGet("{id}")]
     [ProducesResponseType(typeof(EvaluationResponse), StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
     public async Task<ActionResult<EvaluationResponse>> Get(string id)
@@ -166,7 +166,7 @@ public class EvaluationsController : ControllerBase
     /// <returns>Sin contenido</returns>
     /// <response code=\204\>Si se completó exitosamente</response>
     /// <response code=\404\>Si el recurso no se encuentra</response>
-    [HttpDelete("{id:length(24)}")]
+    [HttpDelete("{id}")]
     [ProducesResponseType(StatusCodes.Status204NoContent)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
     public async Task<IActionResult> Delete(string id)

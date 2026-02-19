@@ -75,5 +75,10 @@ public interface IUsersService
     /// <param name="adminId">ID del administrador que aprueba/rechaza</param>
     /// <returns>True si se actualizó correctamente</returns>
     Task<bool> UpdateTeacherStatusAsync(string teacherId, string status, string adminId);
+
+    /// <summary>
+    /// Genera IDs incrementales para usuarios existentes que tengan IDs tipo ObjectId.
+    /// </summary>
+    Task InitializeIncrementalIdsAsync();
 }
 

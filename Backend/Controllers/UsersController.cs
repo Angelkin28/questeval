@@ -107,6 +107,7 @@ public class UsersController : ControllerBase
         return Ok(new LoginResponse
         {
             UserId = user.Id!,
+            IncrementalId = user.IncrementalId,
             Email = user.Email,
             FullName = user.FullName,
             Role = user.Role,
@@ -125,6 +126,7 @@ public class UsersController : ControllerBase
         var response = users.Select(u => new UserResponse
         {
             Id = u.Id!,
+            IncrementalId = u.IncrementalId,
             Email = u.Email,
             FullName = u.FullName,
             Role = u.Role,
@@ -151,6 +153,7 @@ public class UsersController : ControllerBase
         var response = new UserResponse
         {
             Id = user.Id!,
+            IncrementalId = user.IncrementalId,
             Email = user.Email,
             FullName = user.FullName,
             Role = user.Role,

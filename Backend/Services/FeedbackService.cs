@@ -22,6 +22,7 @@ public class FeedbackService : IFeedbackService
 {
     // Colección de MongoDB para feedback
     private readonly IMongoCollection<Feedback> _collection;
+    private readonly IMongoCollection<DatabaseCounters> _counters;
 
     /// <summary>
     /// Constructor que establece la conexión a la colección de feedbacks.
@@ -32,15 +33,25 @@ public class FeedbackService : IFeedbackService
         var mongoClient = new MongoClient(settings.Value.ConnectionString);
         var database = mongoClient.GetDatabase(settings.Value.DatabaseName);
         _collection = database.GetCollection<Feedback>(settings.Value.FeedbackCollectionName);
+        _counters = database.GetCollection<DatabaseCounters>("database_counters");
+    }
+
+    private async Task<string> GetNextIdAsync(string collectionName)
+    {
+        var filter = Builders<DatabaseCounters>.Filter.Eq(x => x.CollectionName, collectionName);
+        var update = Builders<DatabaseCounters>.Update.Inc(x => x.LastId, 1);
+        var options = new FindOneAndUpdateOptions<DatabaseCounters>
+        {
+            IsUpsert = true,
+            ReturnDocument = ReturnDocument.After
+        };
+
+        var counter = await _counters.FindOneAndUpdateAsync(filter, update, options);
+        return counter.LastId.ToString();
     }
 
     /// <summary>
     /// Obtiene todos los feedbacks sin filtro.
-    /// 
-    /// MEJORAS FUTURAS - Agregar filtros por:
-    /// - EvaluationId (feedback específico de una evaluación)
-    /// - ProviderId (todos los feedbacks dados por un profesor)
-    /// - Rango de fechas
     /// </summary>
     public async Task<List<Feedback>> GetAllAsync() =>
         await _collection.Find(_ => true).ToListAsync();
@@ -48,44 +59,42 @@ public class FeedbackService : IFeedbackService
     /// <summary>
     /// Busca un feedback por su ID único.
     /// </summary>
-    /// <param name="id">ObjectId del feedback</param>
     public async Task<Feedback?> GetByIdAsync(string id) =>
         await _collection.Find(x => x.Id == id).FirstOrDefaultAsync();
 
     /// <summary>
-    /// Crea un nuevo feedback para una evaluación.
-    /// 
-    /// VALIDACIONES PREVIAS RECOMENDADAS:
-    /// 1. Verificar que el EvaluationId existe
-    /// 2. Verificar que el ProviderId (quien da el feedback) existe y es profesor
-    /// 3. (Opcional) Verificar que no exista ya un feedback para esta evaluación
-    ///     - Decidir si permitir múltiples feedbacks o solo uno por evaluación
-    /// 4. Establecer CreatedAt con DateTime.UtcNow
-    /// 5. Validar que Comments no esté vacío
-    /// 
-    /// ESTRUCTURA DEL FEEDBACK:
-    /// - EvaluationId: a qué evaluación corresponde este comentario
-    /// - ProviderId: quién escribió el feedback (generalmente el mismo evaluador)
-    /// - Comments: texto libre con la retroalimentación
-    /// - CreatedAt: timestamp de creación
+    /// Crea un nuevo feedback para una evaluación con ID incremental.
     /// </summary>
-    /// <param name="feedback">Feedback con EvaluationId, ProviderId y Comments</param>
-    public async Task CreateAsync(Feedback feedback) =>
+    public async Task CreateAsync(Feedback feedback)
+    {
+        if (string.IsNullOrEmpty(feedback.IncrementalId))
+        {
+            feedback.IncrementalId = await GetNextIdAsync("feedback");
+        }
         await _collection.InsertOneAsync(feedback);
+    }
 
     /// <summary>
     /// Elimina un feedback.
-    /// 
-    /// CONSIDERACIONES:
-    /// - Similar a las evaluaciones, el feedback es generalmente inmutable
-    /// - Esta es la única forma de "editar" (eliminar y recrear)
-    /// - En producción, considerar soft delete para mantener historial
-    /// 
-    /// CASOS DE USO:
-    /// - Eliminar feedback escrito por error
-    /// - Limpieza cuando se elimina la evaluación asociada
     /// </summary>
-    /// <param name="id">ID del feedback a eliminar</param>
     public async Task DeleteAsync(string id) =>
         await _collection.DeleteOneAsync(x => x.Id == id);
+
+    /// <summary>
+    /// Asigna IncrementalId a feedbacks existentes que no lo tengan.
+    /// </summary>
+    public async Task InitializeIncrementalIdsAsync()
+    {
+        var feedbacks = await _collection.Find(_ => true).ToListAsync();
+        foreach (var feedback in feedbacks)
+        {
+            if (string.IsNullOrEmpty(feedback.IncrementalId))
+            {
+                var newIncId = await GetNextIdAsync("feedback");
+                var filter = Builders<Feedback>.Filter.Eq(f => f.Id, feedback.Id);
+                var update = Builders<Feedback>.Update.Set(f => f.IncrementalId, newIncId);
+                await _collection.UpdateOneAsync(filter, update);
+            }
+        }
+    }
 }

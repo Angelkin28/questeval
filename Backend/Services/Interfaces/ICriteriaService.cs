@@ -42,4 +42,9 @@ public interface ICriteriaService
     /// <param name="id">ID del criterio a eliminar</param>
     /// <returns>Tarea asíncrona de eliminación</returns>
     Task DeleteAsync(string id);
+
+    /// <summary>
+    /// Genera IDs incrementales para criterios existentes que tengan IDs tipo ObjectId.
+    /// </summary>
+    Task InitializeIncrementalIdsAsync();
 }

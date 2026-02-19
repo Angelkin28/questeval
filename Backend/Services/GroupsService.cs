@@ -14,6 +14,7 @@ public class GroupsService : IGroupsService
 {
     // Colección de MongoDB para la entidad Group
     private readonly IMongoCollection<Group> _collection;
+    private readonly IMongoCollection<DatabaseCounters> _counters;
 
     /// <summary>
     /// Constructor que inicializa la conexión a la colección de groups en MongoDB.
@@ -24,48 +25,77 @@ public class GroupsService : IGroupsService
         var mongoClient = new MongoClient(settings.Value.ConnectionString);
         var database = mongoClient.GetDatabase(settings.Value.DatabaseName);
         _collection = database.GetCollection<Group>(settings.Value.GroupsCollectionName);
+        _counters = database.GetCollection<DatabaseCounters>("database_counters");
+    }
+
+    private async Task<string> GetNextIdAsync(string collectionName)
+    {
+        var filter = Builders<DatabaseCounters>.Filter.Eq(x => x.CollectionName, collectionName);
+        var update = Builders<DatabaseCounters>.Update.Inc(x => x.LastId, 1);
+        var options = new FindOneAndUpdateOptions<DatabaseCounters>
+        {
+            IsUpsert = true,
+            ReturnDocument = ReturnDocument.After
+        };
+
+        var counter = await _counters.FindOneAndUpdateAsync(filter, update, options);
+        return counter.LastId.ToString();
     }
 
     /// <summary>
     /// Recupera todos los grupos sin aplicar filtros.
-    /// Útil para listar grupos disponibles o para administradores.
     /// </summary>
     public async Task<List<Group>> GetAllAsync() =>
         await _collection.Find(_ => true).ToListAsync();
 
     /// <summary>
     /// Busca un grupo por su ID único de MongoDB.
-    /// Se usa para validar existencia antes de crear proyectos o membresías.
     /// </summary>
-    /// <param name="id">ObjectId en formato string</param>
     public async Task<Group?> GetByIdAsync(string id) =>
         await _collection.Find(x => x.Id == id).FirstOrDefaultAsync();
 
     /// <summary>
-    /// Crea un nuevo grupo en la base de datos.
-    /// El AccessCode debe ser único - considerar validación previa.
-    /// MongoDB asignará automáticamente el _id.
+    /// Crea un nuevo grupo en la base de datos con ID incremental.
     /// </summary>
-    /// <param name="group">Grupo a crear con Name y AccessCode</param>
-    public async Task CreateAsync(Group group) =>
+    public async Task CreateAsync(Group group)
+    {
+        if (string.IsNullOrEmpty(group.IncrementalId))
+        {
+            group.IncrementalId = await GetNextIdAsync("groups");
+        }
         await _collection.InsertOneAsync(group);
+    }
 
     /// <summary>
     /// Actualiza todos los datos de un grupo existente.
-    /// Útil para cambiar nombre o código de acceso del grupo.
     /// </summary>
-    /// <param name="id">ID del grupo a modificar</param>
-    /// <param name="group">Nuevos datos del grupo</param>
-    public async Task UpdateAsync(string id, Group group) =>
+    public async Task UpdateAsync(string id, Group group)
+    {
+        group.Id = id;
         await _collection.ReplaceOneAsync(x => x.Id == id, group);
+    }
 
     /// <summary>
     /// Elimina un grupo permanentemente.
-    /// IMPORTANTE: Considerar eliminar o actualizar:
-    /// - Proyectos asociados a este grupo
-    /// - Membresías de usuarios en este grupo
     /// </summary>
-    /// <param name="id">ID del grupo a eliminar</param>
     public async Task DeleteAsync(string id) =>
         await _collection.DeleteOneAsync(x => x.Id == id);
+
+    /// <summary>
+    /// Asigna IncrementalId a grupos existentes que no lo tengan.
+    /// </summary>
+    public async Task InitializeIncrementalIdsAsync()
+    {
+        var groups = await _collection.Find(_ => true).ToListAsync();
+        foreach (var group in groups)
+        {
+            if (string.IsNullOrEmpty(group.IncrementalId))
+            {
+                var newIncId = await GetNextIdAsync("groups");
+                var filter = Builders<Group>.Filter.Eq(g => g.Id, group.Id);
+                var update = Builders<Group>.Update.Set(g => g.IncrementalId, newIncId);
+                await _collection.UpdateOneAsync(filter, update);
+            }
+        }
+    }
 }

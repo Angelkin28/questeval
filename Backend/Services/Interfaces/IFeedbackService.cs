@@ -35,4 +35,9 @@ public interface IFeedbackService
     /// <param name="id">ID del feedback a eliminar</param>
     /// <returns>Tarea asíncrona de eliminación</returns>
     Task DeleteAsync(string id);
+
+    /// <summary>
+    /// Genera IDs incrementales para feedbacks existentes que tengan IDs tipo ObjectId.
+    /// </summary>
+    Task InitializeIncrementalIdsAsync();
 }

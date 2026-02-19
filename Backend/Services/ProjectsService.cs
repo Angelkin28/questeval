@@ -14,6 +14,7 @@ public class ProjectsService : IProjectsService
 {
     // Colección de MongoDB para proyectos
    private readonly IMongoCollection<Project> _collection;
+   private readonly IMongoCollection<DatabaseCounters> _counters;
 
     /// <summary>
     /// Constructor que inicializa la conexión a la colección de proyectos.
@@ -24,61 +25,83 @@ public class ProjectsService : IProjectsService
         var mongoClient = new MongoClient(settings.Value.ConnectionString);
         var database = mongoClient.GetDatabase(settings.Value.DatabaseName);
         _collection = database.GetCollection<Project>(settings.Value.ProjectsCollectionName);
+        _counters = database.GetCollection<DatabaseCounters>("database_counters");
+    }
+
+    private async Task<string> GetNextIdAsync(string collectionName)
+    {
+        var filter = Builders<DatabaseCounters>.Filter.Eq(x => x.CollectionName, collectionName);
+        var update = Builders<DatabaseCounters>.Update.Inc(x => x.LastId, 1);
+        var options = new FindOneAndUpdateOptions<DatabaseCounters>
+        {
+            IsUpsert = true,
+            ReturnDocument = ReturnDocument.After
+        };
+
+        var counter = await _counters.FindOneAndUpdateAsync(filter, update, options);
+        return counter.LastId.ToString();
     }
 
     /// <summary>
     /// Recupera todos los proyectos sin filtro.
-    /// MEJORA FUTURA: Implementar filtro por GroupId o Status para optimizar queries.
     /// </summary>
     public async Task<List<Project>> GetAllAsync() =>
         await _collection.Find(_ => true).ToListAsync();
 
     /// <summary>
     /// Busca un proyecto por su ID único.
-    /// Se usa para obtener detalles antes de crear evaluaciones.
     /// </summary>
-    /// <param name="id">MongoDB ObjectId del proyecto</param>
     public async Task<Project?> GetByIdAsync(string id) =>
         await _collection.Find(x => x.Id == id).FirstOrDefaultAsync();
 
     /// <summary>
     /// Obtiene todos los proyectos que pertenecen a un grupo especfico.
-    /// til para mostrar proyectos en la lista de grupos o en el perfil de usuario.
     /// </summary>
     public async Task<List<Project>> GetByGroupIdAsync(string groupId) =>
         await _collection.Find(x => x.GroupId == groupId).ToListAsync();
 
     /// <summary>
-    /// Crea un nuevo proyecto en la base de datos.
-    /// VALIDACIONES PREVIAS RECOMENDADAS:
-    /// - Verificar que el GroupId exista
-    /// - Establecer Status inicial (por defecto "Active")
-    /// - Establecer CreatedAt y UpdatedAt con DateTime.UtcNow
+    /// Crea un nuevo proyecto en la base de datos con ID incremental.
     /// </summary>
-    /// <param name="project">Proyecto con Name, Description y GroupId</param>
-    public async Task CreateAsync(Project project) =>
+    public async Task CreateAsync(Project project)
+    {
+        if (string.IsNullOrEmpty(project.IncrementalId))
+        {
+            project.IncrementalId = await GetNextIdAsync("projects");
+        }
         await _collection.InsertOneAsync(project);
+    }
 
     /// <summary>
     /// Actualiza un proyecto existente.
-    /// Casos de uso comunes:
-    /// - Cambiar el status a "Finalized" cuando se completa
-    /// - Actualizar nombre o descripción
-    /// - Archivar proyectos antiguos (status = "Archived")
-    /// IMPORTANTE: Actualizar el campo UpdatedAt antes de llamar este método.
     /// </summary>
-    /// <param name="id">ID del proyecto a modificar</param>
-    /// <param name="project">Datos actualizados del proyecto</param>
-    public async Task UpdateAsync(string id, Project project) =>
+    public async Task UpdateAsync(string id, Project project)
+    {
+        project.Id = id;
         await _collection.ReplaceOneAsync(x => x.Id == id, project);
+    }
 
     /// <summary>
     /// Elimina permanentemente un proyecto.
-    /// IMPACTO EN CASCADA:
-    /// - Las evaluaciones asociadas quedarán huérfanas (considerar eliminarlas también)
-    /// - Mejor práctica: cambiar Status a "Archived" en lugar de eliminar
     /// </summary>
-    /// <param name="id">ID del proyecto a eliminar</param>
     public async Task DeleteAsync(string id) =>
         await _collection.DeleteOneAsync(x => x.Id == id);
+
+    /// <summary>
+    /// Asigna IncrementalId a proyectos existentes que no lo tengan.
+    /// </summary>
+    public async Task InitializeIncrementalIdsAsync()
+    {
+        var projects = await _collection.Find(_ => true).ToListAsync();
+        foreach (var project in projects)
+        {
+            if (string.IsNullOrEmpty(project.IncrementalId))
+            {
+                var newIncId = await GetNextIdAsync("projects");
+                var filter = Builders<Project>.Filter.Eq(p => p.Id, project.Id);
+                var update = Builders<Project>.Update.Set(p => p.IncrementalId, newIncId);
+                await _collection.UpdateOneAsync(filter, update);
+            }
+        }
+    }
 }

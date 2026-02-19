@@ -69,13 +69,14 @@ public class LoginRequest
 public class LoginResponse
 {
     public string UserId { get; set; } = null!;
+    public string? IncrementalId { get; set; }
     public string Email { get; set; } = null!;
     public string FullName { get; set; } = null!;
     public string Role { get; set; } = null!;
     public string? AvatarUrl { get; set; }
-    public string Token { get; set; } = null!; // Token JWT (opcional por ahora)
-    public bool EmailVerified { get; set; } // Si el email fue verificado con OTP
-    public string VerificationStatus { get; set; } = null!; // Estado de aprobación (para Profesores)
+    public string Token { get; set; } = null!;
+    public bool EmailVerified { get; set; }
+    public string VerificationStatus { get; set; } = null!;
 }
 
 /// <summary>
@@ -84,13 +85,14 @@ public class LoginResponse
 public class UserResponse
 {
     public string Id { get; set; } = null!;
+    public string? IncrementalId { get; set; }
     public string Email { get; set; } = null!;
     public string FullName { get; set; } = null!;
     public string Role { get; set; } = null!;
     public string? AvatarUrl { get; set; }
     public DateTime CreatedAt { get; set; }
-    public bool EmailVerified { get; set; } // Nuevo campo
-    public string VerificationStatus { get; set; } = null!; // Nuevo campo
+    public bool EmailVerified { get; set; }
+    public string VerificationStatus { get; set; } = null!;
 }
 
 /// <summary>

@@ -1,0 +1,9 @@
+﻿  Determinando los proyectos que se van a restaurar...
+  Todos los proyectos est├ín actualizados para la restauraci├│n.
+  Backend -> C:\Users\angel\Desktop\QuestEval\Backend\bin\Debug\net10.0\Backend.dll
+
+Compilaci├│n correcta.
+    0 Advertencia(s)
+    0 Errores
+
+Tiempo transcurrido 00:00:08.84

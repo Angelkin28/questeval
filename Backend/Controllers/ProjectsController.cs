@@ -108,7 +108,7 @@ public class ProjectsController : ControllerBase
     /// <returns>El recurso solicitado de project</returns>
     /// <response code=\200\>Retorna el project</response>
     /// <response code=\404\>Si el recurso no se encuentra</response>
-    [HttpGet("{id:length(24)}")]
+    [HttpGet("{id}")]
     [ProducesResponseType(typeof(ProjectResponse), StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
     public async Task<ActionResult<ProjectResponse>> Get(string id)
@@ -202,7 +202,7 @@ public class ProjectsController : ControllerBase
     /// <returns>Sin contenido</returns>
     /// <response code=\204\>Si se completó exitosamente</response>
     /// <response code=\404\>Si el recurso no se encuentra</response>
-    [HttpPut("{id:length(24)}")]
+    [HttpPut("{id}")]
     [ProducesResponseType(StatusCodes.Status204NoContent)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
     public async Task<IActionResult> Update(string id, CreateProjectRequest request)
@@ -246,7 +246,7 @@ public class ProjectsController : ControllerBase
     /// <returns>Sin contenido</returns>
     /// <response code=\204\>Si se completó exitosamente</response>
     /// <response code=\404\>Si el recurso no se encuentra</response>
-    [HttpDelete("{id:length(24)}")]
+    [HttpDelete("{id}")]
     [ProducesResponseType(StatusCodes.Status204NoContent)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
     public async Task<IActionResult> Delete(string id)

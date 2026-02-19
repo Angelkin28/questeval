@@ -37,4 +37,9 @@ public interface IEvaluationsService
     /// <param name="id">ID de la evaluación a eliminar</param>
     /// <returns>Tarea asíncrona de eliminación</returns>
     Task DeleteAsync(string id);
+
+    /// <summary>
+    /// Genera IDs incrementales para evaluaciones existentes que tengan IDs tipo ObjectId.
+    /// </summary>
+    Task InitializeIncrementalIdsAsync();
 }

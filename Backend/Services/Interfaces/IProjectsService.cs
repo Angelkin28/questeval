@@ -47,4 +47,9 @@ public interface IProjectsService
     /// <param name="id">ID del proyecto a eliminar</param>
     /// <returns>Tarea asíncrona de eliminación</returns>
     Task DeleteAsync(string id);
+
+    /// <summary>
+    /// Genera IDs incrementales para proyectos existentes que tengan IDs tipo ObjectId.
+    /// </summary>
+    Task InitializeIncrementalIdsAsync();
 }

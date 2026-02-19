@@ -44,4 +44,9 @@ public interface IGroupsService
     /// <param name="id">ID del grupo a eliminar</param>
     /// <returns>Tarea asíncrona de eliminación</returns>
     Task DeleteAsync(string id);
+
+    /// <summary>
+    /// Genera IDs incrementales para grupos existentes que tengan IDs tipo ObjectId.
+    /// </summary>
+    Task InitializeIncrementalIdsAsync();
 }

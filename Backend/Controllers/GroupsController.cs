@@ -149,7 +149,7 @@ public class GroupsController : ControllerBase
         return Ok(response);
     }
 
-    [HttpGet("{id:length(24)}")]
+    [HttpGet("{id}")]
     [ProducesResponseType(typeof(GroupResponse), StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
     public async Task<ActionResult<GroupResponse>> Get(string id)
@@ -211,7 +211,7 @@ public class GroupsController : ControllerBase
         return CreatedAtAction(nameof(Get), new { id = newGroup.Id }, response);
     }
 
-    [HttpPut("{id:length(24)}")]
+    [HttpPut("{id}")]
     [ProducesResponseType(StatusCodes.Status204NoContent)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
     public async Task<IActionResult> Update(string id, UpdateGroupRequest request)
@@ -236,7 +236,7 @@ public class GroupsController : ControllerBase
         return NoContent();
     }
 
-    [HttpDelete("{id:length(24)}")]
+    [HttpDelete("{id}")]
     [ProducesResponseType(StatusCodes.Status204NoContent)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
     public async Task<IActionResult> Delete(string id)
