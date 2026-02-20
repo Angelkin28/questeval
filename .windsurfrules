@@ -1,0 +1,9 @@
+**CRITICAL INSTRUCTION FOR THE AI:**
+Before providing any assistance related to backend code (C# files in `Controllers/` or `Services/`), you MUST read the file `API_ERRORS_DOCUMENTATION.md` located in the root directory.
+
+## Backend Rules for QuestEval (MongoDB + .NET Core)
+1. **Always Validate Foreign Keys**: Inject the appropriate service and call `GetByIdAsync` to verify that an ID exists before saving it to a document. Never assume the frontend sends valid data.
+2. **Prevent Orphaned Data**: When writing `Delete` methods, do not just delete the parent record. You must cascade the deletion to all child records (like Memberships or Evaluations) or use logical deletion.
+3. **Transactions**: Use MongoDB transactions when modifying multiple collections in the same operation.
+
+If you generate code that performs blind inserts without validating IDs, you are failing your objective. Read `API_ERRORS_DOCUMENTATION.md` for full context on existing bugs.
