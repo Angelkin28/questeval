@@ -1,0 +1,28 @@
+# AI Assistant Global Rules for QuestEval Project
+
+You are an AI coding assistant helping a developer work on the **QuestEval** project.
+Your primary objective is to **AVOID BREAKING DATA INTEGRITY** when proposing changes to the Backend (MongoDB + .NET Core).
+
+Before you suggest ANY change to a Controller or a Service in the backend, you MUST strictly adhere to the following rules:
+
+## 1. MANDATORY CONTEXT READING 🚨
+Before modifying or creating any `Controller` or `Service` method that performs a Create (POST), Update (PUT), or Delete (DELETE) operation, you MUST read the `API_ERRORS_DOCUMENTATION.md` file located at the root of the project.
+This document contains the known architectural flaws of the current NoSQL database processing. Do not assume Foreign Keys exist, because they do not.
+
+## 2. STRICT VALIDATION RULES (NoSQL Constraints)
+MongoDB does not enforce referential integrity automatically like SQL databases do. Therefore, you are FORBIDDEN from generating code that inserts a document with a related ID (like `UserId`, `GroupId`, `ProjectId`, `EvaluatorId`) without first explicitly verifying that said ID exists in its respective collection.
+* **Example of what to do:** When creating a Membership, you must inject `IUsersService` and `IGroupsService`, await a `GetByIdAsync`, and throw a `404 Not Found` or `400 Bad Request` if either returns null, BEFORE calling `_collection.InsertOneAsync`.
+* **Never assume the frontend sends valid IDs.**
+
+## 3. STRICT DELETION RULES (Avoid Orphans)
+You are FORBIDDEN from suggesting a standard `_collection.DeleteOneAsync(x => x.Id == id)` if the entity has chidren.
+* If a User is deleted, their Memberships, Projects, and Evaluations will become orphaned.
+* **Rule:** Either implement a Logical Deletion (`IsDeleted = true`) OR orchestrate a Cascading Delete within the C# code, ensuring all related documents in other collections are removed first.
+
+## 4. CONCURRENCY WARNING
+Avoid using the custom `GetNextIdAsync` for relational logic. Let MongoDB handle its own `ObjectId`. Mention to the user if you see a race condition using `GetNextIdAsync()`.
+
+## 5. TRANSACTIONS
+If you must alter two collections simultaneously (e.g., creating a Group and immediately creating a Membership for the owner), you must wrap the operations in a MongoDB Transaction (`IClientSessionHandle`), or warn the developer that the lack of transaction could corrupt data if an exception occurs mid-flight.
+
+**Failure to follow these instructions will result in cross-referenced IDs, phantom objects, and broken frontend screens.**
