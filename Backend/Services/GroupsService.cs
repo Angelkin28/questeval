@@ -1,5 +1,7 @@
 using Microsoft.Extensions.Options;
 using MongoDB.Driver;
+using MongoDB.Bson;
+using System.Linq;
 using Backend.Models;
 using Backend.Services.Interfaces;
 
@@ -54,14 +56,17 @@ public class GroupsService : IGroupsService
     public async Task<Group?> GetByIdAsync(string id) =>
         await _collection.Find(x => x.Id == id).FirstOrDefaultAsync();
 
+    public async Task<Group?> GetByGroupIdAsync(string groupId) =>
+        await _collection.Find(x => x.GroupId == groupId).FirstOrDefaultAsync();
+
     /// <summary>
-    /// Crea un nuevo grupo en la base de datos con ID incremental.
+    /// Crea un nuevo grupo en la base de datos con Códice secuencial.
     /// </summary>
     public async Task CreateAsync(Group group)
     {
-        if (string.IsNullOrEmpty(group.IncrementalId))
+        if (string.IsNullOrEmpty(group.GroupId))
         {
-            group.IncrementalId = await GetNextIdAsync("groups");
+            group.GroupId = await GetNextIdAsync("groups");
         }
         await _collection.InsertOneAsync(group);
     }
@@ -82,19 +87,36 @@ public class GroupsService : IGroupsService
         await _collection.DeleteOneAsync(x => x.Id == id);
 
     /// <summary>
-    /// Asigna IncrementalId a grupos existentes que no lo tengan.
+    /// Migra grupos existentes: renombra IncrementalId a Codice y limpia campos viejos.
     /// </summary>
     public async Task InitializeIncrementalIdsAsync()
     {
-        var groups = await _collection.Find(_ => true).ToListAsync();
-        foreach (var group in groups)
+        var rawCollection = _collection.Database.GetCollection<BsonDocument>(_collection.CollectionNamespace.CollectionName);
+        var groups = await rawCollection.Find(_ => true).ToListAsync();
+
+        foreach (var groupDoc in groups)
         {
-            if (string.IsNullOrEmpty(group.IncrementalId))
+            var updates = new List<UpdateDefinition<BsonDocument>>();
+
+            if ((groupDoc.Contains("IncrementalId") || groupDoc.Contains("Codice")) && !groupDoc.Contains("GroupId"))
             {
-                var newIncId = await GetNextIdAsync("groups");
-                var filter = Builders<Group>.Filter.Eq(g => g.Id, group.Id);
-                var update = Builders<Group>.Update.Set(g => g.IncrementalId, newIncId);
-                await _collection.UpdateOneAsync(filter, update);
+                var val = groupDoc.Contains("Codice") ? groupDoc["Codice"].ToString() : groupDoc["IncrementalId"].ToString();
+                updates.Add(Builders<BsonDocument>.Update.Set("GroupId", val));
+                updates.Add(Builders<BsonDocument>.Update.Unset("IncrementalId"));
+                updates.Add(Builders<BsonDocument>.Update.Unset("Codice"));
+            }
+            else if (!groupDoc.Contains("GroupId"))
+            {
+                var newGroupId = await GetNextIdAsync("groups");
+                updates.Add(Builders<BsonDocument>.Update.Set("GroupId", newGroupId));
+            }
+
+            if (updates.Any())
+            {
+                await rawCollection.UpdateOneAsync(
+                    Builders<BsonDocument>.Filter.Eq("_id", groupDoc["_id"]),
+                    Builders<BsonDocument>.Update.Combine(updates)
+                );
             }
         }
     }

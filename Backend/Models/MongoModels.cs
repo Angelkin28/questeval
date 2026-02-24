@@ -22,13 +22,14 @@ public class QuestEvalDatabaseSettings
 /// <summary>
 /// Modelo de usuario del sistema
 /// </summary>
+[BsonIgnoreExtraElements]
 public class User
 {
     [BsonId]
     [BsonRepresentation(BsonType.ObjectId)]
     public string? Id { get; set; }
 
-    public string? IncrementalId { get; set; } // ID incremental corto ("1", "2", "3"...)
+    public string? UserId { get; set; } // ID incremental corto ("1", "2", "3"...) - Antes Enrollment
 
     public string Email { get; set; } = null!;
     public string PasswordHash { get; set; } = null!; // Password hasheado
@@ -49,13 +50,14 @@ public class User
 /// <summary>
 /// Modelo de grupo de estudiantes
 /// </summary>
+[BsonIgnoreExtraElements]
 public class Group
 {
     [BsonId]
     [BsonRepresentation(BsonType.ObjectId)]
     public string? Id { get; set; }
 
-    public string? IncrementalId { get; set; }
+    public string? GroupId { get; set; } // Antes Codice
 
     public string Name { get; set; } = null!;
 
@@ -67,18 +69,18 @@ public class Group
 /// <summary>
 /// Modelo de membresía (relación Usuario-Grupo)
 /// </summary>
+[BsonIgnoreExtraElements]
 public class Membership
 {
     [BsonId]
     [BsonRepresentation(BsonType.ObjectId)]
     public string? Id { get; set; }
 
-    public string? IncrementalId { get; set; }
+    public string? MiembroId { get; set; } // Antes Codice
 
-    // Almacena el ID externo del Usuario (ej., UUID de Supabase/Auth0) como string.
+    // Almacena el ID externo del Usuario como Matrícula (Enrollment/UserId).
     public string UserId { get; set; } = null!; 
 
-    [BsonRepresentation(BsonType.ObjectId)]
     public string GroupId { get; set; } = null!;
 
     public DateTime JoinedAt { get; set; } = DateTime.UtcNow;
@@ -87,13 +89,14 @@ public class Membership
 /// <summary>
 /// Modelo de proyecto estudiantil
 /// </summary>
+[BsonIgnoreExtraElements]
 public class Project
 {
     [BsonId]
     [BsonRepresentation(BsonType.ObjectId)]
     public string? Id { get; set; }
 
-    public string? IncrementalId { get; set; }
+    public string? ProjectId { get; set; } // Antes Codice
 
     public string Name { get; set; } = null!;
     public string Description { get; set; } = null!;
@@ -102,8 +105,8 @@ public class Project
     public string? ThumbnailUrl { get; set; }
     public List<string> TeamMembers { get; set; } = new List<string>();
 
-    [BsonRepresentation(BsonType.ObjectId)]
-    public string GroupId { get; set; } = null!;
+    public string? GroupId { get; set; } // Antes GroupCodice
+    public string? UserId { get; set; } // Propietario del proyecto
 
     public string Status { get; set; } = "Active"; // Active, Finalized, Archived
 
@@ -122,13 +125,14 @@ public class QuestionAnswer
 /// <summary>
 /// Modelo de criterio de evaluación
 /// </summary>
+[BsonIgnoreExtraElements]
 public class Criterion
 {
     [BsonId]
     [BsonRepresentation(BsonType.ObjectId)]
     public string? Id { get; set; }
 
-    public string? IncrementalId { get; set; }
+    public string? CriteriaId { get; set; } // Antes Codice
 
     public string Name { get; set; } = null!;
     public string Description { get; set; } = null!;
@@ -138,20 +142,25 @@ public class Criterion
 /// <summary>
 /// Modelo de evaluación de proyecto
 /// </summary>
+[BsonIgnoreExtraElements]
 public class Evaluation
 {
     [BsonId]
     [BsonRepresentation(BsonType.ObjectId)]
     public string? Id { get; set; }
 
-    public string? IncrementalId { get; set; }
+    public string? EvaluationId { get; set; } // Antes Codice
 
-    [BsonRepresentation(BsonType.ObjectId)]
-    public string ProjectId { get; set; } = null!;
+    public string? ProjectId { get; set; } // Antes ProjectCodice
 
-    // Almacena el ID externo del Evaluador (ej., UUID) como string.
-    [BsonRepresentation(BsonType.ObjectId)]
-    public string EvaluatorId { get; set; } = null!; 
+    // Almacena la Matrícula del Evaluador (UserId).
+    public string? UserId { get; set; } 
+
+    // Desnormalización: Rol del evaluador al momento de la evaluación (Alumno/Profesor)
+    public string EvaluatorRole { get; set; } = null!;
+
+    // Desnormalización: Nombre del evaluador al momento de la evaluación
+    public string EvaluatorName { get; set; } = null!;
 
     // Campo desnormalizado: Almacenar puntuación total calculada al momento de escritura
     public double FinalScore { get; set; }
@@ -166,13 +175,12 @@ public class Evaluation
 /// <summary>
 /// Detalle de evaluación (documento embebido)
 /// </summary>
+[BsonIgnoreExtraElements]
 public class EvaluationDetail
 {
-    [BsonRepresentation(BsonType.ObjectId)]
-    public string CriterionId { get; set; } = null!;
+    public string? CriteriaId { get; set; } // Antes CriterionCodice
 
     // Desnormalización: Captura instantánea del nombre del criterio al momento de la evaluación.
-    // Esto asegura que si el nombre del criterio cambia después, la evaluación histórica permanece precisa.
     public string CriterionName { get; set; } = null!;
 
     public int Score { get; set; }
@@ -181,16 +189,16 @@ public class EvaluationDetail
 /// <summary>
 /// Modelo de retroalimentación de evaluación
 /// </summary>
+[BsonIgnoreExtraElements]
 public class Feedback
 {
     [BsonId]
     [BsonRepresentation(BsonType.ObjectId)]
     public string? Id { get; set; }
 
-    public string? IncrementalId { get; set; }
+    public string? FeedbackId { get; set; } // Antes Codice
 
-    [BsonRepresentation(BsonType.ObjectId)]
-    public string EvaluationId { get; set; } = null!;
+    public string? EvaluationId { get; set; } // Antes EvaluationCodice
 
     public string Comment { get; set; } = null!;
     public bool IsPublic { get; set; } = true;

@@ -20,6 +20,8 @@ public interface IFeedbackService
     /// <param name="id">ID del feedback (MongoDB ObjectId)</param>
     /// <returns>El feedback encontrado o null si no existe</returns>
     Task<Feedback?> GetByIdAsync(string id);
+    Task<Feedback?> GetByFeedbackIdAsync(string feedbackId);
+    Task<List<Feedback>> GetByEvaluationIdAsync(string evaluationId);
 
     /// <summary>
     /// Crea un nuevo feedback asociado a una evaluación.

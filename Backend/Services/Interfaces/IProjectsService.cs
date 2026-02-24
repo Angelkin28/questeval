@@ -20,6 +20,7 @@ public interface IProjectsService
     /// <param name="id">ID del proyecto (MongoDB ObjectId)</param>
     /// <returns>El proyecto encontrado o null si no existe</returns>
     Task<Project?> GetByIdAsync(string id);
+    Task<Project?> GetByProjectIdAsync(string projectId);
     
     Task<List<Project>> GetByGroupIdAsync(string groupId);
 
@@ -39,6 +40,17 @@ public interface IProjectsService
     /// <param name="project">Nuevos datos del proyecto</param>
     /// <returns>Tarea asíncrona de actualización</returns>
     Task UpdateAsync(string id, Project project);
+
+    /// <summary>
+    /// Busca y filtra proyectos con paginación.
+    /// </summary>
+    /// <param name="searchTerm">Texto a buscar en nombre o descripción</param>
+    /// <param name="category">Filtro por categoría</param>
+    /// <param name="status">Filtro por estado</param>
+    /// <param name="page">Número de página (1-based)</param>
+    /// <param name="pageSize">Tamaño de página</param>
+    /// <returns>Tupla con la lista de proyectos y el total de coincidencias</returns>
+    Task<(List<Project>, long)> SearchAsync(string? searchTerm, string? category, string? status, int page, int pageSize);
 
     /// <summary>
     /// Elimina un proyecto del sistema.

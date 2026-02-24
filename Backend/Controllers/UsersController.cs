@@ -56,6 +56,7 @@ public class UsersController : ControllerBase
             PasswordHash = passwordHash,
             FullName = request.FullName,
             Role = request.Role,
+            UserId = request.UserId,
             CreatedAt = DateTime.UtcNow,
             UpdatedAt = DateTime.UtcNow,
             EmailVerified = false,
@@ -67,6 +68,7 @@ public class UsersController : ControllerBase
         var response = new UserResponse
         {
             Id = newUser.Id!,
+            UserId = newUser.UserId,
             Email = newUser.Email,
             FullName = newUser.FullName,
             Role = newUser.Role,
@@ -106,8 +108,8 @@ public class UsersController : ControllerBase
 
         return Ok(new LoginResponse
         {
-            UserId = user.Id!,
-            IncrementalId = user.IncrementalId,
+            Id = user.Id!,
+            UserId = user.UserId,
             Email = user.Email,
             FullName = user.FullName,
             Role = user.Role,
@@ -126,7 +128,7 @@ public class UsersController : ControllerBase
         var response = users.Select(u => new UserResponse
         {
             Id = u.Id!,
-            IncrementalId = u.IncrementalId,
+            UserId = u.UserId,
             Email = u.Email,
             FullName = u.FullName,
             Role = u.Role,
@@ -153,7 +155,7 @@ public class UsersController : ControllerBase
         var response = new UserResponse
         {
             Id = user.Id!,
-            IncrementalId = user.IncrementalId,
+            UserId = user.UserId,
             Email = user.Email,
             FullName = user.FullName,
             Role = user.Role,
@@ -259,7 +261,7 @@ public class UsersController : ControllerBase
         }
         
         var success = await _service.UpdateTeacherStatusAsync(
-            request.TeacherId, 
+            request.UserId, 
             request.Status,
             adminId
         );
@@ -281,6 +283,7 @@ public class UsersController : ControllerBase
         var claims = new[]
         {
             new Claim(ClaimTypes.NameIdentifier, user.Id!),
+            new Claim("userId", user.UserId ?? ""),
             new Claim(ClaimTypes.Email, user.Email),
             new Claim(ClaimTypes.Role, user.Role), // Roles: "Alumno", "Profesor", "Admin"
             new Claim("verificationStatus", user.VerificationStatus ?? "pending")

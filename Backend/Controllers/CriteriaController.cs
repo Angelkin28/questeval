@@ -1,4 +1,5 @@
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Authorization;
 using Backend.Models;
 using Backend.Services.Interfaces;
 
@@ -30,6 +31,7 @@ public class CriteriaController : ControllerBase
         var response = criteria.Select(c => new CriterionResponse
         {
             Id = c.Id!,
+            CriteriaId = c.CriteriaId,
             Name = c.Name,
             Description = c.Description,
             MaxScore = c.MaxScore
@@ -59,6 +61,7 @@ public class CriteriaController : ControllerBase
         var response = new CriterionResponse
         {
             Id = criterion.Id!,
+            CriteriaId = criterion.CriteriaId,
             Name = criterion.Name,
             Description = criterion.Description,
             MaxScore = criterion.MaxScore
@@ -75,6 +78,7 @@ public class CriteriaController : ControllerBase
     /// <response code="201">Retorna el criterio recién creado</response>
     /// <response code="400">Si la solicitud es inválida</response>
     [HttpPost]
+    [Authorize(Roles = "Profesor,Admin")]
     [ProducesResponseType(typeof(CriterionResponse), StatusCodes.Status201Created)]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
     public async Task<ActionResult<CriterionResponse>> Post(CreateCriterionRequest request)
@@ -91,6 +95,7 @@ public class CriteriaController : ControllerBase
         var response = new CriterionResponse
         {
             Id = newCriterion.Id!,
+            CriteriaId = newCriterion.CriteriaId,
             Name = newCriterion.Name,
             Description = newCriterion.Description,
             MaxScore = newCriterion.MaxScore
@@ -108,6 +113,7 @@ public class CriteriaController : ControllerBase
     /// <response code="204">Si el criterio fue actualizado exitosamente</response>
     /// <response code="404">Si el criterio no se encuentra</response>
     [HttpPut("{id}")]
+    [Authorize(Roles = "Profesor,Admin")]
     [ProducesResponseType(StatusCodes.Status204NoContent)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
     public async Task<IActionResult> Update(string id, CreateCriterionRequest request)
@@ -122,6 +128,7 @@ public class CriteriaController : ControllerBase
         var updatedCriterion = new Criterion
         {
             Id = id,
+            CriteriaId = criterion.CriteriaId, // Preservar - no editable
             Name = request.Name,
             Description = request.Description,
             MaxScore = request.MaxScore
@@ -140,6 +147,7 @@ public class CriteriaController : ControllerBase
     /// <response code="204">Si el criterio fue eliminado exitosamente</response>
     /// <response code="404">Si el criterio no se encuentra</response>
     [HttpDelete("{id}")]
+    [Authorize(Roles = "Profesor,Admin")]
     [ProducesResponseType(StatusCodes.Status204NoContent)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
     public async Task<IActionResult> Delete(string id)
@@ -152,7 +160,6 @@ public class CriteriaController : ControllerBase
         }
 
         await _service.DeleteAsync(id);
-
         return NoContent();
     }
 }

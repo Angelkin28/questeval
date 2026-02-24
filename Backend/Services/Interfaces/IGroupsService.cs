@@ -22,6 +22,13 @@ public interface IGroupsService
     Task<Group?> GetByIdAsync(string id);
 
     /// <summary>
+    /// Busca un grupo por su ID secuencial (GroupId).
+    /// </summary>
+    /// <param name="groupId">ID del grupo</param>
+    /// <returns>El grupo encontrado o null</returns>
+    Task<Group?> GetByGroupIdAsync(string groupId);
+
+    /// <summary>
     /// Crea un nuevo grupo en la base de datos.
     /// El código de acceso debe ser único en el sistema.
     /// </summary>

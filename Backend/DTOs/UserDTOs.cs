@@ -40,6 +40,12 @@ public class RegisterRequest
     /// <example>Alumno</example>
     [RegularExpression(@"^(Alumno|Profesor|Admin)$", ErrorMessage = "El rol debe ser 'Alumno', 'Profesor' o 'Admin'.")]
     public string Role { get; set; } = "Alumno"; // Rol por defecto
+
+    /// <summary>
+    /// Matrícula o ID secuencial del usuario (opcional si se genera automáticamente)
+    /// </summary>
+    /// <example>2024001</example>
+    public string? UserId { get; set; }
 }
 
 /// <summary>
@@ -68,8 +74,11 @@ public class LoginRequest
 /// </summary>
 public class LoginResponse
 {
-    public string UserId { get; set; } = null!;
-    public string? IncrementalId { get; set; }
+    /// <summary>Identificador único (MongoDB ObjectId)</summary>
+    public string Id { get; set; } = null!;
+    /// <summary>Matrícula o ID incremental numérico</summary>
+    /// <example>2024001</example>
+    public string? UserId { get; set; }
     public string Email { get; set; } = null!;
     public string FullName { get; set; } = null!;
     public string Role { get; set; } = null!;
@@ -84,8 +93,11 @@ public class LoginResponse
 /// </summary>
 public class UserResponse
 {
+    /// <summary>Identificador único (MongoDB ObjectId)</summary>
     public string Id { get; set; } = null!;
-    public string? IncrementalId { get; set; }
+    /// <summary>Matrícula o ID incremental numérico</summary>
+    /// <example>2024001</example>
+    public string? UserId { get; set; }
     public string Email { get; set; } = null!;
     public string FullName { get; set; } = null!;
     public string Role { get; set; } = null!;
@@ -141,7 +153,7 @@ public class ApproveTeacherRequest
     /// ID del maestro a aprobar/rechazar
     /// </summary>
     [Required(ErrorMessage = "El ID del maestro es requerido.")]
-    public string TeacherId { get; set; } = null!;
+    public string UserId { get; set; } = null!;
 
     /// <summary>
     /// Estado de aprobación: "approved" o "rejected"

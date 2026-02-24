@@ -1,5 +1,7 @@
 using Microsoft.Extensions.Options;
 using MongoDB.Driver;
+using MongoDB.Bson;
+using System.Linq;
 using Backend.Models;
 using Backend.Services.Interfaces;
 
@@ -62,14 +64,20 @@ public class FeedbackService : IFeedbackService
     public async Task<Feedback?> GetByIdAsync(string id) =>
         await _collection.Find(x => x.Id == id).FirstOrDefaultAsync();
 
+    public async Task<Feedback?> GetByFeedbackIdAsync(string feedbackId) =>
+        await _collection.Find(x => x.FeedbackId == feedbackId).FirstOrDefaultAsync();
+
+    public async Task<List<Feedback>> GetByEvaluationIdAsync(string evaluationId) =>
+        await _collection.Find(x => x.EvaluationId == evaluationId).ToListAsync();
+
     /// <summary>
-    /// Crea un nuevo feedback para una evaluación con ID incremental.
+    /// Crea un nuevo feedback para una evaluación con Códice secular.
     /// </summary>
     public async Task CreateAsync(Feedback feedback)
     {
-        if (string.IsNullOrEmpty(feedback.IncrementalId))
+        if (string.IsNullOrEmpty(feedback.FeedbackId))
         {
-            feedback.IncrementalId = await GetNextIdAsync("feedback");
+            feedback.FeedbackId = await GetNextIdAsync("feedback");
         }
         await _collection.InsertOneAsync(feedback);
     }
@@ -81,19 +89,66 @@ public class FeedbackService : IFeedbackService
         await _collection.DeleteOneAsync(x => x.Id == id);
 
     /// <summary>
-    /// Asigna IncrementalId a feedbacks existentes que no lo tengan.
+    /// Migra feedback existente: renombra IncrementalId a Codice y convierte EvaluationId (ObjectId) a EvaluationCodice (string).
     /// </summary>
     public async Task InitializeIncrementalIdsAsync()
     {
-        var feedbacks = await _collection.Find(_ => true).ToListAsync();
-        foreach (var feedback in feedbacks)
+        var rawFeedback = _collection.Database.GetCollection<BsonDocument>(_collection.CollectionNamespace.CollectionName);
+        var rawEvaluations = _collection.Database.GetCollection<BsonDocument>("evaluations");
+
+        var feedbacks = await rawFeedback.Find(_ => true).ToListAsync();
+        foreach (var feedbackDoc in feedbacks)
         {
-            if (string.IsNullOrEmpty(feedback.IncrementalId))
+            var updates = new List<UpdateDefinition<BsonDocument>>();
+
+            // 1. Migrar IncrementalId/Codice -> FeedbackId
+            if ((feedbackDoc.Contains("IncrementalId") || feedbackDoc.Contains("Codice")) && !feedbackDoc.Contains("FeedbackId"))
             {
-                var newIncId = await GetNextIdAsync("feedback");
-                var filter = Builders<Feedback>.Filter.Eq(f => f.Id, feedback.Id);
-                var update = Builders<Feedback>.Update.Set(f => f.IncrementalId, newIncId);
-                await _collection.UpdateOneAsync(filter, update);
+                var val = feedbackDoc.Contains("Codice") ? feedbackDoc["Codice"].ToString() : feedbackDoc["IncrementalId"].ToString();
+                updates.Add(Builders<BsonDocument>.Update.Set("FeedbackId", val));
+                updates.Add(Builders<BsonDocument>.Update.Unset("IncrementalId"));
+                updates.Add(Builders<BsonDocument>.Update.Unset("Codice"));
+            }
+            else if (!feedbackDoc.Contains("FeedbackId"))
+            {
+                var newFeedId = await GetNextIdAsync("feedback");
+                updates.Add(Builders<BsonDocument>.Update.Set("FeedbackId", newFeedId));
+            }
+
+            // 2. Migrar EvaluationId (ObjectId) / EvaluationCodice (string) -> EvaluationId (string)
+            if (!feedbackDoc.Contains("EvaluationId") || feedbackDoc["EvaluationId"].IsObjectId)
+            {
+                BsonValue? oldEvalVal = feedbackDoc.Contains("EvaluationId") ? feedbackDoc["EvaluationId"] : (feedbackDoc.Contains("EvaluationCodice") ? feedbackDoc["EvaluationCodice"] : null);
+                if (oldEvalVal != null)
+                {
+                    string? evalIdStr = null;
+                    if (oldEvalVal.IsObjectId)
+                    {
+                        var eval = await rawEvaluations.Find(Builders<BsonDocument>.Filter.Eq("_id", oldEvalVal)).FirstOrDefaultAsync();
+                        if (eval != null)
+                        {
+                            evalIdStr = eval.Contains("EvaluationId") ? eval["EvaluationId"].ToString() : (eval.Contains("Codice") ? eval["Codice"].ToString() : (eval.Contains("IncrementalId") ? eval["IncrementalId"].ToString() : ""));
+                        }
+                    }
+                    else
+                    {
+                        evalIdStr = oldEvalVal.ToString();
+                    }
+
+                    if (!string.IsNullOrEmpty(evalIdStr))
+                    {
+                        updates.Add(Builders<BsonDocument>.Update.Set("EvaluationId", evalIdStr));
+                        updates.Add(Builders<BsonDocument>.Update.Unset("EvaluationCodice"));
+                    }
+                }
+            }
+
+            if (updates.Any())
+            {
+                await rawFeedback.UpdateOneAsync(
+                    Builders<BsonDocument>.Filter.Eq("_id", feedbackDoc["_id"]),
+                    Builders<BsonDocument>.Update.Combine(updates)
+                );
             }
         }
     }

@@ -1,5 +1,7 @@
 using Microsoft.Extensions.Options;
 using MongoDB.Driver;
+using MongoDB.Bson;
+using System.Linq;
 using Backend.Models;
 using Backend.Services.Interfaces;
 
@@ -54,6 +56,9 @@ public class ProjectsService : IProjectsService
     public async Task<Project?> GetByIdAsync(string id) =>
         await _collection.Find(x => x.Id == id).FirstOrDefaultAsync();
 
+    public async Task<Project?> GetByProjectIdAsync(string projectId) =>
+        await _collection.Find(x => x.ProjectId == projectId).FirstOrDefaultAsync();
+
     /// <summary>
     /// Obtiene todos los proyectos que pertenecen a un grupo especfico.
     /// </summary>
@@ -61,13 +66,13 @@ public class ProjectsService : IProjectsService
         await _collection.Find(x => x.GroupId == groupId).ToListAsync();
 
     /// <summary>
-    /// Crea un nuevo proyecto en la base de datos con ID incremental.
+    /// Crea un nuevo proyecto en la base de datos con Códice secular.
     /// </summary>
     public async Task CreateAsync(Project project)
     {
-        if (string.IsNullOrEmpty(project.IncrementalId))
+        if (string.IsNullOrEmpty(project.ProjectId))
         {
-            project.IncrementalId = await GetNextIdAsync("projects");
+            project.ProjectId = await GetNextIdAsync("projects");
         }
         await _collection.InsertOneAsync(project);
     }
@@ -88,19 +93,129 @@ public class ProjectsService : IProjectsService
         await _collection.DeleteOneAsync(x => x.Id == id);
 
     /// <summary>
-    /// Asigna IncrementalId a proyectos existentes que no lo tengan.
+    /// Busca y filtra proyectos con paginación.
+    /// </summary>
+    public async Task<(List<Project>, long)> SearchAsync(string? searchTerm, string? category, string? status, int page, int pageSize)
+    {
+        var builder = Builders<Project>.Filter;
+        var filter = builder.Empty;
+
+        if (!string.IsNullOrEmpty(searchTerm))
+        {
+            var searchFilter = builder.Or(
+                builder.Regex(x => x.Name, new BsonRegularExpression(searchTerm, "i")),
+                builder.Regex(x => x.Description, new BsonRegularExpression(searchTerm, "i"))
+            );
+            filter = builder.And(filter, searchFilter);
+        }
+
+        if (!string.IsNullOrEmpty(category))
+        {
+            filter = builder.And(filter, builder.Eq(x => x.Category, category));
+        }
+
+        if (!string.IsNullOrEmpty(status))
+        {
+            filter = builder.And(filter, builder.Eq(x => x.Status, status));
+        }
+
+        var total = await _collection.CountDocumentsAsync(filter);
+        var projects = await _collection.Find(filter)
+            .Skip((page - 1) * pageSize)
+            .Limit(pageSize)
+            .ToListAsync();
+
+        return (projects, total);
+    }
+
+    /// <summary>
+    /// Migra proyectos existentes: renombra IncrementalId a Codice y convierte GroupId (ObjectId) a GroupCodice (string).
     /// </summary>
     public async Task InitializeIncrementalIdsAsync()
     {
-        var projects = await _collection.Find(_ => true).ToListAsync();
-        foreach (var project in projects)
+        var rawProjects = _collection.Database.GetCollection<BsonDocument>(_collection.CollectionNamespace.CollectionName);
+        var rawGroups = _collection.Database.GetCollection<BsonDocument>("groups"); // Nombre de colección por defecto o desde settings si fuera posible
+
+        var projects = await rawProjects.Find(_ => true).ToListAsync();
+        foreach (var projectDoc in projects)
         {
-            if (string.IsNullOrEmpty(project.IncrementalId))
+            var updates = new List<UpdateDefinition<BsonDocument>>();
+
+            // 1. Migrar IncrementalId/Codice -> ProjectId
+            if ((projectDoc.Contains("IncrementalId") || projectDoc.Contains("Codice")) && !projectDoc.Contains("ProjectId"))
             {
-                var newIncId = await GetNextIdAsync("projects");
-                var filter = Builders<Project>.Filter.Eq(p => p.Id, project.Id);
-                var update = Builders<Project>.Update.Set(p => p.IncrementalId, newIncId);
-                await _collection.UpdateOneAsync(filter, update);
+                var val = projectDoc.Contains("Codice") ? projectDoc["Codice"].ToString() : projectDoc["IncrementalId"].ToString();
+                updates.Add(Builders<BsonDocument>.Update.Set("ProjectId", val));
+                updates.Add(Builders<BsonDocument>.Update.Unset("IncrementalId"));
+                updates.Add(Builders<BsonDocument>.Update.Unset("Codice"));
+            }
+            else if (!projectDoc.Contains("ProjectId"))
+            {
+                var newProjId = await GetNextIdAsync("projects");
+                updates.Add(Builders<BsonDocument>.Update.Set("ProjectId", newProjId));
+            }
+
+            // 2. Migrar GroupId (ObjectId) / GroupCodice (string) -> GroupId (string)
+            if (projectDoc.Contains("GroupId") || projectDoc.Contains("GroupCodice"))
+            {
+                BsonValue? oldGroupIdVal = projectDoc.Contains("GroupId") ? projectDoc["GroupId"] : projectDoc["GroupCodice"];
+                
+                if (oldGroupIdVal != null)
+                {
+                    string? groupIdStr = null;
+                    if (oldGroupIdVal.IsObjectId)
+                    {
+                        var group = await rawGroups.Find(Builders<BsonDocument>.Filter.Eq("_id", oldGroupIdVal)).FirstOrDefaultAsync();
+                        if (group != null)
+                        {
+                            groupIdStr = group.Contains("GroupId") ? group["GroupId"].ToString() : (group.Contains("Codice") ? group["Codice"].ToString() : (group.Contains("IncrementalId") ? group["IncrementalId"].ToString() : ""));
+                        }
+                        
+                        // Si después de todo no tenemos un ID de grupo secuencial, al menos convertir el ObjectId a string para evitar errores de tipo
+                        if (string.IsNullOrEmpty(groupIdStr))
+                        {
+                            groupIdStr = oldGroupIdVal.ToString();
+                        }
+                    }
+                    else
+                    {
+                        groupIdStr = oldGroupIdVal.ToString();
+                    }
+
+                    if (!string.IsNullOrEmpty(groupIdStr))
+                    {
+                        updates.Add(Builders<BsonDocument>.Update.Set("GroupId", groupIdStr));
+                        updates.Add(Builders<BsonDocument>.Update.Unset("GroupCodice"));
+                    }
+                }
+            }
+
+            // 3. Migrar UserId (ObjectId) -> UserId (string)
+            if (projectDoc.Contains("UserId") && projectDoc["UserId"].IsObjectId)
+            {
+                var userObjId = projectDoc["UserId"].AsObjectId;
+                var rawUsers = _collection.Database.GetCollection<BsonDocument>("users");
+                var user = await rawUsers.Find(Builders<BsonDocument>.Filter.Eq("_id", userObjId)).FirstOrDefaultAsync();
+                
+                string userIdStr;
+                if (user != null)
+                {
+                    userIdStr = user.Contains("UserId") ? user["UserId"].ToString() : (user.Contains("Enrollment") ? user["Enrollment"].ToString() : (user.Contains("IncrementalId") ? user["IncrementalId"].ToString() : userObjId.ToString()));
+                }
+                else
+                {
+                    userIdStr = userObjId.ToString();
+                }
+                
+                updates.Add(Builders<BsonDocument>.Update.Set("UserId", userIdStr));
+            }
+
+            if (updates.Any())
+            {
+                await rawProjects.UpdateOneAsync(
+                    Builders<BsonDocument>.Filter.Eq("_id", projectDoc["_id"]),
+                    Builders<BsonDocument>.Update.Combine(updates)
+                );
             }
         }
     }

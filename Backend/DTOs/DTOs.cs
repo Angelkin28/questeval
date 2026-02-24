@@ -32,7 +32,7 @@ public class CreateCriterionRequest
     /// </summary>
     /// <example>100</example>
     [Required(ErrorMessage = "MaxScore es requerido.")]
-    [Range(1, 1000, ErrorMessage = "MaxScore debe estar entre 1 y 1000.")]
+    [Range(1, 100, ErrorMessage = "MaxScore debe estar entre 1 y 100.")]
     public int MaxScore { get; set; }
 }
 
@@ -42,10 +42,16 @@ public class CreateCriterionRequest
 public class CriterionResponse
 {
     /// <summary>
-    /// Identificador único del criterio
+    /// Identificador único del criterio (MongoDB ObjectId)
     /// </summary>
     /// <example>507f1f77bcf86cd799439011</example>
     public string Id { get; set; } = null!;
+
+    /// <summary>
+    /// ID incremental de solo lectura (Códice)
+    /// </summary>
+    /// <example>C-001</example>
+    public string? CriteriaId { get; set; }
 
     /// <summary>
     /// Nombre del criterio
@@ -119,10 +125,16 @@ public class UpdateGroupRequest
 public class GroupResponse
 {
     /// <summary>
-    /// Identificador único del grupo
+    /// Identificador único del grupo (MongoDB ObjectId)
     /// </summary>
     /// <example>507f1f77bcf86cd799439011</example>
     public string Id { get; set; } = null!;
+
+    /// <summary>
+    /// ID incremental de solo lectura (Códice)
+    /// </summary>
+    /// <example>G-001</example>
+    public string? GroupId { get; set; }
 
     /// <summary>
     /// Nombre del grupo
@@ -166,9 +178,9 @@ public class CreateProjectRequest
     public string Description { get; set; } = null!;
 
     /// <summary>
-    /// ID del grupo al que pertenece este proyecto
+    /// Códice del grupo al que pertenece este proyecto
     /// </summary>
-    /// <example>507f1f77bcf86cd799439011</example>
+    /// <example>G-001</example>
     [Required]
     public string GroupId { get; set; } = null!;
 
@@ -195,10 +207,16 @@ public class CreateProjectRequest
 public class ProjectResponse
 {
     /// <summary>
-    /// Identificador único del proyecto
+    /// Identificador único del proyecto (MongoDB ObjectId)
     /// </summary>
     /// <example>507f1f77bcf86cd799439011</example>
     public string Id { get; set; } = null!;
+
+    /// <summary>
+    /// ID incremental de solo lectura (Códice)
+    /// </summary>
+    /// <example>P-001</example>
+    public string? ProjectId { get; set; }
 
     /// <summary>
     /// Nombre del proyecto
@@ -213,13 +231,9 @@ public class ProjectResponse
     public string Description { get; set; } = null!;
 
     /// <summary>
-    /// ID del grupo
+    /// Códice del grupo al que pertenece
     /// </summary>
-    /// <example>507f1f77bcf86cd799439011</example>
-    /// <summary>
-    /// ID del grupo
-    /// </summary>
-    /// <example>507f1f77bcf86cd799439011</example>
+    /// <example>G-001</example>
     public string GroupId { get; set; } = null!;
 
     public string Category { get; set; } = null!;
@@ -263,18 +277,18 @@ public class QuestionAnswerDto
 public class CreateEvaluationRequest
 {
     /// <summary>
-    /// ID del proyecto siendo evaluado
+    /// Códice del proyecto siendo evaluado
     /// </summary>
-    /// <example>507f1f77bcf86cd799439011</example>
+    /// <example>P-001</example>
     [Required]
     public string ProjectId { get; set; } = null!;
 
     /// <summary>
-    /// ID del usuario realizando la evaluación
+    /// Matrícula del usuario realizando la evaluación
     /// </summary>
-    /// <example>auth0|123456789</example>
+    /// <example>2024001</example>
     [Required]
-    public string EvaluatorId { get; set; } = null!;
+    public string UserId { get; set; } = null!;
 
     /// <summary>
     /// Lista de puntuaciones para cada criterio
@@ -289,11 +303,11 @@ public class CreateEvaluationRequest
 public class EvaluationDetailRequest
 {
     /// <summary>
-    /// ID del criterio siendo evaluado
+    /// Códice del criterio siendo evaluado
     /// </summary>
-    /// <example>507f1f77bcf86cd799439011</example>
+    /// <example>C-001</example>
     [Required]
-    public string CriterionId { get; set; } = null!;
+    public string CriteriaId { get; set; } = null!;
 
     /// <summary>
     /// Nombre del criterio (copia instantánea)
@@ -307,7 +321,7 @@ public class EvaluationDetailRequest
     /// </summary>
     /// <example>85</example>
     [Required]
-    [Range(0, int.MaxValue)]
+    [Range(0, 100, ErrorMessage = "El puntaje debe estar entre 0 y 100.")]
     public int Score { get; set; }
 }
 
@@ -317,22 +331,40 @@ public class EvaluationDetailRequest
 public class EvaluationResponse
 {
     /// <summary>
-    /// Identificador único
+    /// Identificador único (MongoDB ObjectId)
     /// </summary>
     /// <example>507f1f77bcf86cd799439011</example>
     public string Id { get; set; } = null!;
 
     /// <summary>
-    /// ID del proyecto
+    /// ID incremental de solo lectura (Códice)
     /// </summary>
-    /// <example>507f1f77bcf86cd799439011</example>
+    /// <example>EV-001</example>
+    public string? EvaluationId { get; set; }
+
+    /// <summary>
+    /// Códice del proyecto evaluado
+    /// </summary>
+    /// <example>P-001</example>
     public string ProjectId { get; set; } = null!;
 
     /// <summary>
-    /// ID del evaluador
+    /// Matrícula del usuario evaluador
     /// </summary>
-    /// <example>auth0|123456789</example>
-    public string EvaluatorId { get; set; } = null!;
+    /// <example>2024001</example>
+    public string UserId { get; set; } = null!;
+
+    /// <summary>
+    /// Rol del evaluador: Alumno o Profesor
+    /// </summary>
+    /// <example>Profesor</example>
+    public string EvaluatorRole { get; set; } = null!;
+
+    /// <summary>
+    /// Nombre completo del evaluador
+    /// </summary>
+    /// <example>Juan Pérez</example>
+    public string EvaluatorName { get; set; } = null!;
 
     /// <summary>
     /// Puntuación final calculada
@@ -357,15 +389,27 @@ public class EvaluationResponse
 }
 
 /// <summary>
+/// Respuesta para búsquedas paginadas de proyectos
+/// </summary>
+public class PagedProjectResponse
+{
+    public List<ProjectResponse> Items { get; set; } = new();
+    public long TotalCount { get; set; }
+    public int Page { get; set; }
+    public int PageSize { get; set; }
+    public int TotalPages { get; set; }
+}
+
+/// <summary>
 /// Detalles de puntuación para un criterio en la respuesta
 /// </summary>
 public class EvaluationDetailResponse
 {
     /// <summary>
-    /// ID del criterio
+    /// Códice del criterio
     /// </summary>
-    /// <example>507f1f77bcf86cd799439011</example>
-    public string CriterionId { get; set; } = null!;
+    /// <example>C-001</example>
+    public string CriteriaId { get; set; } = null!;
 
     /// <summary>
     /// Nombre del criterio (copia instantánea)
@@ -390,9 +434,9 @@ public class EvaluationDetailResponse
 public class CreateFeedbackRequest
 {
     /// <summary>
-    /// ID de la evaluación para la que es esta retroalimentación
+    /// Códice de la evaluación para la que es esta retroalimentación
     /// </summary>
-    /// <example>507f1f77bcf86cd799439011</example>
+    /// <example>EV-001</example>
     [Required]
     public string EvaluationId { get; set; } = null!;
 
@@ -416,15 +460,21 @@ public class CreateFeedbackRequest
 public class FeedbackResponse
 {
     /// <summary>
-    /// Identificador único
+    /// Identificador único (MongoDB ObjectId)
     /// </summary>
     /// <example>507f1f77bcf86cd799439011</example>
     public string Id { get; set; } = null!;
 
     /// <summary>
-    /// ID de la evaluación
+    /// ID incremental de solo lectura (Códice)
     /// </summary>
-    /// <example>507f1f77bcf86cd799439011</example>
+    /// <example>F-001</example>
+    public string? FeedbackId { get; set; }
+
+    /// <summary>
+    /// Códice de la evaluación
+    /// </summary>
+    /// <example>EV-001</example>
     public string EvaluationId { get; set; } = null!;
 
     /// <summary>
@@ -455,16 +505,16 @@ public class FeedbackResponse
 public class CreateMembershipRequest
 {
     /// <summary>
-    /// ID del usuario que se une al grupo
+    /// Matrícula del usuario que se une al grupo
     /// </summary>
-    /// <example>auth0|123456789</example>
+    /// <example>2024001</example>
     [Required]
     public string UserId { get; set; } = null!;
 
     /// <summary>
-    /// ID del grupo al que unirse
+    /// Códice del grupo al que unirse
     /// </summary>
-    /// <example>507f1f77bcf86cd799439011</example>
+    /// <example>G-001</example>
     [Required]
     public string GroupId { get; set; } = null!;
 }
@@ -475,21 +525,27 @@ public class CreateMembershipRequest
 public class MembershipResponse
 {
     /// <summary>
-    /// Identificador único
+    /// Identificador único (MongoDB ObjectId)
     /// </summary>
     /// <example>507f1f77bcf86cd799439011</example>
     public string Id { get; set; } = null!;
 
     /// <summary>
-    /// ID del usuario
+    /// ID incremental de solo lectura (Códice)
     /// </summary>
-    /// <example>auth0|123456789</example>
+    /// <example>M-001</example>
+    public string? MiembroId { get; set; }
+
+    /// <summary>
+    /// Matrícula del usuario
+    /// </summary>
+    /// <example>2024001</example>
     public string UserId { get; set; } = null!;
 
     /// <summary>
-    /// ID del grupo
+    /// Códice del grupo
     /// </summary>
-    /// <example>507f1f77bcf86cd799439011</example>
+    /// <example>G-001</example>
     public string GroupId { get; set; } = null!;
 
     /// <summary>

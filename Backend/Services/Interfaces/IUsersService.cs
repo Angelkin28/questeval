@@ -30,6 +30,13 @@ public interface IUsersService
     Task<User?> GetByEmailAsync(string email);
 
     /// <summary>
+    /// Busca un usuario por su matrícula (UserId).
+    /// </summary>
+    /// <param name="userId">Matrícula del usuario</param>
+    /// <returns>El usuario encontrado o null</returns>
+    Task<User?> GetByUserIdAsync(string userId);
+
+    /// <summary>
     /// Registra un nuevo usuario en el sistema.
     /// El password debe venir ya hasheado desde el controller.
     /// </summary>

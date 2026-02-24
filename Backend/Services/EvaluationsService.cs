@@ -1,5 +1,7 @@
 using Microsoft.Extensions.Options;
 using MongoDB.Driver;
+using MongoDB.Bson;
+using System.Linq;
 using Backend.Models;
 using Backend.Services.Interfaces;
 
@@ -60,20 +62,29 @@ public class EvaluationsService : IEvaluationsService
     public async Task<Evaluation?> GetByIdAsync(string id) =>
         await _collection.Find(x => x.Id == id).FirstOrDefaultAsync();
 
+    public async Task<Evaluation?> GetByEvaluationIdAsync(string evaluationId) =>
+        await _collection.Find(x => x.EvaluationId == evaluationId).FirstOrDefaultAsync();
+
     /// <summary>
-    /// Obtiene evaluaciones por ProjectId.
+    /// Obtiene evaluaciones por ProjectCodice.
     /// </summary>
     public async Task<List<Evaluation>> GetByProjectIdAsync(string projectId) =>
         await _collection.Find(x => x.ProjectId == projectId).ToListAsync();
 
     /// <summary>
-    /// Crea una nueva evaluación de un proyecto con ID incremental.
+    /// Obtiene evaluaciones por UserEnrollment (Evaluador).
+    /// </summary>
+    public async Task<List<Evaluation>> GetByUserIdAsync(string userId) =>
+        await _collection.Find(x => x.UserId == userId).ToListAsync();
+
+    /// <summary>
+    /// Crea una nueva evaluación de un proyecto con Códice secular.
     /// </summary>
     public async Task CreateAsync(Evaluation evaluation)
     {
-        if (string.IsNullOrEmpty(evaluation.IncrementalId))
+        if (string.IsNullOrEmpty(evaluation.EvaluationId))
         {
-            evaluation.IncrementalId = await GetNextIdAsync("evaluations");
+            evaluation.EvaluationId = await GetNextIdAsync("evaluations");
         }
         await _collection.InsertOneAsync(evaluation);
     }
@@ -85,19 +96,138 @@ public class EvaluationsService : IEvaluationsService
         await _collection.DeleteOneAsync(x => x.Id == id);
 
     /// <summary>
-    /// Asigna IncrementalId a evaluaciones existentes que no lo tengan.
+    /// Migra evaluaciones existentes: renombra campos y resuelve relaciones (Project, User, Criteria).
     /// </summary>
     public async Task InitializeIncrementalIdsAsync()
     {
-        var evaluations = await _collection.Find(_ => true).ToListAsync();
-        foreach (var evaluation in evaluations)
+        var rawEvaluations = _collection.Database.GetCollection<BsonDocument>(_collection.CollectionNamespace.CollectionName);
+        var rawProjects = _collection.Database.GetCollection<BsonDocument>("projects");
+        var rawUsers = _collection.Database.GetCollection<BsonDocument>("users");
+        var rawCriteria = _collection.Database.GetCollection<BsonDocument>("criteria");
+
+        var evaluations = await rawEvaluations.Find(_ => true).ToListAsync();
+        foreach (var evalDoc in evaluations)
         {
-            if (string.IsNullOrEmpty(evaluation.IncrementalId))
+            var updates = new List<UpdateDefinition<BsonDocument>>();
+
+            // 1. Migrar IncrementalId/Codice -> EvaluationId
+            if ((evalDoc.Contains("IncrementalId") || evalDoc.Contains("Codice")) && !evalDoc.Contains("EvaluationId"))
             {
-                var newIncId = await GetNextIdAsync("evaluations");
-                var filter = Builders<Evaluation>.Filter.Eq(e => e.Id, evaluation.Id);
-                var update = Builders<Evaluation>.Update.Set(e => e.IncrementalId, newIncId);
-                await _collection.UpdateOneAsync(filter, update);
+                var val = evalDoc.Contains("Codice") ? evalDoc["Codice"].ToString() : evalDoc["IncrementalId"].ToString();
+                updates.Add(Builders<BsonDocument>.Update.Set("EvaluationId", val));
+                updates.Add(Builders<BsonDocument>.Update.Unset("IncrementalId"));
+                updates.Add(Builders<BsonDocument>.Update.Unset("Codice"));
+            }
+            else if (!evalDoc.Contains("EvaluationId"))
+            {
+                var newEvalId = await GetNextIdAsync("evaluations");
+                updates.Add(Builders<BsonDocument>.Update.Set("EvaluationId", newEvalId));
+            }
+
+            // 2. Migrar ProjectId (ObjectId) / ProjectCodice (string) -> ProjectId (string)
+            if (!evalDoc.Contains("ProjectId") || evalDoc["ProjectId"].IsObjectId)
+            {
+                BsonValue? oldProjectIdVal = evalDoc.Contains("ProjectId") ? evalDoc["ProjectId"] : (evalDoc.Contains("ProjectCodice") ? evalDoc["ProjectCodice"] : null);
+                if (oldProjectIdVal != null)
+                {
+                    string? projectIdStr = null;
+                    if (oldProjectIdVal.IsObjectId)
+                    {
+                        var project = await rawProjects.Find(Builders<BsonDocument>.Filter.Eq("_id", oldProjectIdVal)).FirstOrDefaultAsync();
+                        if (project != null)
+                        {
+                            projectIdStr = project.Contains("ProjectId") ? project["ProjectId"].ToString() : (project.Contains("Codice") ? project["Codice"].ToString() : (project.Contains("IncrementalId") ? project["IncrementalId"].ToString() : ""));
+                        }
+                    }
+                    else
+                    {
+                        projectIdStr = oldProjectIdVal.ToString();
+                    }
+
+                    if (!string.IsNullOrEmpty(projectIdStr))
+                    {
+                        updates.Add(Builders<BsonDocument>.Update.Set("ProjectId", projectIdStr));
+                        updates.Add(Builders<BsonDocument>.Update.Unset("ProjectCodice"));
+                    }
+                }
+            }
+
+            // 3. Migrar EvaluatorId/UserId (ObjectId) / UserEnrollment (string) -> UserId (string)
+            string? oldUserField = evalDoc.Contains("EvaluatorId") ? "EvaluatorId" : (evalDoc.Contains("UserId") ? "UserId" : (evalDoc.Contains("UserEnrollment") ? "UserEnrollment" : null));
+            if (oldUserField != null && (!evalDoc.Contains("UserId") || evalDoc["UserId"].IsObjectId || oldUserField == "UserEnrollment"))
+            {
+                var oldUserVal = evalDoc[oldUserField];
+                string? userIdStr = null;
+                if (oldUserVal.IsObjectId)
+                {
+                    var user = await rawUsers.Find(Builders<BsonDocument>.Filter.Eq("_id", oldUserVal)).FirstOrDefaultAsync();
+                    if (user != null)
+                    {
+                        userIdStr = user.Contains("UserId") ? user["UserId"].ToString() : (user.Contains("Enrollment") ? user["Enrollment"].ToString() : (user.Contains("IncrementalId") ? user["IncrementalId"].ToString() : ""));
+                    }
+                }
+                else
+                {
+                    userIdStr = oldUserVal.ToString();
+                }
+
+                if (!string.IsNullOrEmpty(userIdStr))
+                {
+                    updates.Add(Builders<BsonDocument>.Update.Set("UserId", userIdStr));
+                    if (oldUserField != "UserId") updates.Add(Builders<BsonDocument>.Update.Unset(oldUserField));
+                }
+            }
+
+            // 4. Migrar Details (CriterionId / CriterionCodice / CriteriaId)
+            if (evalDoc.Contains("Details"))
+            {
+                var details = evalDoc["Details"].AsBsonArray;
+                bool detailsChanged = false;
+                foreach (var detail in details)
+                {
+                    var detailObj = detail.AsBsonDocument;
+                    if (!detailObj.Contains("CriteriaId") || detailObj["CriteriaId"].IsObjectId)
+                    {
+                        BsonValue? oldCritVal = detailObj.Contains("CriteriaId") ? detailObj["CriteriaId"] : (detailObj.Contains("CriterionCodice") ? detailObj["CriterionCodice"] : (detailObj.Contains("CriterionId") ? detailObj["CriterionId"] : null));
+                        
+                        if (oldCritVal != null)
+                        {
+                            string? critIdStr = null;
+                            if (oldCritVal.IsObjectId)
+                            {
+                                var crit = await rawCriteria.Find(Builders<BsonDocument>.Filter.Eq("_id", oldCritVal)).FirstOrDefaultAsync();
+                                if (crit != null)
+                                {
+                                    critIdStr = crit.Contains("CriteriaId") ? crit["CriteriaId"].ToString() : (crit.Contains("Codice") ? crit["Codice"].ToString() : (crit.Contains("IncrementalId") ? crit["IncrementalId"].ToString() : ""));
+                                }
+                            }
+                            else
+                            {
+                                critIdStr = oldCritVal.ToString();
+                            }
+
+                            if (!string.IsNullOrEmpty(critIdStr))
+                            {
+                                detailObj.Set("CriteriaId", critIdStr);
+                                detailObj.Remove("CriterionCodice");
+                                detailObj.Remove("CriterionId");
+                                detailsChanged = true;
+                            }
+                        }
+                    }
+                }
+                if (detailsChanged)
+                {
+                    updates.Add(Builders<BsonDocument>.Update.Set("Details", details));
+                }
+            }
+
+            if (updates.Any())
+            {
+                await rawEvaluations.UpdateOneAsync(
+                    Builders<BsonDocument>.Filter.Eq("_id", evalDoc["_id"]),
+                    Builders<BsonDocument>.Update.Combine(updates)
+                );
             }
         }
     }

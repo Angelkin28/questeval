@@ -43,6 +43,7 @@ public class GroupsController : ControllerBase
         var response = groups.Select(g => new GroupResponse
         {
             Id = g.Id!,
+            GroupId = g.GroupId,
             Name = g.Name,
             AccessCode = g.AccessCode,
             CreatedAt = g.CreatedAt
@@ -57,7 +58,7 @@ public class GroupsController : ControllerBase
     [ProducesResponseType(typeof(List<GroupResponse>), StatusCodes.Status200OK)]
     public async Task<ActionResult<List<GroupResponse>>> GetMyGroups()
     {
-        var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+        var userId = User.FindFirst("userId")?.Value;
         if (string.IsNullOrEmpty(userId)) return Unauthorized();
 
         var memberships = await _membershipsService.GetByUserIdAsync(userId);
@@ -66,12 +67,13 @@ public class GroupsController : ControllerBase
         var myGroups = new List<GroupResponse>();
         foreach (var groupId in groupIds)
         {
-            var group = await _service.GetByIdAsync(groupId);
+            var group = await _service.GetByGroupIdAsync(groupId);
             if (group != null)
             {
                 myGroups.Add(new GroupResponse
                 {
                     Id = group.Id!,
+                    GroupId = group.GroupId,
                     Name = group.Name,
                     AccessCode = group.AccessCode,
                     CreatedAt = group.CreatedAt
@@ -93,17 +95,18 @@ public class GroupsController : ControllerBase
         var group = await _service.GetByIdAsync(id);
         if (group == null) return NotFound("Group not found");
 
-        var memberships = await _membershipsService.GetByGroupIdAsync(id);
+        var memberships = await _membershipsService.GetByGroupIdAsync(group.GroupId ?? "");
         var members = new List<UserResponse>();
         
         foreach (var membership in memberships)
         {
-            var user = await _usersService.GetByIdAsync(membership.UserId);
+            var user = await _usersService.GetByUserIdAsync(membership.UserId);
             if (user != null)
             {
                 members.Add(new UserResponse
                 {
                     Id = user.Id!,
+                    UserId = user.UserId,
                     Email = user.Email,
                     FullName = user.FullName,
                     Role = user.Role,
@@ -129,11 +132,12 @@ public class GroupsController : ControllerBase
         var group = await _service.GetByIdAsync(id);
         if (group == null) return NotFound("Group not found");
 
-        var projects = await _projectsService.GetByGroupIdAsync(id);
+        var projects = await _projectsService.GetByGroupIdAsync(group.GroupId ?? "");
         
         var response = projects.Select(p => new ProjectResponse
         {
             Id = p.Id!,
+            ProjectId = p.ProjectId,
             Name = p.Name,
             Description = p.Description,
             GroupId = p.GroupId,
@@ -164,6 +168,7 @@ public class GroupsController : ControllerBase
         var response = new GroupResponse
         {
             Id = group.Id!,
+            GroupId = group.GroupId,
             Name = group.Name,
             AccessCode = group.AccessCode,
             CreatedAt = group.CreatedAt
@@ -180,7 +185,7 @@ public class GroupsController : ControllerBase
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
     public async Task<ActionResult<GroupResponse>> Post(CreateGroupRequest request)
     {
-        var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+        var userId = User.FindFirst("userId")?.Value;
         if (string.IsNullOrEmpty(userId)) return Unauthorized();
 
         var newGroup = new Group
@@ -196,13 +201,14 @@ public class GroupsController : ControllerBase
         await _membershipsService.CreateAsync(new Membership
         {
             UserId = userId,
-            GroupId = newGroup.Id!,
+            GroupId = newGroup.GroupId!,
             JoinedAt = DateTime.UtcNow
         });
 
         var response = new GroupResponse
         {
             Id = newGroup.Id!,
+            GroupId = newGroup.GroupId,
             Name = newGroup.Name,
             AccessCode = newGroup.AccessCode,
             CreatedAt = newGroup.CreatedAt
@@ -226,6 +232,7 @@ public class GroupsController : ControllerBase
         var updatedGroup = new Group
         {
             Id = id,
+            GroupId = group.GroupId, // Preservar - no editable
             Name = request.Name,
             AccessCode = request.AccessCode,
             CreatedAt = group.CreatedAt
@@ -262,7 +269,7 @@ public class GroupsController : ControllerBase
     [ProducesResponseType(StatusCodes.Status404NotFound)]
     public async Task<IActionResult> JoinGroup([FromBody] JoinGroupRequest request)
     {
-        var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+        var userId = User.FindFirst("userId")?.Value;
         if (string.IsNullOrEmpty(userId)) return Unauthorized();
 
         var group = (await _service.GetAllAsync())
@@ -272,7 +279,7 @@ public class GroupsController : ControllerBase
             return NotFound(new { message = "Código de acceso inválido." });
 
         var existingMembership = (await _membershipsService.GetByUserIdAsync(userId))
-            .FirstOrDefault(m => m.GroupId == group.Id);
+            .FirstOrDefault(m => m.GroupId == group.GroupId);
 
         if (existingMembership != null)
             return BadRequest(new { message = "Ya eres miembro de este grupo." });
@@ -280,11 +287,11 @@ public class GroupsController : ControllerBase
         await _membershipsService.CreateAsync(new Membership
         {
             UserId = userId,
-            GroupId = group.Id!,
+            GroupId = group.GroupId!,
             JoinedAt = DateTime.UtcNow
         });
 
-        return Ok(new { message = "Te has unido al grupo exitosamente.", groupId = group.Id });
+        return Ok(new { message = "Te has unido al grupo exitosamente.", groupId = group.GroupId });
     }
 }
 

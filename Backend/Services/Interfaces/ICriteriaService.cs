@@ -20,6 +20,7 @@ public interface ICriteriaService
     /// <param name="id">ID del criterio (MongoDB ObjectId)</param>
     /// <returns>El criterio encontrado o null si no existe</returns>
     Task<Criterion?> GetByIdAsync(string id);
+    Task<Criterion?> GetByCriteriaIdAsync(string criteriaId);
 
     /// <summary>
     /// Crea un nuevo criterio de evaluación en la base de datos.

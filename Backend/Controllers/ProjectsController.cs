@@ -24,10 +24,61 @@ public class ProjectsController : ControllerBase
     }
 
     /// <summary>
+    /// Buscar y filtrar proyectos con paginación
+    /// </summary>
+    /// <param name="searchTerm">Texto a buscar en nombre o descripción</param>
+    /// <param name="category">Filtro por categoría</param>
+    /// <param name="status">Filtro por estado</param>
+    /// <param name="page">Número de página (default 1)</param>
+    /// <param name="pageSize">Tamaño de página (default 10)</param>
+    /// <returns>Lista paginada de proyectos y metadata</returns>
+    [HttpGet("search")]
+    [ProducesResponseType(typeof(PagedProjectResponse), StatusCodes.Status200OK)]
+    public async Task<ActionResult<PagedProjectResponse>> Search(
+        [FromQuery] string? searchTerm,
+        [FromQuery] string? category,
+        [FromQuery] string? status,
+        [FromQuery] int page = 1,
+        [FromQuery] int pageSize = 10)
+    {
+        var (projects, total) = await _service.SearchAsync(searchTerm, category, status, page, pageSize);
+        
+        var projectResponses = projects.Select(p => new ProjectResponse
+        {
+            Id = p.Id!,
+            ProjectId = p.ProjectId,
+            Name = p.Name,
+            Description = p.Description,
+            GroupId = p.GroupId,
+            Status = p.Status,
+            CreatedAt = p.CreatedAt,
+            UpdatedAt = p.UpdatedAt,
+            Category = p.Category,
+            VideoUrl = p.VideoUrl,
+            ThumbnailUrl = p.ThumbnailUrl,
+            TeamMembers = p.TeamMembers,
+            ComprehensionQuestions = p.ComprehensionQuestions.Select(q => new QuestionAnswerDto
+            {
+                Question = q.Question,
+                Answer = q.Answer
+            }).ToList()
+        }).ToList();
+
+        return Ok(new PagedProjectResponse
+        {
+            Items = projectResponses,
+            TotalCount = total,
+            Page = page,
+            PageSize = pageSize,
+            TotalPages = (int)Math.Ceiling((double)total / pageSize)
+        });
+    }
+
+    /// <summary>
     /// Obtener todos los projects
     /// </summary>
     /// <returns>Lista de todos los proyectos</returns>
-    /// <response code=\200\>Retorna la lista de projects</response>
+    /// <response code="200">Retorna la lista de projects</response>
     [HttpGet]
     [ProducesResponseType(typeof(List<ProjectResponse>), StatusCodes.Status200OK)]
     public async Task<ActionResult<List<ProjectResponse>>> Get()
@@ -36,6 +87,7 @@ public class ProjectsController : ControllerBase
         var response = projects.Select(p => new ProjectResponse
         {
             Id = p.Id!,
+            ProjectId = p.ProjectId,
             Name = p.Name,
             Description = p.Description,
             GroupId = p.GroupId,
@@ -64,7 +116,7 @@ public class ProjectsController : ControllerBase
     [ProducesResponseType(typeof(List<ProjectResponse>), StatusCodes.Status200OK)]
     public async Task<ActionResult<List<ProjectResponse>>> GetMine()
     {
-        var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+        var userId = User.FindFirst("userId")?.Value;
         if (string.IsNullOrEmpty(userId)) return Unauthorized();
 
         // 1. Obtener grupos del usuario
@@ -74,29 +126,31 @@ public class ProjectsController : ControllerBase
         if (!groupIds.Any()) return Ok(new List<ProjectResponse>());
 
         // 2. Obtener proyectos de esos grupos
-        // Nota: Esto es ineficiente si hay muchos grupos/proyectos. Idealmente el servicio soportaría GetByGroupIds
-        var allProjects = await _service.GetAllAsync();
-        var myProjects = allProjects.Where(p => groupIds.Contains(p.GroupId)).ToList();
-
-        var response = myProjects.Select(p => new ProjectResponse
+        var response = new List<ProjectResponse>();
+        foreach (var groupId in groupIds)
         {
-            Id = p.Id!,
-            Name = p.Name,
-            Description = p.Description,
-            GroupId = p.GroupId,
-            Status = p.Status,
-            CreatedAt = p.CreatedAt,
-            UpdatedAt = p.UpdatedAt,
-            Category = p.Category,
-            VideoUrl = p.VideoUrl,
-            ThumbnailUrl = p.ThumbnailUrl,
-            TeamMembers = p.TeamMembers,
-            ComprehensionQuestions = p.ComprehensionQuestions.Select(q => new QuestionAnswerDto
+            var groupProjects = await _service.GetByGroupIdAsync(groupId);
+            response.AddRange(groupProjects.Select(p => new ProjectResponse
             {
-                Question = q.Question,
-                Answer = q.Answer
-            }).ToList()
-        }).ToList();
+                Id = p.Id!,
+                ProjectId = p.ProjectId,
+                Name = p.Name,
+                Description = p.Description,
+                GroupId = p.GroupId,
+                Status = p.Status,
+                CreatedAt = p.CreatedAt,
+                UpdatedAt = p.UpdatedAt,
+                Category = p.Category,
+                VideoUrl = p.VideoUrl,
+                ThumbnailUrl = p.ThumbnailUrl,
+                TeamMembers = p.TeamMembers,
+                ComprehensionQuestions = p.ComprehensionQuestions.Select(q => new QuestionAnswerDto
+                {
+                    Question = q.Question,
+                    Answer = q.Answer
+                }).ToList()
+            }));
+        }
 
         return Ok(response);
     }
@@ -104,10 +158,10 @@ public class ProjectsController : ControllerBase
     /// <summary>
     /// Obtener un project by ID
     /// </summary>
-    /// <param name=\id\>El ID del proyecto</param>
+    /// <param name="id">El ID del proyecto</param>
     /// <returns>El recurso solicitado de project</returns>
-    /// <response code=\200\>Retorna el project</response>
-    /// <response code=\404\>Si el recurso no se encuentra</response>
+    /// <response code="200">Retorna el project</response>
+    /// <response code="404">Si el recurso no se encuentra</response>
     [HttpGet("{id}")]
     [ProducesResponseType(typeof(ProjectResponse), StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
@@ -123,6 +177,7 @@ public class ProjectsController : ControllerBase
         var response = new ProjectResponse
         {
             Id = project.Id!,
+            ProjectId = project.ProjectId,
             Name = project.Name,
             Description = project.Description,
             GroupId = project.GroupId,
@@ -146,16 +201,17 @@ public class ProjectsController : ControllerBase
     /// <summary>
     /// Crear un nuevo project
     /// </summary>
-    /// <param name=\request\>Detalles del proyecto</param>
+    /// <param name="request">Detalles del proyecto</param>
     /// <returns>The created project</returns>
-    /// <response code=\201\>Retorna el newly created project</response>
-    /// <response code=\400\>Si la solicitud es inválida</response>
+    /// <response code="201">Retorna el newly created project</response>
+    /// <response code="400">Si la solicitud es inválida</response>
     [HttpPost]
+    [Authorize(Roles = "Profesor,Admin")]
     [ProducesResponseType(typeof(ProjectResponse), StatusCodes.Status201Created)]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
     public async Task<ActionResult<ProjectResponse>> Post(CreateProjectRequest request)
     {
-        var newProject = new Project
+        var newProject = new Backend.Models.Project
         {
             Name = request.Name,
             Description = request.Description,
@@ -179,6 +235,7 @@ public class ProjectsController : ControllerBase
         var response = new ProjectResponse
         {
             Id = newProject.Id!,
+            ProjectId = newProject.ProjectId,
             Name = newProject.Name,
             Description = newProject.Description,
             GroupId = newProject.GroupId,
@@ -197,12 +254,13 @@ public class ProjectsController : ControllerBase
     /// <summary>
     /// Actualizar un project
     /// </summary>
-    /// <param name=\id\>El ID del proyecto</param>
-    /// <param name=\request\>Updated Detalles del proyecto</param>
+    /// <param name="id">El ID del proyecto</param>
+    /// <param name="request">Updated Detalles del proyecto</param>
     /// <returns>Sin contenido</returns>
-    /// <response code=\204\>Si se completó exitosamente</response>
-    /// <response code=\404\>Si el recurso no se encuentra</response>
+    /// <response code="204">Si se completó exitosamente</response>
+    /// <response code="404">Si el recurso no se encuentra</response>
     [HttpPut("{id}")]
+    [Authorize(Roles = "Profesor,Admin")]
     [ProducesResponseType(StatusCodes.Status204NoContent)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
     public async Task<IActionResult> Update(string id, CreateProjectRequest request)
@@ -214,9 +272,10 @@ public class ProjectsController : ControllerBase
             return NotFound();
         }
 
-        var updatedProject = new Project
+        var updatedProject = new Backend.Models.Project
         {
             Id = id,
+            ProjectId = project.ProjectId, // Preservar - no editable
             Name = request.Name,
             Description = request.Description,
             GroupId = request.GroupId,
@@ -242,11 +301,12 @@ public class ProjectsController : ControllerBase
     /// <summary>
     /// Eliminar un project
     /// </summary>
-    /// <param name=\id\>El ID del proyecto</param>
+    /// <param name="id">El ID del proyecto</param>
     /// <returns>Sin contenido</returns>
-    /// <response code=\204\>Si se completó exitosamente</response>
-    /// <response code=\404\>Si el recurso no se encuentra</response>
+    /// <response code="204">Si se completó exitosamente</response>
+    /// <response code="404">Si el recurso no se encuentra</response>
     [HttpDelete("{id}")]
+    [Authorize(Roles = "Profesor,Admin")]
     [ProducesResponseType(StatusCodes.Status204NoContent)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
     public async Task<IActionResult> Delete(string id)

@@ -1,5 +1,7 @@
 using Microsoft.Extensions.Options;
 using MongoDB.Driver;
+using MongoDB.Bson;
+using System.Linq;
 using Backend.Models;
 using Backend.Services.Interfaces;
 
@@ -54,14 +56,17 @@ public class CriteriaService : ICriteriaService
     public async Task<Criterion?> GetByIdAsync(string id) =>
         await _collection.Find(x => x.Id == id).FirstOrDefaultAsync();
 
+    public async Task<Criterion?> GetByCriteriaIdAsync(string criteriaId) =>
+        await _collection.Find(x => x.CriteriaId == criteriaId).FirstOrDefaultAsync();
+
     /// <summary>
-    /// Inserta un nuevo criterio en la base de datos con ID incremental.
+    /// Inserta un nuevo criterio en la base de datos con Códice secuencial.
     /// </summary>
     public async Task CreateAsync(Criterion criterion)
     {
-        if (string.IsNullOrEmpty(criterion.IncrementalId))
+        if (string.IsNullOrEmpty(criterion.CriteriaId))
         {
-            criterion.IncrementalId = await GetNextIdAsync("criteria");
+            criterion.CriteriaId = await GetNextIdAsync("criteria");
         }
         await _collection.InsertOneAsync(criterion);
     }
@@ -82,19 +87,36 @@ public class CriteriaService : ICriteriaService
         await _collection.DeleteOneAsync(x => x.Id == id);
 
     /// <summary>
-    /// Asigna IncrementalId a criterios existentes que no lo tengan.
+    /// Migra criterios existentes: renombra IncrementalId a Codice y limpia campos viejos.
     /// </summary>
     public async Task InitializeIncrementalIdsAsync()
     {
-        var criteria = await _collection.Find(_ => true).ToListAsync();
-        foreach (var criterion in criteria)
+        var rawCollection = _collection.Database.GetCollection<BsonDocument>(_collection.CollectionNamespace.CollectionName);
+        var criteria = await rawCollection.Find(_ => true).ToListAsync();
+
+        foreach (var criterionDoc in criteria)
         {
-            if (string.IsNullOrEmpty(criterion.IncrementalId))
+            var updates = new List<UpdateDefinition<BsonDocument>>();
+
+            if ((criterionDoc.Contains("IncrementalId") || criterionDoc.Contains("Codice")) && !criterionDoc.Contains("CriteriaId"))
             {
-                var newIncId = await GetNextIdAsync("criteria");
-                var filter = Builders<Criterion>.Filter.Eq(c => c.Id, criterion.Id);
-                var update = Builders<Criterion>.Update.Set(c => c.IncrementalId, newIncId);
-                await _collection.UpdateOneAsync(filter, update);
+                var val = criterionDoc.Contains("Codice") ? criterionDoc["Codice"].ToString() : criterionDoc["IncrementalId"].ToString();
+                updates.Add(Builders<BsonDocument>.Update.Set("CriteriaId", val));
+                updates.Add(Builders<BsonDocument>.Update.Unset("IncrementalId"));
+                updates.Add(Builders<BsonDocument>.Update.Unset("Codice"));
+            }
+            else if (!criterionDoc.Contains("CriteriaId"))
+            {
+                var newCriteriaId = await GetNextIdAsync("criteria");
+                updates.Add(Builders<BsonDocument>.Update.Set("CriteriaId", newCriteriaId));
+            }
+
+            if (updates.Any())
+            {
+                await rawCollection.UpdateOneAsync(
+                    Builders<BsonDocument>.Filter.Eq("_id", criterionDoc["_id"]),
+                    Builders<BsonDocument>.Update.Combine(updates)
+                );
             }
         }
     }

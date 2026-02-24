@@ -20,6 +20,7 @@ public interface IMembershipsService
     /// <param name="id">ID de la membresía (MongoDB ObjectId)</param>
     /// <returns>La membresía encontrada o null si no existe</returns>
     Task<Membership?> GetByIdAsync(string id);
+    Task<Membership?> GetByMiembroIdAsync(string miembroId);
     
     Task<List<Membership>> GetByUserIdAsync(string userId);
     
@@ -38,4 +39,9 @@ public interface IMembershipsService
     /// <param name="id">ID de la membresía a eliminar</param>
     /// <returns>Tarea asíncrona de eliminación</returns>
     Task DeleteAsync(string id);
+
+    /// <summary>
+    /// Asigna IncrementalId a membresías existentes que no lo tengan.
+    /// </summary>
+    Task InitializeIncrementalIdsAsync();
 }

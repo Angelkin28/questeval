@@ -1,5 +1,7 @@
 using Microsoft.Extensions.Options;
 using MongoDB.Driver;
+using MongoDB.Bson;
+using System.Linq;
 using Backend.Models;
 using Backend.Services.Interfaces;
 
@@ -44,15 +46,18 @@ public class UsersService : IUsersService
     public async Task<User?> GetByEmailAsync(string email) =>
         await _collection.Find(x => x.Email == email).FirstOrDefaultAsync();
 
+    public async Task<User?> GetByUserIdAsync(string userId) =>
+        await _collection.Find(x => x.UserId == userId).FirstOrDefaultAsync();
+
     /// <summary>
-    /// Registra un nuevo usuario. MongoDB genera el _id automáticamente.
-    /// Se asigna un IncrementalId corto ("1", "2", "3"...) como campo adicional.
+    /// Registra un nuevo usuario.
+    /// Se asigna un Enrollment corto ("1", "2", "3"...) como campo adicional si no se provee.
     /// </summary>
     public async Task CreateAsync(User user)
     {
-        if (string.IsNullOrEmpty(user.IncrementalId))
+        if (string.IsNullOrEmpty(user.UserId))
         {
-            user.IncrementalId = await GetNextIdAsync("users");
+            user.UserId = await GetNextIdAsync("users");
         }
         await _collection.InsertOneAsync(user);
     }
@@ -110,29 +115,50 @@ public class UsersService : IUsersService
     }
 
     /// <summary>
-    /// Asigna IncrementalId a usuarios existentes que no lo tengan
-    /// y los marca como verificados para pruebas.
+    /// Migra usuarios existentes: renombra IncrementalId a Enrollment y asegura status aprobado.
     /// </summary>
     public async Task InitializeIncrementalIdsAsync()
     {
-        var users = await _collection.Find(_ => true).ToListAsync();
-        foreach (var user in users)
+        var rawCollection = _collection.Database.GetCollection<BsonDocument>(_collection.CollectionNamespace.CollectionName);
+        var users = await rawCollection.Find(_ => true).ToListAsync();
+
+        foreach (var userDoc in users)
         {
-            if (string.IsNullOrEmpty(user.IncrementalId) || !user.EmailVerified || user.VerificationStatus != "approved")
+            var id = userDoc["_id"].AsObjectId.ToString();
+            var updates = new List<UpdateDefinition<BsonDocument>>();
+
+            // 1. Migrar IncrementalId/Enrollment -> UserId si existe el viejo y no el nuevo
+            if ((userDoc.Contains("IncrementalId") || userDoc.Contains("Enrollment")) && !userDoc.Contains("UserId"))
             {
-                var updateDef = Builders<User>.Update
-                    .Set(u => u.EmailVerified, true)
-                    .Set(u => u.VerificationStatus, "approved")
-                    .Set(u => u.UpdatedAt, DateTime.UtcNow);
+                var val = userDoc.Contains("Enrollment") ? userDoc["Enrollment"].ToString() : userDoc["IncrementalId"].ToString();
+                updates.Add(Builders<BsonDocument>.Update.Set("UserId", val));
+                updates.Add(Builders<BsonDocument>.Update.Unset("IncrementalId"));
+                updates.Add(Builders<BsonDocument>.Update.Unset("Enrollment"));
+            }
+            else if (!userDoc.Contains("UserId"))
+            {
+                // Si no tiene ninguno, generar uno nuevo
+                var newUserId = await GetNextIdAsync("users");
+                updates.Add(Builders<BsonDocument>.Update.Set("UserId", newUserId));
+            }
 
-                if (string.IsNullOrEmpty(user.IncrementalId))
-                {
-                    var newIncId = await GetNextIdAsync("users");
-                    updateDef = updateDef.Set(u => u.IncrementalId, newIncId);
-                }
+            // 2. Asegurar verificación y aprobación para datos existentes
+            if (!userDoc.Contains("EmailVerified") || userDoc["EmailVerified"] == false)
+            {
+                updates.Add(Builders<BsonDocument>.Update.Set("EmailVerified", true));
+            }
+            if (!userDoc.Contains("VerificationStatus") || userDoc["VerificationStatus"] != "approved")
+            {
+                updates.Add(Builders<BsonDocument>.Update.Set("VerificationStatus", "approved"));
+            }
 
-                var filter = Builders<User>.Filter.Eq(u => u.Id, user.Id);
-                await _collection.UpdateOneAsync(filter, updateDef);
+            if (updates.Any())
+            {
+                updates.Add(Builders<BsonDocument>.Update.Set("UpdatedAt", DateTime.UtcNow));
+                await rawCollection.UpdateOneAsync(
+                    Builders<BsonDocument>.Filter.Eq("_id", userDoc["_id"]),
+                    Builders<BsonDocument>.Update.Combine(updates)
+                );
             }
         }
     }
