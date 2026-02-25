@@ -1,22 +1,25 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../providers/auth_provider.dart';
 import '../theme/questeval_theme.dart';
+import 'package:go_router/go_router.dart';
 
 /// Credenciales de prueba para desarrollo y demostración.
-const String kTestEmail = 'demo@questeval.edu';
-const String kTestPassword = 'demo1234';
+const String kTestEmail = 'estudiante@questeval.com';
+const String kTestPassword = 'Alumno123!';
 
 /// Pantalla de inicio de sesión de QuestEval.
 /// Incluye validación básica de campos vacíos y diseño responsive
 /// orientado a móvil y modo kiosco (elementos grandes y espaciados).
-class LoginScreen extends StatefulWidget {
+class LoginScreen extends ConsumerStatefulWidget {
   const LoginScreen({super.key});
 
   @override
-  State<LoginScreen> createState() => _LoginScreenState();
+  ConsumerState<LoginScreen> createState() => _LoginScreenState();
 }
 
-class _LoginScreenState extends State<LoginScreen> {
+class _LoginScreenState extends ConsumerState<LoginScreen> {
   final _formKey = GlobalKey<FormState>();
   final _emailController = TextEditingController();
   final _passwordController = TextEditingController();
@@ -31,42 +34,53 @@ class _LoginScreenState extends State<LoginScreen> {
     super.dispose();
   }
 
-  /// Valida que email y contraseña no estén vacíos y muestra error por SnackBar o texto.
-  void _onLoginPressed() {
+  /// Valida que email y contraseña no estén vacíos e inicia sesión con el backend.
+  Future<void> _onLoginPressed() async {
     setState(() => _errorMessage = null);
 
     final email = _emailController.text.trim();
     final password = _passwordController.text.trim();
 
     if (email.isEmpty) {
-      setState(() => _errorMessage = 'Introduce tu correo electrónico.');
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: const Text('Introduce tu correo electrónico.'),
-          backgroundColor: QuestEvalColors.error,
-          behavior: SnackBarBehavior.floating,
-        ),
-      );
+      _showError('Introduce tu correo electrónico.');
       return;
     }
 
     if (password.isEmpty) {
-      setState(() => _errorMessage = 'Introduce tu contraseña.');
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: const Text('Introduce tu contraseña.'),
-          backgroundColor: QuestEvalColors.error,
-          behavior: SnackBarBehavior.floating,
-        ),
-      );
+      _showError('Introduce tu contraseña.');
       return;
     }
 
-    // Aquí se integrará la autenticación con backend más adelante.
-    // Por ahora solo validación de campos.
+    final success = await ref.read(authProvider.notifier).login(email, password);
+
+    if (success) {
+      if (mounted) {
+        final user = ref.read(authProvider).user;
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Bienvenido, ${user?.fullName}!'),
+            backgroundColor: Colors.green,
+            behavior: SnackBarBehavior.floating,
+          ),
+        );
+        if (mounted) {
+          context.go('/projects');
+        }
+      }
+    } else {
+      if (mounted) {
+        final error = ref.read(authProvider).error;
+        _showError(error ?? 'Error desconocido al iniciar sesión.');
+      }
+    }
+  }
+
+  void _showError(String message) {
+    setState(() => _errorMessage = message);
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
-        content: const Text('Credenciales válidas (sin backend aún).'),
+        content: Text(message),
+        backgroundColor: QuestEvalColors.error,
         behavior: SnackBarBehavior.floating,
       ),
     );
@@ -77,6 +91,7 @@ class _LoginScreenState extends State<LoginScreen> {
     final theme = Theme.of(context);
     final mediaQuery = MediaQuery.of(context);
     final isWide = mediaQuery.size.width > 600;
+    final authState = ref.watch(authProvider);
 
     // Espaciado y tamaños adaptados para tablet/kiosco.
     final horizontalPadding = isWide ? 48.0 : 24.0;
@@ -115,11 +130,13 @@ class _LoginScreenState extends State<LoginScreen> {
 
                     // Botón para rellenar con datos de prueba.
                     TextButton(
-                      onPressed: () {
-                        _emailController.text = kTestEmail;
-                        _passwordController.text = kTestPassword;
-                        setState(() => _errorMessage = null);
-                      },
+                      onPressed: authState.isLoading
+                          ? null
+                          : () {
+                              _emailController.text = kTestEmail;
+                              _passwordController.text = kTestPassword;
+                              setState(() => _errorMessage = null);
+                            },
                       child: Text(
                         'Usar datos de prueba',
                         style: theme.textTheme.bodySmall?.copyWith(
@@ -135,6 +152,7 @@ class _LoginScreenState extends State<LoginScreen> {
                       controller: _emailController,
                       keyboardType: TextInputType.emailAddress,
                       textInputAction: TextInputAction.next,
+                      enabled: !authState.isLoading,
                       decoration: const InputDecoration(
                         labelText: 'Correo electrónico',
                         hintText: 'tu.correo@institucion.edu',
@@ -148,6 +166,7 @@ class _LoginScreenState extends State<LoginScreen> {
                       controller: _passwordController,
                       obscureText: true,
                       textInputAction: TextInputAction.done,
+                      enabled: !authState.isLoading,
                       onFieldSubmitted: (_) => _onLoginPressed(),
                       decoration: const InputDecoration(
                         labelText: 'Contraseña',
@@ -159,8 +178,34 @@ class _LoginScreenState extends State<LoginScreen> {
 
                     // Botón principal de inicio de sesión.
                     ElevatedButton(
-                      onPressed: _onLoginPressed,
-                      child: const Text('Iniciar sesión'),
+                      onPressed: authState.isLoading ? null : _onLoginPressed,
+                      child: authState.isLoading
+                          ? const SizedBox(
+                              height: 20,
+                              width: 20,
+                              child: CircularProgressIndicator(
+                                strokeWidth: 2,
+                                color: Colors.white,
+                              ),
+                            )
+                          : const Text('Iniciar sesión'),
+                    ),
+                    const SizedBox(height: 12),
+
+                    // Botón de Invitado
+                    OutlinedButton(
+                      onPressed: authState.isLoading 
+                          ? null 
+                          : () async {
+                              await ref.read(authProvider.notifier).loginAsGuest();
+                              if (mounted) {
+                                context.go('/projects');
+                              }
+                            },
+                      style: OutlinedButton.styleFrom(
+                        side: BorderSide(color: theme.primaryColor),
+                      ),
+                      child: const Text('Entrar como invitado'),
                     ),
                     SizedBox(height: verticalSpacing),
 

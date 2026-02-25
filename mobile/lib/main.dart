@@ -1,24 +1,40 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:shared_preferences/shared_preferences.dart';
+import 'core/router.dart';
+import 'theme/app_theme.dart';
+import 'providers/theme_provider.dart';
+import 'providers/persistence_provider.dart';
 
-import 'screens/login_screen.dart';
-import 'theme/questeval_theme.dart';
+void main() async {
+  WidgetsFlutterBinding.ensureInitialized();
+  
+  final prefs = await SharedPreferences.getInstance();
+  final persistence = PersistenceService(prefs);
+  await persistence.initHive();
 
-void main() {
-  runApp(const QuestEvalApp());
+  runApp(
+    ProviderScope(
+      overrides: [
+        persistenceProvider.overrideWithValue(persistence),
+      ],
+      child: const QuestEvalApp(),
+    ),
+  );
 }
 
-/// Punto de entrada de la aplicación QuestEval.
-/// Usa el tema personalizado (beige/arena/crema) y la pantalla de login como home.
-class QuestEvalApp extends StatelessWidget {
+class QuestEvalApp extends ConsumerWidget {
   const QuestEvalApp({super.key});
 
   @override
-  Widget build(BuildContext context) {
-    return MaterialApp(
+  Widget build(BuildContext context, WidgetRef ref) {
+    final themeState = ref.watch(themeProvider);
+    
+    return MaterialApp.router(
       title: 'QuestEval',
       debugShowCheckedModeBanner: false,
-      theme: QuestEvalTheme.questevalTheme,
-      home: const LoginScreen(),
+      theme: AppTheme.getTheme(themeState.category, themeState.isDark),
+      routerConfig: appRouter,
     );
   }
 }

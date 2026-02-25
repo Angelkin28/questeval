@@ -62,10 +62,19 @@ builder.Services.AddCors(options =>
 {
     options.AddPolicy("AllowFrontend", policy =>
     {
-        // Agregar URLs del frontend aquí (servidores dev, URLs de producción, etc.)
-        policy.WithOrigins("http://localhost:5173", "http://localhost:5248", "http://localhost:4200", "http://localhost:4201")
-              .AllowAnyMethod()    // Permitir GET, POST, PUT, DELETE, etc.
-              .AllowAnyHeader();   // Permitir todos los headers (Authorization, Content-Type, etc.)
+        // En desarrollo, permitimos cualquier origen para facilitar las pruebas móviles/web
+        if (builder.Environment.IsDevelopment())
+        {
+            policy.AllowAnyOrigin()
+                  .AllowAnyMethod()
+                  .AllowAnyHeader();
+        }
+        else
+        {
+            policy.WithOrigins("http://localhost:5173", "http://localhost:5248", "http://localhost:4200", "http://localhost:4201")
+                  .AllowAnyMethod()
+                  .AllowAnyHeader();
+        }
     });
 });
 
@@ -162,7 +171,6 @@ app.UseCors("AllowFrontend");
 app.UseAuthentication();
 app.UseAuthorization();
 
-// 6. Controllers - Mapear solicitudes HTTP a acciones de controller
 // 6. Controllers - Mapear solicitudes HTTP a acciones de controller
 app.MapControllers();
 
@@ -288,99 +296,143 @@ using (var scope = app.Services.CreateScope())
         }
     }
 
-    // --- 4. Crear GRUPO si no existe ---
+    // --- 4. Crear GRUPOS si no existen ---
     var existingGroups = await groupsService.GetAllAsync();
-    var sampleGroup = existingGroups.FirstOrDefault(g => g.AccessCode == "SWENG101");
-    if (sampleGroup == null)
+    var integradorGroup = existingGroups.FirstOrDefault(g => g.AccessCode == "INT2026");
+    if (integradorGroup == null)
     {
-        logger.LogInformation("Creating Sample Group...");
-        sampleGroup = new Group
-        {
-            Name = "Ingeniería de Software II",
-            AccessCode = "SWENG101",
-            CreatedAt = DateTime.UtcNow
-        };
-        await groupsService.CreateAsync(sampleGroup);
+        integradorGroup = new Group { Name = "Integrador 2026", AccessCode = "INT2026", CreatedAt = DateTime.UtcNow };
+        await groupsService.CreateAsync(integradorGroup);
+    }
+    
+    var videoGamesGroup = existingGroups.FirstOrDefault(g => g.AccessCode == "VG2026");
+    if (videoGamesGroup == null)
+    {
+        videoGamesGroup = new Group { Name = "Videojuegos 2026", AccessCode = "VG2026", CreatedAt = DateTime.UtcNow };
+        await groupsService.CreateAsync(videoGamesGroup);
     }
 
-    // --- 5. Crear PROYECTO si no existe ---
-    var existingProjects = await projectsService.GetAllAsync();
-    var sampleProject = existingProjects.FirstOrDefault(p => p.Name == "QuestEval v1.0");
-    if (sampleProject == null)
-    {
-        logger.LogInformation("Creating Sample Project...");
-        sampleProject = new Project
-        {
-            Name = "QuestEval v1.0",
-            Description = "Sistema de evaluación de proyectos con MongoDB y .NET 10",
-            GroupId = sampleGroup.GroupId!,
-            Status = "Active",
-            Category = "Integrador",
-            TeamMembers = new List<string> { "Kevin Meza", "Kevin Lopez" },
-            CreatedAt = DateTime.UtcNow,
-            UpdatedAt = DateTime.UtcNow
-        };
-        await projectsService.CreateAsync(sampleProject);
-    }
-
-    // --- 6. Crear CRITERIOS si no existen ---
+    // --- 5. Crear CRITERIOS si no existen ---
     var existingCriteria = await criteriaService.GetAllAsync();
     if (!existingCriteria.Any())
     {
         logger.LogInformation("Creating Sample Criteria...");
         var criteria = new List<Criterion>
         {
-            new Criterion { Name = "Legibilidad del Código", Description = "Evalúa que el código siga estándares y sea fácil de leer", MaxScore = 100 },
-            new Criterion { Name = "Interfaz de Usuario", Description = "Evalúa la estética y usabilidad de la UI/UX", MaxScore = 100 },
-            new Criterion { Name = "Calidad Técnica", Description = "Uso correcto de patrones de diseño y arquitectura", MaxScore = 100 }
+            new Criterion { Name = "Planificación y Organización", Description = "Evalúa la estructura y tiempos", MaxScore = 15 },
+            new Criterion { Name = "Investigación y Fundamentación", Description = "Bases teóricas y estado del arte", MaxScore = 15 },
+            new Criterion { Name = "Desarrollo Técnico", Description = "Implementación y código", MaxScore = 25 },
+            new Criterion { Name = "Innovación y Creatividad", Description = "Originalidad de la propuesta", MaxScore = 15 },
+            new Criterion { Name = "Documentación", Description = "Reporte y manuales", MaxScore = 10 },
+            new Criterion { Name = "Presentación y Defensa", Description = "Pitch y respuestas", MaxScore = 20 }
         };
         foreach (var c in criteria) await criteriaService.CreateAsync(c);
         existingCriteria = await criteriaService.GetAllAsync();
     }
 
-    // --- 7. Crear EVALUACIONES si no hay suficientes ---
-    var existingEvaluations = await evaluationsService.GetAllAsync();
-    if (existingEvaluations.Count < 5 && sampleProject != null)
+    // --- 6. Crear PROYECTOS si no existen ---
+    var existingProjects = await projectsService.GetAllAsync();
+    
+    // Proyectos Integrador
+    var integradorProjects = new List<Project>
     {
-        logger.LogInformation("Creating 5 Sample Evaluations...");
-        var students = await usersService.GetAllAsync();
-        var evaluators = students.Where(u => u.Role == "Alumno" && u.UserId != studentUser?.UserId).Take(5).ToList();
-        
-        // Si no hay suficientes alumnos, usar al propio estudiante o al profesor
-        if (evaluators.Count < 5) evaluators.Add(profUser!);
-
-        var random = new Random();
-        foreach (var evaluator in evaluators)
-        {
-            var evaluation = new Evaluation
+        new Project 
+        { 
+            Name = "Ólale Mobile - Auditoría de Compliance", 
+            Description = "Aplicación móvil para auditoría automatizada de cumplimiento legal.",
+            Status = "PENDIENTE",
+            Category = "Integrador",
+            GroupId = integradorGroup.GroupId!,
+            ThumbnailUrl = "https://picsum.photos/id/1/400/300",
+            ComprehensionQuestions = new List<QuestionAnswer>
             {
-                ProjectId = sampleProject.ProjectId!,
-                UserId = evaluator.UserId!,
-                EvaluatorRole = evaluator.Role,
-                EvaluatorName = evaluator.FullName,
-                Details = existingCriteria.Select(c => new EvaluationDetail
-                {
-                    CriteriaId = c.CriteriaId!,
-                    CriterionName = c.Name,
-                    Score = random.Next(70, 101)
-                }).ToList(),
-                CreatedAt = DateTime.UtcNow,
-                UpdatedAt = DateTime.UtcNow
-            };
-            evaluation.FinalScore = evaluation.Details.Average(d => d.Score);
-            await evaluationsService.CreateAsync(evaluation);
+                new() { 
+                    Question = "¿Cuál es el objetivo principal de Ólale Mobile?", 
+                    Options = new List<string> { "Automatizar auditorías", "Vender seguros", "Crear juegos", "Chat social" },
+                    CorrectAnswerIndex = 0,
+                    Answer = "Automatizar auditorías." 
+                },
+                new() { 
+                    Question = "¿Qué plataforma principal utiliza?", 
+                    Options = new List<string> { "React Native", "Flutter", "Swift", "Kotlin" },
+                    CorrectAnswerIndex = 1,
+                    Answer = "Flutter." 
+                }
+            }
+        },
+        new Project 
+        { 
+            Name = "Sistema de Gestión Escolar", 
+            Description = "Plataforma integral para gestión académica.",
+            Status = "EVALUADO",
+            Category = "Integrador",
+            GroupId = integradorGroup.GroupId!,
+            ThumbnailUrl = "https://picsum.photos/id/2/400/300"
+        },
+        new Project 
+        { 
+            Name = "App de Delivery Local", 
+            Description = "Entrega a domicilio para negocios locales.",
+            Status = "EVALUADO",
+            Category = "Integrador",
+            GroupId = integradorGroup.GroupId!,
+            ThumbnailUrl = "https://picsum.photos/id/3/400/300"
+        }
+    };
+
+    foreach (var p in integradorProjects)
+    {
+        if (!existingProjects.Any(ex => ex.Name == p.Name))
+        {
+            await projectsService.CreateAsync(p);
         }
     }
 
-        logger.LogInformation("Seeding and initialization complete.");
+    // Proyectos Videojuegos
+    var vgProjects = new List<Project>
+    {
+        new Project 
+        { 
+            Name = "Space Defenders 3D", 
+            Description = "Juego de disparos espacial 3D.",
+            Status = "EVALUADO",
+            Category = "Videojuegos",
+            GroupId = videoGamesGroup.GroupId!,
+            ThumbnailUrl = "https://picsum.photos/id/4/400/300"
+        },
+        new Project 
+        { 
+            Name = "Puzzle Quest Adventures", 
+            Description = "Aventura narrativa de puzzles.",
+            Status = "EVALUADO",
+            Category = "Videojuegos",
+            GroupId = videoGamesGroup.GroupId!,
+            ThumbnailUrl = "https://picsum.photos/id/5/400/300"
+        },
+        new Project 
+        { 
+            Name = "Racing Legends", 
+            Description = "Simulador de carreras alta velocidad.",
+            Status = "PENDIENTE",
+            Category = "Videojuegos",
+            GroupId = videoGamesGroup.GroupId!,
+            ThumbnailUrl = "https://picsum.photos/id/6/400/300"
+        }
+    };
+
+    foreach (var p in vgProjects)
+    {
+        if (!existingProjects.Any(ex => ex.Name == p.Name))
+        {
+            await projectsService.CreateAsync(p);
+        }
+    }
+
+    logger.LogInformation("Seeding and initialization complete.");
     }
     catch (Exception ex)
     {
         logger.LogCritical(ex, "FATAL ERROR DURING SEEDING: {Message}", ex.Message);
-        if (ex.InnerException != null)
-        {
-            logger.LogCritical(ex.InnerException, "INNER EXCEPTION: {Message}", ex.InnerException.Message);
-        }
         throw;
     }
 }
