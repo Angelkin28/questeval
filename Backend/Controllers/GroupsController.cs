@@ -19,17 +19,20 @@ public class GroupsController : ControllerBase
     private readonly IMembershipsService _membershipsService;
     private readonly IUsersService _usersService;
     private readonly IProjectsService _projectsService;
+    private readonly IActivityLogService _logService;
 
     public GroupsController(
         IGroupsService service, 
         IMembershipsService membershipsService,
         IUsersService usersService,
-        IProjectsService projectsService)
+        IProjectsService projectsService,
+        IActivityLogService logService)
     {
         _service = service;
         _membershipsService = membershipsService;
         _usersService = usersService;
         _projectsService = projectsService;
+        _logService = logService;
     }
 
     /// <summary>
@@ -192,6 +195,7 @@ public class GroupsController : ControllerBase
         {
             Name = request.Name,
             AccessCode = request.AccessCode,
+            TeacherId = userId,  // Guardar el ID del maestro creador
             CreatedAt = DateTime.UtcNow
         };
 
@@ -204,6 +208,10 @@ public class GroupsController : ControllerBase
             GroupId = newGroup.GroupId!,
             JoinedAt = DateTime.UtcNow
         });
+
+        // Registrar en el log de actividad
+        var creatorName = User.FindFirst(ClaimTypes.Name)?.Value ?? "Profesor";
+        await _logService.LogAsync("group_created", $"Nuevo grupo creado: \"{newGroup.Name}\" (Código: {newGroup.AccessCode}) por {creatorName}", "info", userId, creatorName, newGroup.Id, newGroup.Name);
 
         var response = new GroupResponse
         {

@@ -90,7 +90,7 @@ export default function LoginPage() {
                 router.push('/dashboard');
                 return;
             }
-            setError('Credenciales incorrectas. Verifica tus datos.');
+            setError(err.message || 'Credenciales incorrectas. Verifica tus datos.');
         } finally {
             setLoading(false);
         }

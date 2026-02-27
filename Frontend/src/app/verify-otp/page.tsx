@@ -106,11 +106,8 @@ const VerifyOtpForm = () => {
 
       // Redirigir según el rol
       setTimeout(() => {
-        if (role === 'Profesor') {
-          router.push('/waiting-approval');
-        } else {
-          router.push('/login?verified=true');
-        }
+        // Todos los roles van al login directamente; el backend ya los aprueba automáticamente
+        router.push('/login?verified=true');
       }, 1500);
 
     } catch (err: any) {

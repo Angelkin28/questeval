@@ -1,6 +1,7 @@
 using Microsoft.Extensions.Options;
 using MongoDB.Driver;
 using MongoDB.Bson;
+using MongoDB.Bson.Serialization;
 using System.Linq;
 using Backend.Models;
 using Backend.Services.Interfaces;
@@ -35,8 +36,41 @@ public class MembershipsService : IMembershipsService
     public async Task<List<Membership>> GetByUserIdAsync(string userId) =>
         await _collection.Find(x => x.UserId == userId).ToListAsync();
         
-    public async Task<List<Membership>> GetByGroupIdAsync(string groupId) =>
-        await _collection.Find(x => x.GroupId == groupId).ToListAsync();
+    public async Task<List<Membership>> GetByGroupIdAsync(string groupId)
+    {
+        // Buscar via BsonDocument raw para tolerar GroupId como string O como ObjectId
+        var rawCollection = _collection.Database.GetCollection<BsonDocument>(
+            _collection.CollectionNamespace.CollectionName);
+
+        FilterDefinition<BsonDocument> filter;
+        if (ObjectId.TryParse(groupId, out var oid))
+        {
+            // Buscar por ObjectId Y por string (algunos registros pueden tener uno u otro)
+            filter = Builders<BsonDocument>.Filter.Or(
+                Builders<BsonDocument>.Filter.Eq("GroupId", oid),
+                Builders<BsonDocument>.Filter.Eq("GroupId", groupId)
+            );
+        }
+        else
+        {
+            filter = Builders<BsonDocument>.Filter.Eq("GroupId", groupId);
+        }
+
+        var docs = await rawCollection.Find(filter).ToListAsync();
+        var result = new List<Membership>();
+        foreach (var doc in docs)
+        {
+            try
+            {
+                // Normalizar GroupId a string antes de deserializar
+                if (doc.Contains("GroupId") && doc["GroupId"].BsonType == BsonType.ObjectId)
+                    doc["GroupId"] = new BsonString(doc["GroupId"].AsObjectId.ToString());
+                result.Add(BsonSerializer.Deserialize<Membership>(doc));
+            }
+            catch { /* ignorar documentos con datos inválidos */ }
+        }
+        return result;
+    }
 
     public async Task CreateAsync(Membership membership)
     {

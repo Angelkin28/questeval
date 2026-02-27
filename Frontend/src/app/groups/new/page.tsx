@@ -14,6 +14,7 @@ export default function NewGroupPage() {
     const [name, setName] = useState('');
     const [accessCode, setAccessCode] = useState('');
     const [loading, setLoading] = useState(false);
+    const [error, setError] = useState('');
 
     const generateCode = () => {
         const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
@@ -30,11 +31,12 @@ export default function NewGroupPage() {
 
         setLoading(true);
         try {
-            await api.groups.create({ name, accessCode });
-            router.push('/groups');
-        } catch (error) {
+            const newGroup = await api.groups.create({ name, accessCode });
+            // Ir al detalle del grupo recién creado
+            router.push(`/groups/${newGroup.id}`);
+        } catch (error: any) {
             console.error(error);
-            alert('Error al crear grupo');
+            setError(error.message || 'Error al crear grupo');
         } finally {
             setLoading(false);
         }
@@ -82,6 +84,11 @@ export default function NewGroupPage() {
                                 <p className="text-xs text-muted-foreground">Comparte este código con los estudiantes para que se unan.</p>
                             </div>
 
+                            {error && (
+                                <p className="text-sm text-red-600 bg-red-50 border border-red-200 rounded-lg px-3 py-2">
+                                    {error}
+                                </p>
+                            )}
                             <Button type="submit" className="w-full bg-primary text-primary-foreground hover:bg-primary/90" disabled={loading}>
                                 {loading ? 'Creando...' : (
                                     <>

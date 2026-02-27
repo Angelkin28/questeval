@@ -19,4 +19,9 @@ public interface IOtpService
     /// <param name="otpCode">Código OTP de 6 dígitos</param>
     /// <returns>True si el código es válido</returns>
     Task<bool> VerifyOtpAsync(string email, string otpCode);
+
+    /// <summary>
+    /// Elimina a un usuario completamente de Supabase Auth usando su email
+    /// </summary>
+    Task<bool> DeleteUserByEmailAsync(string email);
 }

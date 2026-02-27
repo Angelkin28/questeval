@@ -157,8 +157,9 @@ export const api = {
             });
 
             if (!response.ok) {
-                const error = await response.json();
-                throw new Error(error.message || 'Error al iniciar sesión');
+                const error = await response.json().catch(() => ({}));
+                // El backend retorna ProblemDetails con campo 'detail'
+                throw new Error(error.detail || error.message || 'Error al iniciar sesión');
             }
 
             return response.json();
@@ -378,7 +379,10 @@ export const api = {
                 headers,
                 body: JSON.stringify(data),
             });
-            if (!response.ok) throw new Error('Error al crear grupo');
+            if (!response.ok) {
+                const err = await response.json().catch(() => ({}));
+                throw new Error(err.detail || err.title || `Error al crear grupo (${response.status})`);
+            }
             return response.json();
         },
 

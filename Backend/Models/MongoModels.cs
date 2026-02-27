@@ -17,6 +17,7 @@ public class QuestEvalDatabaseSettings
     public string CriteriaCollectionName { get; set; } = null!;
     public string EvaluationsCollectionName { get; set; } = null!;
     public string FeedbackCollectionName { get; set; } = null!;
+    public string ActivityLogsCollectionName { get; set; } = null!;
 }
 
 /// <summary>
@@ -63,6 +64,28 @@ public class Group
 
     public string AccessCode { get; set; } = null!;
 
+    public string? TeacherId { get; set; } // ID del profesor que creó/gestiona el grupo
+
+    public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
+}
+
+/// <summary>
+/// Registro de actividad del sistema para el panel de administración
+/// </summary>
+[BsonIgnoreExtraElements]
+public class ActivityLog
+{
+    [BsonId]
+    [BsonRepresentation(BsonType.ObjectId)]
+    public string? Id { get; set; }
+
+    public string Action { get; set; } = null!;       // "user_created", "group_created", "user_deleted", etc.
+    public string Detail { get; set; } = null!;        // Descripción legible
+    public string Category { get; set; } = "info";    // "info", "warning", "delete", "auth"
+    public string? ActorId { get; set; }               // Quién hizo la acción
+    public string? ActorName { get; set; }             // Nombre del actor
+    public string? TargetId { get; set; }              // ID del objeto afectado
+    public string? TargetName { get; set; }            // Nombre del objeto afectado
     public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
 }
 

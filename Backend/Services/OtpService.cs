@@ -11,11 +11,15 @@ public class OtpService : IOtpService
 {
     private readonly Supabase.Client _supabaseClient;
     private readonly ILogger<OtpService> _logger;
+    private readonly IConfiguration _config;
+    private readonly IHttpClientFactory _httpClientFactory;
 
-    public OtpService(Supabase.Client supabaseClient, ILogger<OtpService> logger)
+    public OtpService(Supabase.Client supabaseClient, ILogger<OtpService> logger, IConfiguration config, IHttpClientFactory httpClientFactory)
     {
         _supabaseClient = supabaseClient;
         _logger = logger;
+        _config = config;
+        _httpClientFactory = httpClientFactory;
     }
 
     /// <summary>
@@ -109,6 +113,83 @@ public class OtpService : IOtpService
         catch (Exception ex)
         {
             _logger.LogError($"❌ Error al verificar OTP para {email}: {ex.Message}");
+            return false;
+        }
+    }
+
+    /// <summary>
+    /// Elimina a un usuario completamente de Supabase Auth usando su email
+    /// </summary>
+    public async Task<bool> DeleteUserByEmailAsync(string email)
+    {
+        try
+        {
+            var url = _config["Supabase:Url"];
+            var key = _config["Supabase:Key"];
+            
+            if (string.IsNullOrEmpty(url) || string.IsNullOrEmpty(key)) return false;
+
+            using var client = _httpClientFactory.CreateClient();
+            client.DefaultRequestHeaders.Add("apikey", key);
+            client.DefaultRequestHeaders.Add("Authorization", $"Bearer {key}");
+
+            // 1. Obtener la lista de usuarios
+            var getUrl = $"{url}/auth/v1/admin/users";
+            var response = await client.GetAsync(getUrl);
+            
+            if (!response.IsSuccessStatusCode) return false;
+
+            var json = await response.Content.ReadAsStringAsync();
+            var doc = System.Text.Json.JsonDocument.Parse(json);
+            
+            string? targetId = null;
+            
+            // Supabase admin listing devuelve a veces un array, y a veces un objeto con propiedad "users"
+            System.Text.Json.JsonElement usersArray = default;
+            
+            if (doc.RootElement.ValueKind == System.Text.Json.JsonValueKind.Array)
+            {
+                usersArray = doc.RootElement;
+            }
+            else if (doc.RootElement.ValueKind == System.Text.Json.JsonValueKind.Object && doc.RootElement.TryGetProperty("users", out var uArr))
+            {
+                usersArray = uArr;
+            }
+
+            if (usersArray.ValueKind == System.Text.Json.JsonValueKind.Array)
+            {
+                foreach (var userItem in usersArray.EnumerateArray())
+                {
+                    if (userItem.TryGetProperty("email", out var emailProp) && emailProp.GetString() == email)
+                    {
+                        if (userItem.TryGetProperty("id", out var idProp))
+                        {
+                            targetId = idProp.GetString();
+                        }
+                        break;
+                    }
+                }
+            }
+
+            // 2. Eliminar el usuario por su UUID si se encontró
+            if (!string.IsNullOrEmpty(targetId))
+            {
+                var deleteUrl = $"{url}/auth/v1/admin/users/{targetId}";
+                var delResult = await client.DeleteAsync(deleteUrl);
+                
+                if (delResult.IsSuccessStatusCode)
+                {
+                    _logger.LogInformation($"✅ Usuario {email} borrado de Supabase Auth.");
+                    return true;
+                }
+            }
+            
+            _logger.LogInformation($"⚠️ El usuario {email} no existía o no pudo ser borrado en Supabase Auth.");
+            return true;
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError($"❌ Error al borrar a {email} de Supabase Auth: {ex.Message}");
             return false;
         }
     }

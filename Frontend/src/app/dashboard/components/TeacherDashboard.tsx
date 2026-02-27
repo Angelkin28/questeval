@@ -22,6 +22,7 @@ export default function TeacherDashboard({ user }: TeacherDashboardProps) {
     const router = useRouter();
     const [groups, setGroups] = useState<Group[]>([]);
     const [pendingProjects, setPendingProjects] = useState<any[]>([]);
+    const [totalStudents, setTotalStudents] = useState<number | null>(null);
     const [loading, setLoading] = useState(true);
 
     useEffect(() => {
@@ -34,6 +35,23 @@ export default function TeacherDashboard({ user }: TeacherDashboardProps) {
                     api.projects.getAll() // This returns ALL projects. We should filter by my groups.
                 ]);
                 setGroups(myGroups);
+
+                // Contar el total de alumnos únicos en todos mis grupos
+                const allMemberIds = new Set<string>();
+                let studentCount = 0;
+                for (const group of myGroups) {
+                    try {
+                        const members = await api.groups.getMembers(group.id);
+                        members.forEach(m => {
+                            const role = m.role?.toLowerCase();
+                            if ((role === 'alumno' || role === 'student') && !allMemberIds.has(m.id)) {
+                                allMemberIds.add(m.id);
+                                studentCount++;
+                            }
+                        });
+                    } catch { }
+                }
+                setTotalStudents(studentCount);
 
                 // Filter projects that belong to my groups AND are status 'Completed'
                 const myGroupIds = new Set(myGroups.map(g => g.id));
@@ -91,7 +109,9 @@ export default function TeacherDashboard({ user }: TeacherDashboardProps) {
                         </div>
                         <div>
                             <p className="text-sm text-muted-foreground font-medium uppercase">Total Alumnos</p>
-                            <p className="text-2xl font-bold title-serif">-</p> {/* Requires member count */}
+                            <p className="text-2xl font-bold title-serif">
+                                {totalStudents === null ? '...' : totalStudents}
+                            </p>
                         </div>
                     </CardContent>
                 </Card>

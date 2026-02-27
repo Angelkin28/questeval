@@ -14,6 +14,9 @@ public class UsersService : IUsersService
 {
     private readonly IMongoCollection<User> _collection;
     private readonly IMongoCollection<DatabaseCounters> _counters;
+    private readonly IMongoCollection<Membership> _memberships;
+    private readonly IMongoCollection<Project> _projects;
+    private readonly IMongoCollection<Evaluation> _evaluations;
 
     public UsersService(IOptions<QuestEvalDatabaseSettings> settings)
     {
@@ -21,6 +24,9 @@ public class UsersService : IUsersService
         var database = mongoClient.GetDatabase(settings.Value.DatabaseName);
         _collection = database.GetCollection<User>(settings.Value.UsersCollectionName);
         _counters = database.GetCollection<DatabaseCounters>("database_counters");
+        _memberships = database.GetCollection<Membership>(settings.Value.MembershipsCollectionName);
+        _projects = database.GetCollection<Project>(settings.Value.ProjectsCollectionName);
+        _evaluations = database.GetCollection<Evaluation>(settings.Value.EvaluationsCollectionName);
     }
 
     private async Task<string> GetNextIdAsync(string collectionName)
@@ -68,8 +74,33 @@ public class UsersService : IUsersService
         await _collection.ReplaceOneAsync(x => x.Id == id, user);
     }
 
-    public async Task DeleteAsync(string id) =>
+    public async Task DeleteAsync(string id)
+    {
+        var user = await GetByIdAsync(id);
+        if (user == null) return;
+
+        // Lista de posibles IDs del usuario para buscar en otras colecciones
+        var userIds = new List<string> { user.Id! };
+        if (!string.IsNullOrEmpty(user.UserId))
+        {
+            userIds.Add(user.UserId);
+        }
+
+        // 1. Borrar membresías del usuario
+        var memFilter = Builders<Membership>.Filter.In(m => m.UserId, userIds);
+        await _memberships.DeleteManyAsync(memFilter);
+
+        // 2. Borrar proyectos donde el usuario es dueño
+        var projFilter = Builders<Project>.Filter.In(p => p.UserId, userIds);
+        await _projects.DeleteManyAsync(projFilter);
+
+        // 3. Borrar evaluaciones hechas por este usuario
+        var evalFilter = Builders<Evaluation>.Filter.In(e => e.UserId, userIds);
+        await _evaluations.DeleteManyAsync(evalFilter);
+
+        // 4. Finalmente, borrar al usuario
         await _collection.DeleteOneAsync(x => x.Id == id);
+    }
 
     public async Task<bool> MarkEmailAsVerifiedAsync(string userId)
     {

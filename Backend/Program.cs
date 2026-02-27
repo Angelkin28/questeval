@@ -3,6 +3,7 @@ using Backend.Services;
 using Backend.Services.Interfaces;
 using Backend.Middlewares;
 using DotNetEnv;
+using System.Security.Claims;
 
 // Cargar variables de entorno desde .env (sobreescribe appsettings.json)
 // El separador __ mapea automáticamente a secciones anidadas:
@@ -28,12 +29,32 @@ builder.Services.AddScoped<IProjectsService, ProjectsService>();      // Gestion
 builder.Services.AddScoped<IEvaluationsService, EvaluationsService>(); // Gestionar evaluaciones de proyectos
 builder.Services.AddScoped<IMembershipsService, MembershipsService>(); // Gestionar relaciones usuario-grupo
 builder.Services.AddScoped<IFeedbackService, FeedbackService>();      // Gestionar retroalimentación de evaluaciones
+builder.Services.AddScoped<IOtpService, OtpService>();                // Gestionar OTP y autenticación de Supabase
+builder.Services.AddScoped<IActivityLogService, ActivityLogService>(); // Gestionar logs de actividad del sistema
 
 // ==================== MANEJO DE EXCEPCIONES ====================
 // GlobalExceptionHandler captura excepciones no manejadas y retorna RFC 7807 ProblemDetails
 // Esto evita errores 500 exponiendo stack traces a los clientes
 builder.Services.AddExceptionHandler<GlobalExceptionHandler>();
 builder.Services.AddProblemDetails(); // Habilitar respuestas ProblemDetails
+
+// ==================== CONFIGURACIÓN HTTP & SUPABASE ====================
+builder.Services.AddHttpClient();
+
+// Inicializar el cliente de Supabase como Singleton para que IOtpService pueda consumirlo
+builder.Services.AddSingleton<Supabase.Client>(provider => 
+{
+    var config = provider.GetRequiredService<IConfiguration>();
+    var url = config["Supabase:Url"] ?? throw new ArgumentNullException("Supabase:Url");
+    var key = config["Supabase:Key"] ?? throw new ArgumentNullException("Supabase:Key");
+    
+    var options = new Supabase.SupabaseOptions
+    {
+        AutoConnectRealtime = true
+    };
+    
+    return new Supabase.Client(url, key, options);
+});
 
 // ==================== CONFIGURACIÓN CORS ====================
 // Configurar Cross-Origin Resource Sharing para acceso del frontend
@@ -69,6 +90,34 @@ builder.Services.AddControllers()
         // Los controllers retornarán 400 BadRequest automáticamente para datos inválidos
         options.SuppressModelStateInvalidFilter = false;
     });
+
+// ==================== CONFIGURACIÓN DE AUTENTICACIÓN JWT ====================
+var jwtSecretKey = builder.Configuration["Jwt:SecretKey"] ?? throw new ArgumentNullException("Jwt:SecretKey no configurada en .env");
+var jwtIssuer = builder.Configuration["Jwt:Issuer"] ?? "QuestEvalBackend";
+var jwtAudience = builder.Configuration["Jwt:Audience"] ?? "QuestEvalFrontend";
+var key = new Microsoft.IdentityModel.Tokens.SymmetricSecurityKey(System.Text.Encoding.UTF8.GetBytes(jwtSecretKey));
+
+builder.Services.AddAuthentication(options =>
+{
+    options.DefaultAuthenticateScheme = Microsoft.AspNetCore.Authentication.JwtBearer.JwtBearerDefaults.AuthenticationScheme;
+    options.DefaultChallengeScheme = Microsoft.AspNetCore.Authentication.JwtBearer.JwtBearerDefaults.AuthenticationScheme;
+})
+.AddJwtBearer(options =>
+{
+    options.RequireHttpsMetadata = false;
+    options.SaveToken = true;
+    options.TokenValidationParameters = new Microsoft.IdentityModel.Tokens.TokenValidationParameters
+    {
+        ValidateIssuerSigningKey = true,
+        IssuerSigningKey = key,
+        ValidateIssuer = true,
+        ValidIssuer = jwtIssuer,
+        ValidateAudience = true,
+        ValidAudience = jwtAudience,
+        ValidateLifetime = true,
+        ClockSkew = TimeSpan.FromMinutes(5)
+    };
+});
 
 // ==================== CONFIGURACIÓN SWAGGER/OpenAPI ====================
 // Swagger proporciona documentación interactiva de la API en /swagger
@@ -154,7 +203,8 @@ app.UseHttpsRedirection();
 //    Debe estar antes de UseAuthorization
 app.UseCors("AllowFrontend");
 
-// 5. Authorization - Verificar permisos de usuario (placeholder para futura autenticación JWT)
+// 5. Authentication & Authorization - Verificar permisos de usuario (placeholder para futura autenticación JWT)
+app.UseAuthentication();
 app.UseAuthorization();
 
 // 6. Controllers - Mapear solicitudes HTTP a acciones de controller
@@ -207,10 +257,29 @@ app.Lifetime.ApplicationStarted.Register(() =>
             {
                 Console.WriteLine($"⚠️  El usuario {adminEmail} no existe en la BD todavía.");
             }
+
+            // ==================== VERIFICAR A TODOS LOS PROFESORES Y ALUMNOS ====================
+            Console.WriteLine("⚙️  Verificando estado de profesores y alumnos en BD...");
+            var allUsers = await usersService.GetAllAsync();
+            var unverifiedUsers = allUsers.Where(u => (u.Role == "Profesor" || u.Role == "Alumno") && !u.EmailVerified).ToList();
+
+            foreach (var user in unverifiedUsers)
+            {
+                user.EmailVerified = true;
+                user.VerificationStatus = "approved"; // Mantenemos compatibilidad con el front antiguo si lo requiere aún
+                await usersService.UpdateAsync(user.Id!, user);
+                Console.WriteLine($"✅ Usuario verificado forzadamente: {user.Email} ({user.FullName} - {user.Role})");
+            }
+            
+            if (!unverifiedUsers.Any())
+            {
+                 Console.WriteLine("✅ No hay profesores ni alumnos pendientes de verificación de correo.");
+            }
+
         }
         catch (Exception ex)
         {
-            Console.WriteLine($"⚠️  Error al verificar usuario admin: {ex.Message}");
+            Console.WriteLine($"⚠️  Error al verificar usuarios en el startup: {ex.Message}");
         }
     });
 });
