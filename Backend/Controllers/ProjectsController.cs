@@ -112,7 +112,7 @@ public class ProjectsController : ControllerBase
     /// </summary>
     /// <returns>Lista de mis proyectos</returns>
     [HttpGet("mine")]
-    [Authorize]
+    [Authorize(Roles = "Alumno,Profesor,Admin")]
     [ProducesResponseType(typeof(List<ProjectResponse>), StatusCodes.Status200OK)]
     public async Task<ActionResult<List<ProjectResponse>>> GetMine()
     {

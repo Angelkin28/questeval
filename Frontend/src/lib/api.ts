@@ -1,4 +1,4 @@
-const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5122/api';
+﻿const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5122/api';
 
 export interface RegisterRequest {
     email: string;
@@ -134,6 +134,18 @@ export interface EvaluationResponse {
     createdAt: string;
 }
 
+export interface GuestAccessRequest {
+    fullName: string;
+}
+
+export interface GuestAccessResponse {
+    id: string;
+    fullName: string;
+    role: string;
+    token: string;
+    userId?: string;
+}
+
 export const api = {
     auth: {
         // ... (login and register existing code)
@@ -162,6 +174,27 @@ export const api = {
             if (!response.ok) {
                 // Handle specific error formats from ASP.NET Core
                 let errorMessage = 'Error al registrarse';
+                try {
+                    const error = await response.json();
+                    errorMessage = error.message || JSON.stringify(error) || errorMessage;
+                } catch (e) {
+                    errorMessage = response.statusText;
+                }
+                throw new Error(errorMessage);
+            }
+
+            return response.json();
+        },
+
+        guestAccess: async (data: GuestAccessRequest): Promise<GuestAccessResponse> => {
+            const response = await fetch(`${API_URL}/Users/guest-access`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(data),
+            });
+
+            if (!response.ok) {
+                let errorMessage = 'Error al acceder como invitado';
                 try {
                     const error = await response.json();
                     errorMessage = error.message || JSON.stringify(error) || errorMessage;
@@ -488,5 +521,31 @@ export const api = {
             }
             return response.json();
         }
+    },
+
+    feedback: {
+        create: async (data: { projectId: string; evaluatorId: string; comment: string }): Promise<void> => {
+            const token = localStorage.getItem('token');
+            const headers: HeadersInit = { 'Content-Type': 'application/json' };
+            if (token) headers['Authorization'] = `Bearer ${token}`;
+
+            const response = await fetch(`${API_URL}/Feedback`, {
+                method: 'POST',
+                headers,
+                body: JSON.stringify(data),
+            });
+            if (!response.ok) throw new Error('Error al crear feedback');
+        },
+        getByProject: async (projectId: string): Promise<any[]> => {
+            const token = localStorage.getItem('token');
+            const headers: HeadersInit = { 'Content-Type': 'application/json' };
+            if (token) headers['Authorization'] = `Bearer ${token}`;
+
+            const response = await fetch(`${API_URL}/Feedback/project/${projectId}`, { headers });
+            if (!response.ok) throw new Error('Error al obtener feedback');
+            return response.json();
+        }
     }
 };
+
+

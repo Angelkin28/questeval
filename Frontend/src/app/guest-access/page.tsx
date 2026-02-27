@@ -17,16 +17,16 @@ const quotes = [
 ];
 
 const phrases = [
-    'Diseñado para instituciones que priorizan la calidad educativa.',
-    'Cada evaluación es una oportunidad de crecimiento.',
-    'La retroalimentación oportuna transforma el aprendizaje.',
-    'Transparencia y rigor en cada proceso académico.',
-    'Una herramienta construida por y para docentes.',
+    'Como invitado, puedes explorar proyectos y compartir tu evaluación.',
+    'Tu participación es valiosa para enriquecer el aprendizaje.',
+    'Califica y comenta con libertad y respeto.',
+    'La retroalimentación es un acto de generosidad académica.',
+    'Una herramienta construida por y para la comunidad educativa.',
 ];
 
-export default function LoginPage() {
+export default function GuestAccessPage() {
     const router = useRouter();
-    const [formData, setFormData] = useState({ email: '', password: '' });
+    const [fullName, setFullName] = useState('');
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState('');
     const [quoteIndex, setQuoteIndex] = useState(0);
@@ -45,54 +45,36 @@ export default function LoginPage() {
         return () => clearInterval(interval);
     }, []);
 
-    const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-        setFormData({ ...formData, [e.target.name]: e.target.value });
-    };
-
-    const handleLogin = async (e: React.FormEvent) => {
+    const handleGuestAccess = async (e: React.FormEvent) => {
         e.preventDefault();
         setLoading(true);
         setError('');
 
+        if (!fullName.trim()) {
+            setError('Por favor ingresa tu nombre.');
+            setLoading(false);
+            return;
+        }
+
         try {
-            const response = await api.auth.login({
-                email: formData.email,
-                password: formData.password,
+            const response = await api.auth.guestAccess({
+                fullName: fullName.trim(),
             });
 
+            // Almacenar datos de sesión
             localStorage.setItem('token', response.token);
-            localStorage.setItem('user', JSON.stringify(response));
+            localStorage.setItem('user', JSON.stringify({
+                userId: response.id,
+                fullName: response.fullName,
+                role: response.role,
+                token: response.token,
+            }));
 
-            if (response.emailVerified === false) {
-                router.push(`/verify-otp?email=${encodeURIComponent(formData.email)}&role=${response.role}`);
-                return;
-            }
-            if (response.role === 'Admin') { router.push('/admin/dashboard'); return; }
-            if (response.role === 'Profesor' && response.verificationStatus === 'pending') { router.push('/waiting-approval'); return; }
-            if (response.role === 'Profesor' && response.verificationStatus === 'rejected') {
-                setError('Tu cuenta ha sido rechazada. Contacta al administrador.');
-                localStorage.removeItem('token');
-                localStorage.removeItem('user');
-                return;
-            }
-            router.push('/dashboard');
+            // Redirigir al dashboard de invitados
+            router.push('/guest-dashboard');
 
         } catch (err: any) {
-            if (err.message?.includes('fetch') || err.message?.includes('Failed to fetch')) {
-                const demoUser = {
-                    userId: 'demo-123',
-                    email: formData.email,
-                    enrollment: 'D2024001',
-                    fullName: formData.email.includes('@') ? formData.email.split('@')[0] : 'Usuario Demo',
-                    role: formData.email.toLowerCase().includes('maestro') ? 'Maestro' : 'Alumno',
-                    token: 'demo-token',
-                };
-                localStorage.setItem('user', JSON.stringify(demoUser));
-                localStorage.setItem('token', 'demo-token');
-                router.push('/dashboard');
-                return;
-            }
-            setError('Credenciales incorrectas. Verifica tus datos.');
+            setError(err.message || 'Error al acceder como invitado. Intenta de nuevo.');
         } finally {
             setLoading(false);
         }
@@ -154,7 +136,7 @@ export default function LoginPage() {
                 <div className="relative">
                     <div className="w-12 h-px bg-[#D4AF37]/40 mb-4" />
                     <p className="text-white/25 text-[10px] uppercase tracking-[0.2em]">
-                        Sistema Institucional · Acceso Seguro
+                        Sistema Institucional · Acceso Invitados
                     </p>
                 </div>
             </div>
@@ -165,14 +147,14 @@ export default function LoginPage() {
                 {/* Barra superior */}
                 <div className="flex items-center justify-between px-8 py-5 border-b border-black/5">
                     <Link
-                        href="/"
+                        href="/login"
                         className="flex items-center gap-2 text-[#1A1A1A]/40 hover:text-[#1A1A1A] transition-colors text-xs font-bold uppercase tracking-widest"
                     >
                         <ArrowLeft className="w-3.5 h-3.5" />
-                        Inicio
+                        Atrás
                     </Link>
                     <p className="text-[10px] text-[#1A1A1A]/30 uppercase tracking-[0.2em]">
-                        Acceso Institucional
+                        Acceso para Invitados
                     </p>
                 </div>
 
@@ -184,51 +166,27 @@ export default function LoginPage() {
                         <div className="mb-10">
                             <div className="w-12 h-1 bg-[#D4AF37] mb-6" />
                             <h1 className="text-4xl font-semibold text-[#1A1A1A] tracking-tight mb-3">
-                                Iniciar sesión
+                                Acceso como Invitado
                             </h1>
                             <p className="text-[#1A1A1A]/45 text-sm leading-relaxed">
-                                Ingresa tus credenciales institucionales para acceder al sistema de evaluación.
+                                Ingresa tu nombre para acceder a los proyectos, calificar evaluaciones y dejar tus comentarios.
                             </p>
                         </div>
 
                         {/* Form */}
-                        <form onSubmit={handleLogin} className="space-y-5">
+                        <form onSubmit={handleGuestAccess} className="space-y-5">
 
                             <div className="space-y-1.5">
                                 <label className="text-[10px] font-bold uppercase tracking-[0.2em] text-[#1A1A1A]/60 block">
-                                    Matrícula / Correo Institucional
+                                    Tu Nombre
                                 </label>
                                 <Input
-                                    name="email"
                                     type="text"
-                                    placeholder="ejemplo@institucion.edu"
-                                    value={formData.email}
-                                    onChange={handleChange}
+                                    placeholder="Ej: Juan Pérez"
+                                    value={fullName}
+                                    onChange={(e) => setFullName(e.target.value)}
                                     required
                                     className="h-12 bg-white border-[#1A1A1A]/12 focus-visible:ring-[#1A1A1A] rounded-sm px-4 text-sm placeholder:text-[#1A1A1A]/25 transition-all"
-                                />
-                            </div>
-
-                            <div className="space-y-1.5">
-                                <div className="flex items-center justify-between">
-                                    <label className="text-[10px] font-bold uppercase tracking-[0.2em] text-[#1A1A1A]/60 block">
-                                        Contraseña
-                                    </label>
-                                    <Link
-                                        href="/forgot-password"
-                                        className="text-[10px] uppercase tracking-widest text-[#1A1A1A]/40 hover:text-[#D4AF37] font-bold transition-colors"
-                                    >
-                                        ¿Olvidaste tu contraseña?
-                                    </Link>
-                                </div>
-                                <Input
-                                    name="password"
-                                    type="password"
-                                    placeholder="••••••••••••"
-                                    value={formData.password}
-                                    onChange={handleChange}
-                                    required
-                                    className="h-12 bg-white border-[#1A1A1A]/12 focus-visible:ring-[#1A1A1A] rounded-sm px-4 text-base tracking-widest transition-all"
                                 />
                             </div>
 
@@ -240,36 +198,22 @@ export default function LoginPage() {
 
                             <Button
                                 type="submit"
-                                className="w-full h-13 mt-2 bg-[#1A1A1A] text-white hover:bg-[#D4AF37] hover:text-[#1A1A1A] font-bold uppercase tracking-[0.15em] text-xs rounded-sm shadow-lg transition-all duration-300"
+                                className="w-full h-13 mt-2 bg-[#D4AF37] text-[#1A1A1A] hover:bg-[#1A1A1A] hover:text-[#D4AF37] font-bold uppercase tracking-[0.15em] text-xs rounded-sm shadow-lg transition-all duration-300"
                                 style={{ height: '52px' }}
                                 disabled={loading}
                             >
                                 {loading ? (
                                     <Loader2 className="w-4 h-4 animate-spin" />
                                 ) : (
-                                    'Ingresar al Sistema'
+                                    'Continuar como Invitado'
                                 )}
                             </Button>
 
-                            <div className="flex items-center gap-3 pt-2">
-                                <div className="h-px flex-1 bg-black/8" />
-                                <span className="text-[10px] text-[#1A1A1A]/30 uppercase tracking-widest">o</span>
-                                <div className="h-px flex-1 bg-black/8" />
+                            <div className="pt-4 border-t border-black/8">
+                                <p className="text-[10px] text-[#1A1A1A]/50 text-center leading-relaxed">
+                                    Como invitado podrás ver proyectos, calificar y comentar. No necesitas crear una cuenta.
+                                </p>
                             </div>
-
-                            <Link
-                                href="/register"
-                                className="flex items-center justify-center w-full h-12 border border-[#1A1A1A]/15 text-[#1A1A1A]/50 hover:border-[#1A1A1A]/40 hover:text-[#1A1A1A] transition-all duration-300 font-bold uppercase tracking-[0.15em] text-xs rounded-sm"
-                            >
-                                Solicitar Acceso al Sistema
-                            </Link>
-
-                            <Link
-                                href="/guest-access"
-                                className="flex items-center justify-center w-full h-12 bg-[#D4AF37]/10 border border-[#D4AF37]/30 text-[#D4AF37] hover:bg-[#D4AF37]/20 hover:border-[#D4AF37]/50 transition-all duration-300 font-bold uppercase tracking-[0.15em] text-xs rounded-sm"
-                            >
-                                Acceso como Invitado
-                            </Link>
                         </form>
 
                         <p className="text-center text-[10px] text-[#1A1A1A]/25 uppercase tracking-widest mt-8">
