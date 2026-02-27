@@ -63,18 +63,16 @@ export default function LoginPage() {
             localStorage.setItem('token', response.token);
             localStorage.setItem('user', JSON.stringify(response));
 
+            // El Admin entra directo al dashboard, nunca necesita OTP
+            if (response.role === 'Admin') { router.push('/admin/dashboard'); return; }
+
+            // Si el email aún no fue verificado con OTP → redirigir a verificación
             if (response.emailVerified === false) {
                 router.push(`/verify-otp?email=${encodeURIComponent(formData.email)}&role=${response.role}`);
                 return;
             }
-            if (response.role === 'Admin') { router.push('/admin/dashboard'); return; }
-            if (response.role === 'Profesor' && response.verificationStatus === 'pending') { router.push('/waiting-approval'); return; }
-            if (response.role === 'Profesor' && response.verificationStatus === 'rejected') {
-                setError('Tu cuenta ha sido rechazada. Contacta al administrador.');
-                localStorage.removeItem('token');
-                localStorage.removeItem('user');
-                return;
-            }
+
+            // Profesor y Alumno acceden directamente al dashboard con sus credenciales
             router.push('/dashboard');
 
         } catch (err: any) {
@@ -92,7 +90,7 @@ export default function LoginPage() {
                 router.push('/dashboard');
                 return;
             }
-            setError('Credenciales incorrectas. Verifica tus datos.');
+            setError(err.message || 'Credenciales incorrectas. Verifica tus datos.');
         } finally {
             setLoading(false);
         }

@@ -42,11 +42,6 @@ export default function DashboardPage() {
 
                 const userData = JSON.parse(userJson);
 
-                if (userData.verificationStatus === 'pending') {
-                    router.push('/waiting-approval');
-                    return;
-                }
-
                 setUserName(userData.fullName || 'Usuario');
                 setUserEnrollment(userData.enrollment || '');
                 const roleLower = userData.role?.toLowerCase();

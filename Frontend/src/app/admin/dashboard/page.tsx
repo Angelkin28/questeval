@@ -1,248 +1,608 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
-import Header from '@/components/layout/Header'; // Assuming this exists, based on other pages
+import Header from '@/components/layout/Header';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Users, FileText, CheckCircle, AlertCircle, ArrowRight } from 'lucide-react';
+import {
+    Users, Trash2, Loader2, AlertCircle, ShieldCheck,
+    GraduationCap, BookOpen, Search, RefreshCw, Activity,
+    LayoutGrid, ChevronDown
+} from 'lucide-react';
 import { api } from '@/lib/api';
+
+const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5122/api';
+
+interface User {
+    id: string;
+    userId?: string;
+    fullName: string;
+    email: string;
+    role: string;
+    createdAt: string;
+}
+
+interface AdminGroup {
+    id: string;
+    groupId?: string;
+    name: string;
+    accessCode: string;
+    teacherId?: string;
+    teacherName?: string;
+    teacherEmail?: string;
+    studentCount: number;
+    totalMembers: number;
+    createdAt: string;
+}
+
+interface ActivityLog {
+    id: string;
+    action: string;
+    detail: string;
+    category: string;
+    actorName?: string;
+    targetName?: string;
+    createdAt: string;
+}
+
+const authHeaders = () => {
+    const token = localStorage.getItem('token');
+    return {
+        'Content-Type': 'application/json',
+        ...(token ? { Authorization: `Bearer ${token}` } : {})
+    };
+};
 
 export default function AdminDashboard() {
     const router = useRouter();
-    const [stats, setStats] = useState({
-        pendingTeachers: 0,
-        totalUsers: 0, // Placeholder
-        activeProjects: 0 // Placeholder
-    });
-    const [teachers, setTeachers] = useState<any[]>([]);
+    const [users, setUsers] = useState<User[]>([]);
+    const [groups, setGroups] = useState<AdminGroup[]>([]);
+    const [logs, setLogs] = useState<ActivityLog[]>([]);
+    const [professors, setProfessors] = useState<User[]>([]);
+
     const [loading, setLoading] = useState(true);
+    const [loadingGroups, setLoadingGroups] = useState(false);
+    const [loadingLogs, setLoadingLogs] = useState(false);
+
+    const [searchTerm, setSearchTerm] = useState('');
+    const [roleFilter, setRoleFilter] = useState<'Todos' | 'Alumno' | 'Profesor'>('Todos');
+    const [deletingId, setDeletingId] = useState<string | null>(null);
+    const [confirmDelete, setConfirmDelete] = useState<User | null>(null);
+    const [activeTab, setActiveTab] = useState<'usuarios' | 'grupos' | 'logs'>('usuarios');
+
+    const [error, setError] = useState('');
+    const [successMsg, setSuccessMsg] = useState('');
+
+    const [changeTeacherModal, setChangeTeacherModal] = useState<AdminGroup | null>(null);
+    const [selectedTeacherId, setSelectedTeacherId] = useState('');
+    const [savingTeacher, setSavingTeacher] = useState(false);
 
     useEffect(() => {
-        const fetchStats = async () => {
-            try {
-                // For now, we only have an endpoint for pending teachers that returns a list
-                // We can fetch that list to get the count.
-                // Later we should add a dedicated stats endpoint for admin.
-                const token = localStorage.getItem('token');
-                if (!token) {
-                    router.push('/login');
-                    return;
-                }
-
-                // Reuse the existing API call structure or make a direct fetch if api.ts doesn't have it yet
-                // checking api.ts... it doesn't seem to have getPendingTeachers exposed yet in the `api` object directly 
-                // but we can add it or fetch directly. Let's fetch directly for now to be quick, 
-                // or better, extend api.ts in a future step. For now, direct fetch with auth header.
-
-                // Fetch all users to get stats and teacher list
-                try {
-                    const allUsers = await api.users.getAll();
-                    const teacherList = allUsers.filter(u => u.role === 'Profesor');
-                    setTeachers(teacherList);
-
-                    // Update stats
-                    // Pending teachers endpoint still returns just pending, but we could also filter from allUsers if we wanted
-                    // For now let's keep the existing pending logic or fetch both
-                    const pendingTeachersCount = teacherList.filter(t => t.verificationStatus === 'pending').length;
-
-                    setStats(prev => ({
-                        ...prev,
-                        totalUsers: allUsers.length,
-                        pendingTeachers: pendingTeachersCount
-                    }));
-                } catch (e) {
-                    console.error("Error fetching users", e);
-                }
-
-                // If previous fetch for pending-teachers specific endpoint is needed, keep it, 
-                // but since we have allUsers now, filtering is better if the GetAll includes status.
-                // Assuming GetAll returns status. Let's rely on that.
-
-            } catch (error) {
-                console.error("Error fetching admin stats", error);
-            } finally {
-                setLoading(false);
-            }
-        };
-
-        fetchStats();
+        const userData = localStorage.getItem('user');
+        if (!userData) { router.push('/login'); return; }
+        const parsed = JSON.parse(userData);
+        if (parsed.role !== 'Admin') { router.push('/dashboard'); return; }
+        fetchUsers();
     }, [router]);
+
+    const fetchUsers = useCallback(async () => {
+        setLoading(true);
+        setError('');
+        try {
+            const allUsers = await api.users.getAll();
+            const filtered = allUsers.filter((u: any) => u.role === 'Alumno' || u.role === 'Profesor');
+            setUsers(filtered as User[]);
+            setProfessors(filtered.filter((u: any) => u.role === 'Profesor') as User[]);
+        } catch {
+            setError('No se pudieron cargar los usuarios. Verifica que el backend esté activo.');
+        } finally {
+            setLoading(false);
+        }
+    }, []);
+
+    const fetchGroups = useCallback(async () => {
+        setLoadingGroups(true);
+        try {
+            const res = await fetch(`${API_URL}/Admin/groups`, { headers: authHeaders() });
+            if (!res.ok) {
+                const errBody = await res.json().catch(() => ({}));
+                throw new Error(errBody.detail || errBody.title || `Error al cargar grupos (${res.status})`);
+            }
+            setGroups(await res.json());
+        } catch (e: any) {
+            setError(e.message);
+        } finally {
+            setLoadingGroups(false);
+        }
+    }, []);
+
+    const fetchLogs = useCallback(async () => {
+        setLoadingLogs(true);
+        try {
+            const res = await fetch(`${API_URL}/Admin/logs?limit=100`, { headers: authHeaders() });
+            if (!res.ok) {
+                const errBody = await res.json().catch(() => ({}));
+                throw new Error(errBody.detail || errBody.title || `Error al cargar logs (${res.status})`);
+            }
+            setLogs(await res.json());
+        } catch (e: any) {
+            setError(e.message);
+        } finally {
+            setLoadingLogs(false);
+        }
+    }, []);
+
+    useEffect(() => {
+        if (activeTab === 'grupos') fetchGroups();
+        if (activeTab === 'logs') fetchLogs();
+    }, [activeTab, fetchGroups, fetchLogs]);
+
+    const handleDeleteConfirm = async () => {
+        if (!confirmDelete) return;
+        setDeletingId(confirmDelete.id);
+        setConfirmDelete(null);
+        try {
+            await api.users.deleteUser(confirmDelete.id);
+            setUsers(prev => prev.filter(u => u.id !== confirmDelete.id));
+            setSuccessMsg(`Usuario "${confirmDelete.fullName}" eliminado correctamente.`);
+            setTimeout(() => setSuccessMsg(''), 4000);
+        } catch {
+            setError(`No se pudo eliminar a "${confirmDelete.fullName}".`);
+            setTimeout(() => setError(''), 5000);
+        } finally {
+            setDeletingId(null);
+        }
+    };
+
+    const handleChangeTeacher = async () => {
+        if (!changeTeacherModal || !selectedTeacherId) return;
+        setSavingTeacher(true);
+        try {
+            const res = await fetch(`${API_URL}/Admin/groups/${changeTeacherModal.id}/teacher`, {
+                method: 'PUT',
+                headers: authHeaders(),
+                body: JSON.stringify({ teacherId: selectedTeacherId })
+            });
+            if (!res.ok) {
+                const err = await res.json().catch(() => ({}));
+                throw new Error(err.detail || 'Error al cambiar el maestro');
+            }
+            const data = await res.json();
+            setSuccessMsg(data.message);
+            setChangeTeacherModal(null);
+            fetchGroups();
+            setTimeout(() => setSuccessMsg(''), 4000);
+        } catch (e: any) {
+            setError(e.message);
+            setTimeout(() => setError(''), 5000);
+        } finally {
+            setSavingTeacher(false);
+        }
+    };
+
+    const filteredUsers = users.filter(u => {
+        const matchRole = roleFilter === 'Todos' || u.role === roleFilter;
+        const term = searchTerm.toLowerCase();
+        return matchRole && (u.fullName.toLowerCase().includes(term) || u.email.toLowerCase().includes(term));
+    });
+
+    const totalAlumnos = users.filter(u => u.role === 'Alumno').length;
+    const totalProfesores = users.filter(u => u.role === 'Profesor').length;
+
+    const logCategoryColor = (cat: string) => {
+        if (cat === 'delete') return 'bg-red-500';
+        if (cat === 'warning') return 'bg-amber-500';
+        if (cat === 'auth') return 'bg-blue-500';
+        return 'bg-green-500';
+    };
+
+    const logBadgeColor = (cat: string) => {
+        if (cat === 'delete') return 'bg-red-100 text-red-600';
+        if (cat === 'warning') return 'bg-amber-100 text-amber-600';
+        if (cat === 'auth') return 'bg-blue-100 text-blue-600';
+        return 'bg-green-100 text-green-600';
+    };
 
     return (
         <div className="min-h-screen bg-background pb-20">
             <Header title="Panel de Administración" showBack={false} />
 
-            <main className="px-4 py-8 max-w-6xl mx-auto space-y-8 animate-fade-in">
+            <main className="px-4 py-8 max-w-6xl mx-auto space-y-6 animate-fade-in">
 
-                {/* Welcome Section */}
+                {/* Title */}
                 <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
                     <div>
-                        <h1 className="text-3xl font-bold tracking-tight">Bienvenido, Administrador</h1>
-                        <p className="text-muted-foreground mt-1">
-                            Gestiona usuarios, evaluaciones y configuraciones del sistema.
-                        </p>
+                        <div className="flex items-center gap-3 mb-1">
+                            <ShieldCheck className="w-7 h-7 text-primary" />
+                            <h1 className="text-3xl font-bold tracking-tight">Administración</h1>
+                        </div>
+                        <p className="text-muted-foreground text-sm">Gestiona usuarios, grupos y revisa el historial de actividad.</p>
                     </div>
                     <div className="text-sm text-muted-foreground bg-secondary/50 px-4 py-2 rounded-full">
                         {new Date().toLocaleDateString('es-MX', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}
                     </div>
                 </div>
 
-                {/* Quick Actions / Alerts */}
-                {stats.pendingTeachers > 0 && (
-                    <div className="bg-amber-50 dark:bg-amber-950/20 border border-amber-200 dark:border-amber-800 rounded-lg p-4 flex items-start gap-4">
-                        <AlertCircle className="w-5 h-5 text-amber-600 dark:text-amber-500 mt-0.5" />
-                        <div className="flex-1">
-                            <h3 className="font-medium text-amber-900 dark:text-amber-400">Solicitudes Pendientes</h3>
-                            <p className="text-sm text-amber-800/80 dark:text-amber-500/80 mt-1">
-                                Hay <strong>{stats.pendingTeachers}</strong> profesores esperando aprobación para acceder al sistema.
-                            </p>
-                        </div>
-                        <Button
-                            variant="secondary"
-                            size="sm"
-                            className="bg-amber-100 hover:bg-amber-200 text-amber-900 border-amber-200"
-                            onClick={() => router.push('/admin/pending-teachers')}
-                        >
-                            Revisar
-                        </Button>
+                {/* Feedback */}
+                {error && (
+                    <div className="bg-red-50 border border-red-200 text-red-700 rounded-lg px-4 py-3 flex items-center gap-3">
+                        <AlertCircle className="w-4 h-4 flex-shrink-0" />
+                        <span className="text-sm">{error}</span>
+                    </div>
+                )}
+                {successMsg && (
+                    <div className="bg-green-50 border border-green-200 text-green-700 rounded-lg px-4 py-3 text-sm">
+                        ✅ {successMsg}
                     </div>
                 )}
 
                 {/* KPI Cards */}
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                    <Card className="hover:shadow-md transition-shadow cursor-pointer" onClick={() => router.push('/admin/pending-teachers')}>
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                    <Card>
                         <CardHeader className="flex flex-row items-center justify-between pb-2">
-                            <CardTitle className="text-sm font-medium text-muted-foreground">Profesores Pendientes</CardTitle>
+                            <CardTitle className="text-sm font-medium text-muted-foreground">Total Usuarios</CardTitle>
                             <Users className="w-4 h-4 text-primary" />
                         </CardHeader>
                         <CardContent>
-                            <div className="text-3xl font-bold">{loading ? "..." : stats.pendingTeachers}</div>
-                            <p className="text-xs text-muted-foreground mt-1">
-                                Requieren verificación manual
-                            </p>
+                            <div className="text-3xl font-bold">{loading ? '...' : users.length}</div>
+                            <p className="text-xs text-muted-foreground mt-1">Alumnos y Profesores activos</p>
                         </CardContent>
                     </Card>
-
-                    <Card className="opacity-75">
-                        <CardHeader className="flex flex-row items-center justify-between pb-2">
-                            <CardTitle className="text-sm font-medium text-muted-foreground">Total Usuarios</CardTitle>
-                            <Users className="w-4 h-4 text-muted-foreground" />
-                        </CardHeader>
-                        <CardContent>
-                            <div className="text-3xl font-bold">-</div>
-                            <p className="text-xs text-muted-foreground mt-1">
-                                Alumnos y Profesores activos
-                            </p>
-                        </CardContent>
-                    </Card>
-
-                    <Card className="opacity-75">
-                        <CardHeader className="flex flex-row items-center justify-between pb-2">
-                            <CardTitle className="text-sm font-medium text-muted-foreground">Evaluaciones</CardTitle>
-                            <FileText className="w-4 h-4 text-muted-foreground" />
-                        </CardHeader>
-                        <CardContent>
-                            <div className="text-3xl font-bold">-</div>
-                            <p className="text-xs text-muted-foreground mt-1">
-                                Realizadas este ciclo
-                            </p>
-                        </CardContent>
-                    </Card>
-                </div>
-
-                {/* Teachers List Section */}
-                <div className="mt-8 animate-fade-in delay-100">
-                    <div className="flex justify-between items-center mb-4">
-                        <h2 className="text-xl font-semibold">Profesores Registrados</h2>
-                        <span className="text-sm text-muted-foreground bg-secondary px-3 py-1 rounded-full">
-                            Total: {teachers.length}
-                        </span>
-                    </div>
-
                     <Card>
-                        <CardContent className="p-0 overflow-hidden">
-                            <div className="overflow-x-auto">
-                                <table className="w-full text-sm text-left">
-                                    <thead className="bg-muted/50 text-muted-foreground uppercase text-xs">
-                                        <tr>
-                                            <th className="px-6 py-4 font-medium">Nombre</th>
-                                            <th className="px-6 py-4 font-medium">Email</th>
-                                            <th className="px-6 py-4 font-medium">Estado</th>
-                                            <th className="px-6 py-4 font-medium">Fecha Registro</th>
-                                        </tr>
-                                    </thead>
-                                    <tbody className="divide-y divide-border">
-                                        {teachers.length === 0 ? (
-                                            <tr>
-                                                <td colSpan={4} className="px-6 py-8 text-center text-muted-foreground">
-                                                    No hay profesores registrados.
-                                                </td>
-                                            </tr>
-                                        ) : (
-                                            teachers.map((teacher) => (
-                                                <tr key={teacher.id} className="hover:bg-muted/30 transition-colors">
-                                                    <td className="px-6 py-4 font-medium flex items-center gap-3">
-                                                        <div className="w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center text-primary font-bold text-xs">
-                                                            {teacher.fullName.substring(0, 2).toUpperCase()}
-                                                        </div>
-                                                        {teacher.fullName}
-                                                    </td>
-                                                    <td className="px-6 py-4 text-muted-foreground">{teacher.email}</td>
-                                                    <td className="px-6 py-4">
-                                                        <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${teacher.verificationStatus === 'approved'
-                                                            ? 'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400'
-                                                            : teacher.verificationStatus === 'pending'
-                                                                ? 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900/30 dark:text-yellow-400'
-                                                                : 'bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-400'
-                                                            }`}>
-                                                            {teacher.verificationStatus === 'approved' ? 'Aprobado' :
-                                                                teacher.verificationStatus === 'pending' ? 'Pendiente' : 'Rechazado'}
-                                                        </span>
-                                                    </td>
-                                                    <td className="px-6 py-4 text-muted-foreground">
-                                                        {new Date(teacher.createdAt).toLocaleDateString()}
-                                                    </td>
-                                                </tr>
-                                            ))
-                                        )}
-                                    </tbody>
-                                </table>
-                            </div>
+                        <CardHeader className="flex flex-row items-center justify-between pb-2">
+                            <CardTitle className="text-sm font-medium text-muted-foreground">Alumnos</CardTitle>
+                            <GraduationCap className="w-4 h-4 text-blue-500" />
+                        </CardHeader>
+                        <CardContent>
+                            <div className="text-3xl font-bold text-blue-600">{loading ? '...' : totalAlumnos}</div>
+                            <p className="text-xs text-muted-foreground mt-1">Estudiantes registrados</p>
+                        </CardContent>
+                    </Card>
+                    <Card>
+                        <CardHeader className="flex flex-row items-center justify-between pb-2">
+                            <CardTitle className="text-sm font-medium text-muted-foreground">Profesores</CardTitle>
+                            <BookOpen className="w-4 h-4 text-purple-500" />
+                        </CardHeader>
+                        <CardContent>
+                            <div className="text-3xl font-bold text-purple-600">{loading ? '...' : totalProfesores}</div>
+                            <p className="text-xs text-muted-foreground mt-1">Docentes registrados</p>
                         </CardContent>
                     </Card>
                 </div>
 
-                {/* Main Navigation Menu */}
-                <h2 className="text-xl font-semibold mt-8 mb-4">Gestión del Sistema</h2>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <div
-                        className="group flex items-center p-4 border rounded-xl hover:bg-secondary/40 transition-colors cursor-pointer"
-                        onClick={() => router.push('/admin/pending-teachers')}
-                    >
-                        <div className="h-12 w-12 rounded-full bg-primary/10 flex items-center justify-center mr-4 group-hover:scale-110 transition-transform">
-                            <Users className="w-6 h-6 text-primary" />
-                        </div>
-                        <div className="flex-1">
-                            <h3 className="font-semibold">Aprobar Maestros</h3>
-                            <p className="text-sm text-muted-foreground">Revisar y validar registros de nuevos docentes.</p>
-                        </div>
-                        <ArrowRight className="w-5 h-5 text-muted-foreground group-hover:text-primary transition-colors" />
-                    </div>
-
-                    {/* Placeholder for future features */}
-                    <div className="group flex items-center p-4 border rounded-xl hover:bg-secondary/40 transition-colors cursor-not-allowed opacity-60">
-                        <div className="h-12 w-12 rounded-full bg-secondary flex items-center justify-center mr-4">
-                            <CheckCircle className="w-6 h-6 text-muted-foreground" />
-                        </div>
-                        <div className="flex-1">
-                            <h3 className="font-semibold">Rubricas Globales</h3>
-                            <p className="text-sm text-muted-foreground">Configurar criterios de evaluación estándar.</p>
-                        </div>
-                    </div>
+                {/* Tabs */}
+                <div className="flex gap-1 border-b border-border">
+                    {([
+                        { key: 'usuarios', label: 'Usuarios', icon: Users },
+                        { key: 'grupos', label: 'Grupos', icon: LayoutGrid },
+                        { key: 'logs', label: 'Actividad', icon: Activity },
+                    ] as const).map(({ key, label, icon: Icon }) => (
+                        <button
+                            key={key}
+                            onClick={() => setActiveTab(key)}
+                            className={`px-4 py-2.5 text-sm font-medium transition-colors border-b-2 -mb-px ${activeTab === key ? 'border-primary text-primary' : 'border-transparent text-muted-foreground hover:text-foreground'}`}
+                        >
+                            <span className="flex items-center gap-2">
+                                <Icon className="w-4 h-4" /> {label}
+                                {key === 'logs' && logs.length > 0 && (
+                                    <span className="ml-1 bg-primary/10 text-primary text-xs px-1.5 py-0.5 rounded-full">{logs.length}</span>
+                                )}
+                            </span>
+                        </button>
+                    ))}
                 </div>
+
+                {/* ===================== TAB: USUARIOS ===================== */}
+                {activeTab === 'usuarios' && (
+                    <div className="space-y-4">
+                        <div className="flex flex-col sm:flex-row gap-3">
+                            <div className="relative flex-1">
+                                <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+                                <input
+                                    type="text"
+                                    placeholder="Buscar por nombre o correo..."
+                                    value={searchTerm}
+                                    onChange={e => setSearchTerm(e.target.value)}
+                                    className="w-full pl-9 pr-4 py-2 border border-border rounded-lg bg-background text-sm focus:outline-none focus:ring-2 focus:ring-primary/30"
+                                />
+                            </div>
+                            <div className="flex gap-2">
+                                {(['Todos', 'Alumno', 'Profesor'] as const).map(role => (
+                                    <button
+                                        key={role}
+                                        onClick={() => setRoleFilter(role)}
+                                        className={`px-3 py-2 rounded-lg text-sm font-medium transition-colors ${roleFilter === role ? 'bg-primary text-primary-foreground' : 'bg-secondary text-secondary-foreground hover:bg-secondary/80'}`}
+                                    >
+                                        {role}
+                                    </button>
+                                ))}
+                            </div>
+                            <Button variant="outline" size="sm" onClick={fetchUsers} disabled={loading} className="gap-2">
+                                <RefreshCw className={`w-4 h-4 ${loading ? 'animate-spin' : ''}`} />
+                                Actualizar
+                            </Button>
+                        </div>
+
+                        <Card>
+                            <CardContent className="p-0 overflow-hidden">
+                                {loading ? (
+                                    <div className="flex flex-col items-center justify-center py-16 gap-3 text-muted-foreground">
+                                        <Loader2 className="w-8 h-8 animate-spin text-primary" />
+                                        <p className="text-sm">Cargando usuarios...</p>
+                                    </div>
+                                ) : filteredUsers.length === 0 ? (
+                                    <div className="flex flex-col items-center justify-center py-16 gap-3 text-muted-foreground">
+                                        <Users className="w-12 h-12 opacity-20" />
+                                        <p className="text-sm">No se encontraron usuarios.</p>
+                                    </div>
+                                ) : (
+                                    <div className="overflow-x-auto">
+                                        <table className="w-full text-sm text-left">
+                                            <thead className="bg-muted/50 text-muted-foreground uppercase text-xs">
+                                                <tr>
+                                                    <th className="px-4 py-4 font-medium">#ID</th>
+                                                    <th className="px-6 py-4 font-medium">Usuario</th>
+                                                    <th className="px-6 py-4 font-medium">Correo</th>
+                                                    <th className="px-6 py-4 font-medium">Rol</th>
+                                                    <th className="px-6 py-4 font-medium">Fecha Registro</th>
+                                                    <th className="px-6 py-4 font-medium text-center">Eliminar</th>
+                                                </tr>
+                                            </thead>
+                                            <tbody className="divide-y divide-border">
+                                                {filteredUsers.map(user => (
+                                                    <tr key={user.id} className="hover:bg-muted/30 transition-colors">
+                                                        <td className="px-4 py-4">
+                                                            <span className="inline-block font-mono text-xs bg-secondary px-2 py-1 rounded text-muted-foreground">
+                                                                {user.userId ?? '—'}
+                                                            </span>
+                                                        </td>
+                                                        <td className="px-6 py-4">
+                                                            <div className="flex items-center gap-3">
+                                                                <div className={`w-9 h-9 rounded-full flex items-center justify-center text-xs font-bold flex-shrink-0 ${user.role === 'Profesor' ? 'bg-purple-100 text-purple-700' : 'bg-blue-100 text-blue-700'}`}>
+                                                                    {user.fullName.substring(0, 2).toUpperCase()}
+                                                                </div>
+                                                                <span className="font-medium">{user.fullName}</span>
+                                                            </div>
+                                                        </td>
+                                                        <td className="px-6 py-4 text-muted-foreground font-mono text-xs">{user.email}</td>
+                                                        <td className="px-6 py-4">
+                                                            <span className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium ${user.role === 'Profesor' ? 'bg-purple-100 text-purple-700' : 'bg-blue-100 text-blue-700'}`}>
+                                                                {user.role === 'Profesor' ? <BookOpen className="w-3 h-3" /> : <GraduationCap className="w-3 h-3" />}
+                                                                {user.role}
+                                                            </span>
+                                                        </td>
+                                                        <td className="px-6 py-4 text-muted-foreground text-xs">
+                                                            {new Date(user.createdAt).toLocaleDateString('es-MX', { day: '2-digit', month: 'short', year: 'numeric' })}
+                                                        </td>
+                                                        <td className="px-6 py-4 text-center">
+                                                            <button
+                                                                onClick={() => setConfirmDelete(user)}
+                                                                disabled={deletingId === user.id}
+                                                                className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-red-50 text-red-600 hover:bg-red-100 font-medium text-xs transition-colors disabled:opacity-50"
+                                                            >
+                                                                {deletingId === user.id
+                                                                    ? <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                                                                    : <Trash2 className="w-3.5 h-3.5" />}
+                                                                Eliminar
+                                                            </button>
+                                                        </td>
+                                                    </tr>
+                                                ))}
+                                            </tbody>
+                                        </table>
+                                    </div>
+                                )}
+                            </CardContent>
+                        </Card>
+                        <p className="text-xs text-muted-foreground text-right">Mostrando {filteredUsers.length} de {users.length} usuarios</p>
+                    </div>
+                )}
+
+                {/* ===================== TAB: GRUPOS ===================== */}
+                {activeTab === 'grupos' && (
+                    <div className="space-y-4">
+                        <div className="flex justify-end">
+                            <Button variant="outline" size="sm" onClick={fetchGroups} disabled={loadingGroups} className="gap-2">
+                                <RefreshCw className={`w-4 h-4 ${loadingGroups ? 'animate-spin' : ''}`} />
+                                Actualizar
+                            </Button>
+                        </div>
+                        <Card>
+                            <CardContent className="p-0 overflow-hidden">
+                                {loadingGroups ? (
+                                    <div className="flex flex-col items-center justify-center py-16 gap-3 text-muted-foreground">
+                                        <Loader2 className="w-8 h-8 animate-spin text-primary" />
+                                        <p className="text-sm">Cargando grupos...</p>
+                                    </div>
+                                ) : groups.length === 0 ? (
+                                    <div className="flex flex-col items-center justify-center py-16 gap-3 text-muted-foreground">
+                                        <LayoutGrid className="w-12 h-12 opacity-20" />
+                                        <p className="text-sm">No hay grupos registrados.</p>
+                                    </div>
+                                ) : (
+                                    <div className="overflow-x-auto">
+                                        <table className="w-full text-sm text-left">
+                                            <thead className="bg-muted/50 text-muted-foreground uppercase text-xs">
+                                                <tr>
+                                                    <th className="px-6 py-4 font-medium">Grupo</th>
+                                                    <th className="px-6 py-4 font-medium">Código</th>
+                                                    <th className="px-6 py-4 font-medium">Maestro Asignado</th>
+                                                    <th className="px-6 py-4 font-medium text-center">Alumnos</th>
+                                                    <th className="px-6 py-4 font-medium">Fecha</th>
+                                                    <th className="px-6 py-4 font-medium text-center">Acciones</th>
+                                                </tr>
+                                            </thead>
+                                            <tbody className="divide-y divide-border">
+                                                {groups.map(group => (
+                                                    <tr key={group.id} className="hover:bg-muted/30 transition-colors">
+                                                        <td className="px-6 py-4 font-medium">{group.name}</td>
+                                                        <td className="px-6 py-4">
+                                                            <span className="font-mono text-xs bg-secondary px-2 py-1 rounded">{group.accessCode}</span>
+                                                        </td>
+                                                        <td className="px-6 py-4">
+                                                            {group.teacherName ? (
+                                                                <div>
+                                                                    <p className="font-medium text-sm">{group.teacherName}</p>
+                                                                    <p className="text-xs text-muted-foreground">{group.teacherEmail}</p>
+                                                                </div>
+                                                            ) : (
+                                                                <span className="text-muted-foreground italic text-xs">Sin asignar</span>
+                                                            )}
+                                                        </td>
+                                                        <td className="px-6 py-4 text-center">
+                                                            <span className="inline-flex items-center justify-center w-8 h-8 rounded-full bg-primary/10 text-primary font-bold text-sm">
+                                                                {group.studentCount}
+                                                            </span>
+                                                        </td>
+                                                        <td className="px-6 py-4 text-muted-foreground text-xs">
+                                                            {new Date(group.createdAt).toLocaleDateString('es-MX', { day: '2-digit', month: 'short', year: 'numeric' })}
+                                                        </td>
+                                                        <td className="px-6 py-4 text-center">
+                                                            <button
+                                                                onClick={() => {
+                                                                    setChangeTeacherModal(group);
+                                                                    setSelectedTeacherId(group.teacherId || '');
+                                                                }}
+                                                                className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-primary/10 text-primary hover:bg-primary/20 font-medium text-xs transition-colors"
+                                                            >
+                                                                <ChevronDown className="w-3.5 h-3.5" />
+                                                                Cambiar Maestro
+                                                            </button>
+                                                        </td>
+                                                    </tr>
+                                                ))}
+                                            </tbody>
+                                        </table>
+                                    </div>
+                                )}
+                            </CardContent>
+                        </Card>
+                        <p className="text-xs text-muted-foreground text-right">{groups.length} grupos en total</p>
+                    </div>
+                )}
+
+                {/* ===================== TAB: LOGS ===================== */}
+                {activeTab === 'logs' && (
+                    <Card>
+                        <CardHeader className="flex flex-row items-center justify-between pb-3">
+                            <CardTitle className="text-base font-semibold flex items-center gap-2">
+                                <Activity className="w-4 h-4 text-primary" />
+                                Historial de Actividad
+                            </CardTitle>
+                            <div className="flex items-center gap-3">
+                                <span className="text-xs text-muted-foreground">{logs.length} registros</span>
+                                <Button variant="outline" size="sm" onClick={fetchLogs} disabled={loadingLogs} className="gap-2">
+                                    <RefreshCw className={`w-4 h-4 ${loadingLogs ? 'animate-spin' : ''}`} />
+                                    Actualizar
+                                </Button>
+                            </div>
+                        </CardHeader>
+                        <CardContent className="p-0">
+                            {loadingLogs ? (
+                                <div className="flex flex-col items-center justify-center py-16 gap-3 text-muted-foreground">
+                                    <Loader2 className="w-8 h-8 animate-spin text-primary" />
+                                    <p className="text-sm">Cargando actividad...</p>
+                                </div>
+                            ) : logs.length === 0 ? (
+                                <div className="flex flex-col items-center justify-center py-16 gap-3 text-muted-foreground">
+                                    <Activity className="w-12 h-12 opacity-20" />
+                                    <p className="text-sm">No hay actividad registrada.</p>
+                                </div>
+                            ) : (
+                                <div className="divide-y divide-border max-h-[600px] overflow-y-auto">
+                                    {logs.map((log, i) => (
+                                        <div key={log.id || i} className="flex items-start gap-4 px-6 py-3 hover:bg-muted/20 transition-colors">
+                                            <div className={`mt-1.5 w-2 h-2 rounded-full flex-shrink-0 ${logCategoryColor(log.category)}`} />
+                                            <div className="flex-1 min-w-0">
+                                                <div className="flex items-center gap-2 flex-wrap">
+                                                    <span className="font-medium text-sm">{log.detail}</span>
+                                                    <span className={`text-xs px-2 py-0.5 rounded-full ${logBadgeColor(log.category)}`}>
+                                                        {log.action}
+                                                    </span>
+                                                </div>
+                                                {log.actorName && (
+                                                    <p className="text-xs text-muted-foreground mt-0.5">Por: {log.actorName}</p>
+                                                )}
+                                            </div>
+                                            <span className="text-xs text-muted-foreground flex-shrink-0 font-mono">
+                                                {new Date(log.createdAt).toLocaleString('es-MX', { day: '2-digit', month: 'short', hour: '2-digit', minute: '2-digit' })}
+                                            </span>
+                                        </div>
+                                    ))}
+                                </div>
+                            )}
+                        </CardContent>
+                    </Card>
+                )}
 
             </main>
+
+            {/* Modal: Confirmar Eliminación */}
+            {confirmDelete && (
+                <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm p-4">
+                    <div className="bg-background rounded-2xl shadow-2xl p-6 w-full max-w-sm border border-border animate-fade-in">
+                        <div className="flex items-center gap-3 mb-4">
+                            <div className="w-10 h-10 rounded-full bg-red-100 flex items-center justify-center flex-shrink-0">
+                                <Trash2 className="w-5 h-5 text-red-600" />
+                            </div>
+                            <div>
+                                <h3 className="font-semibold text-base">Eliminar Usuario</h3>
+                                <p className="text-xs text-muted-foreground">Esta acción no se puede deshacer</p>
+                            </div>
+                        </div>
+                        <div className="bg-muted/50 rounded-lg px-4 py-3 mb-5 text-sm">
+                            <p className="font-medium">{confirmDelete.fullName}</p>
+                            <p className="text-muted-foreground text-xs mt-0.5">{confirmDelete.email} · {confirmDelete.role}</p>
+                        </div>
+                        <div className="flex gap-3">
+                            <button onClick={() => setConfirmDelete(null)} className="flex-1 py-2.5 rounded-lg border border-border text-sm font-medium hover:bg-muted transition-colors">Cancelar</button>
+                            <button onClick={handleDeleteConfirm} className="flex-1 py-2.5 rounded-lg bg-red-600 text-white text-sm font-medium hover:bg-red-700 transition-colors">Sí, eliminar</button>
+                        </div>
+                    </div>
+                </div>
+            )}
+
+            {/* Modal: Cambiar Maestro */}
+            {changeTeacherModal && (
+                <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm p-4">
+                    <div className="bg-background rounded-2xl shadow-2xl p-6 w-full max-w-sm border border-border animate-fade-in">
+                        <div className="flex items-center gap-3 mb-4">
+                            <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center flex-shrink-0">
+                                <BookOpen className="w-5 h-5 text-primary" />
+                            </div>
+                            <div>
+                                <h3 className="font-semibold text-base">Cambiar Maestro</h3>
+                                <p className="text-xs text-muted-foreground">Grupo: {changeTeacherModal.name}</p>
+                            </div>
+                        </div>
+                        <div className="mb-4">
+                            <label className="text-sm font-medium block mb-2">Seleccionar Profesor</label>
+                            <select
+                                value={selectedTeacherId}
+                                onChange={e => setSelectedTeacherId(e.target.value)}
+                                className="w-full border border-border rounded-lg px-3 py-2 text-sm bg-background focus:outline-none focus:ring-2 focus:ring-primary/30"
+                            >
+                                <option value="">-- Seleccionar profesor --</option>
+                                {professors.map(p => (
+                                    <option key={p.id} value={p.id}>{p.fullName} ({p.email})</option>
+                                ))}
+                            </select>
+                        </div>
+                        <div className="flex gap-3">
+                            <button onClick={() => setChangeTeacherModal(null)} className="flex-1 py-2.5 rounded-lg border border-border text-sm font-medium hover:bg-muted transition-colors">Cancelar</button>
+                            <button
+                                onClick={handleChangeTeacher}
+                                disabled={!selectedTeacherId || savingTeacher}
+                                className="flex-1 py-2.5 rounded-lg bg-primary text-primary-foreground text-sm font-medium hover:bg-primary/90 transition-colors disabled:opacity-50 flex items-center justify-center gap-2"
+                            >
+                                {savingTeacher ? <Loader2 className="w-4 h-4 animate-spin" /> : null}
+                                Guardar
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            )}
         </div>
     );
 }

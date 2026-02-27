@@ -2,6 +2,13 @@ using Backend.Models;
 using Backend.Services;
 using Backend.Services.Interfaces;
 using Backend.Middlewares;
+using DotNetEnv;
+using System.Security.Claims;
+
+// Cargar variables de entorno desde .env (sobreescribe appsettings.json)
+// El separador __ mapea automáticamente a secciones anidadas:
+// QuestEvalDatabase__ConnectionString → QuestEvalDatabase:ConnectionString
+Env.Load();
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -22,12 +29,32 @@ builder.Services.AddScoped<IProjectsService, ProjectsService>();      // Gestion
 builder.Services.AddScoped<IEvaluationsService, EvaluationsService>(); // Gestionar evaluaciones de proyectos
 builder.Services.AddScoped<IMembershipsService, MembershipsService>(); // Gestionar relaciones usuario-grupo
 builder.Services.AddScoped<IFeedbackService, FeedbackService>();      // Gestionar retroalimentación de evaluaciones
+builder.Services.AddScoped<IOtpService, OtpService>();                // Gestionar OTP y autenticación de Supabase
+builder.Services.AddScoped<IActivityLogService, ActivityLogService>(); // Gestionar logs de actividad del sistema
 
 // ==================== MANEJO DE EXCEPCIONES ====================
 // GlobalExceptionHandler captura excepciones no manejadas y retorna RFC 7807 ProblemDetails
 // Esto evita errores 500 exponiendo stack traces a los clientes
 builder.Services.AddExceptionHandler<GlobalExceptionHandler>();
 builder.Services.AddProblemDetails(); // Habilitar respuestas ProblemDetails
+
+// ==================== CONFIGURACIÓN HTTP & SUPABASE ====================
+builder.Services.AddHttpClient();
+
+// Inicializar el cliente de Supabase como Singleton para que IOtpService pueda consumirlo
+builder.Services.AddSingleton<Supabase.Client>(provider => 
+{
+    var config = provider.GetRequiredService<IConfiguration>();
+    var url = config["Supabase:Url"] ?? throw new ArgumentNullException("Supabase:Url");
+    var key = config["Supabase:Key"] ?? throw new ArgumentNullException("Supabase:Key");
+    
+    var options = new Supabase.SupabaseOptions
+    {
+        AutoConnectRealtime = true
+    };
+    
+    return new Supabase.Client(url, key, options);
+});
 
 // ==================== CONFIGURACIÓN CORS ====================
 // Configurar Cross-Origin Resource Sharing para acceso del frontend
@@ -36,12 +63,6 @@ builder.Services.AddCors(options =>
 {
     options.AddPolicy("AllowFrontend", policy =>
     {
-<<<<<<< HEAD
-        // Agregar URLs del frontend aquí (servidores dev, URLs de producción, etc.)
-        policy.WithOrigins("http://localhost:5173", "http://localhost:5248")
-              .AllowAnyMethod()    // Permitir GET, POST, PUT, DELETE, etc.
-              .AllowAnyHeader();   // Permitir todos los headers (Authorization, Content-Type, etc.)
-=======
         // En desarrollo, permitimos cualquier origen para facilitar las pruebas móviles/web
         if (builder.Environment.IsDevelopment())
         {
@@ -55,21 +76,48 @@ builder.Services.AddCors(options =>
                   .AllowAnyMethod()
                   .AllowAnyHeader();
         }
->>>>>>> c6e0590b0c2315ded1dd98ef1a613f074bcc0c5f
     });
 });
 
 // ==================== CONFIGURACIÓN DE CONTROLLERS ====================
 builder.Services.AddControllers()
-    // Preservar nombres de propiedades tal cual (no convertir a camelCase)
-    // Los documentos de MongoDB usan PascalCase, así que mantenemos las respuestas JSON consistentes
-    .AddJsonOptions(options => options.JsonSerializerOptions.PropertyNamingPolicy = null)
+    // Usar camelCase en las respuestas JSON para coincidir con las interfaces TypeScript del frontend
+    // Ejemplo: "Role" en C# → "role" en JSON, "UserId" → "userId"
+    .AddJsonOptions(options => options.JsonSerializerOptions.PropertyNamingPolicy = System.Text.Json.JsonNamingPolicy.CamelCase)
     .ConfigureApiBehaviorOptions(options =>
     {
         // Habilitar validación automática de modelo basada en DataAnnotations
         // Los controllers retornarán 400 BadRequest automáticamente para datos inválidos
         options.SuppressModelStateInvalidFilter = false;
     });
+
+// ==================== CONFIGURACIÓN DE AUTENTICACIÓN JWT ====================
+var jwtSecretKey = builder.Configuration["Jwt:SecretKey"] ?? throw new ArgumentNullException("Jwt:SecretKey no configurada en .env");
+var jwtIssuer = builder.Configuration["Jwt:Issuer"] ?? "QuestEvalBackend";
+var jwtAudience = builder.Configuration["Jwt:Audience"] ?? "QuestEvalFrontend";
+var key = new Microsoft.IdentityModel.Tokens.SymmetricSecurityKey(System.Text.Encoding.UTF8.GetBytes(jwtSecretKey));
+
+builder.Services.AddAuthentication(options =>
+{
+    options.DefaultAuthenticateScheme = Microsoft.AspNetCore.Authentication.JwtBearer.JwtBearerDefaults.AuthenticationScheme;
+    options.DefaultChallengeScheme = Microsoft.AspNetCore.Authentication.JwtBearer.JwtBearerDefaults.AuthenticationScheme;
+})
+.AddJwtBearer(options =>
+{
+    options.RequireHttpsMetadata = false;
+    options.SaveToken = true;
+    options.TokenValidationParameters = new Microsoft.IdentityModel.Tokens.TokenValidationParameters
+    {
+        ValidateIssuerSigningKey = true,
+        IssuerSigningKey = key,
+        ValidateIssuer = true,
+        ValidIssuer = jwtIssuer,
+        ValidateAudience = true,
+        ValidAudience = jwtAudience,
+        ValidateLifetime = true,
+        ClockSkew = TimeSpan.FromMinutes(5)
+    };
+});
 
 // ==================== CONFIGURACIÓN SWAGGER/OpenAPI ====================
 // Swagger proporciona documentación interactiva de la API en /swagger
@@ -155,11 +203,86 @@ app.UseHttpsRedirection();
 //    Debe estar antes de UseAuthorization
 app.UseCors("AllowFrontend");
 
-// 5. Authorization - Verificar permisos de usuario (placeholder para futura autenticación JWT)
+// 5. Authentication & Authorization - Verificar permisos de usuario (placeholder para futura autenticación JWT)
+app.UseAuthentication();
 app.UseAuthorization();
 
 // 6. Controllers - Mapear solicitudes HTTP a acciones de controller
 app.MapControllers();
+
+// ==================== SEED: GARANTIZAR USUARIO ADMIN ====================
+// Nota: ApplicationStarted.Register recibe Action (no Func<Task>), por eso usamos Task.Run
+// para no crear un async void que ignora excepciones y crashea el app.
+app.Lifetime.ApplicationStarted.Register(() =>
+{
+    Task.Run(async () =>
+    {
+        try
+        {
+            using var scope = app.Services.CreateScope();
+            var usersService = scope.ServiceProvider.GetRequiredService<IUsersService>();
+
+            const string adminEmail = "won.dorado.mid@gmail.com";
+            var adminUser = await usersService.GetByEmailAsync(adminEmail);
+
+            if (adminUser != null)
+            {
+                bool needsUpdate = false;
+
+                if (adminUser.Role != "Admin")
+                {
+                    adminUser.Role = "Admin";
+                    needsUpdate = true;
+                }
+
+                // El admin siempre debe estar verificado (no necesita OTP)
+                if (!adminUser.EmailVerified)
+                {
+                    adminUser.EmailVerified = true;
+                    adminUser.VerificationStatus = "approved";
+                    needsUpdate = true;
+                }
+
+                if (needsUpdate)
+                {
+                    await usersService.UpdateAsync(adminUser.Id!, adminUser);
+                    Console.WriteLine($"✅ Usuario admin ({adminEmail}) actualizado: Role=Admin, EmailVerified=true.");
+                }
+                else
+                {
+                    Console.WriteLine($"✅ Usuario admin ({adminEmail}) ya está correctamente configurado.");
+                }
+            }
+            else
+            {
+                Console.WriteLine($"⚠️  El usuario {adminEmail} no existe en la BD todavía.");
+            }
+
+            // ==================== VERIFICAR A TODOS LOS PROFESORES Y ALUMNOS ====================
+            Console.WriteLine("⚙️  Verificando estado de profesores y alumnos en BD...");
+            var allUsers = await usersService.GetAllAsync();
+            var unverifiedUsers = allUsers.Where(u => (u.Role == "Profesor" || u.Role == "Alumno") && !u.EmailVerified).ToList();
+
+            foreach (var user in unverifiedUsers)
+            {
+                user.EmailVerified = true;
+                user.VerificationStatus = "approved"; // Mantenemos compatibilidad con el front antiguo si lo requiere aún
+                await usersService.UpdateAsync(user.Id!, user);
+                Console.WriteLine($"✅ Usuario verificado forzadamente: {user.Email} ({user.FullName} - {user.Role})");
+            }
+            
+            if (!unverifiedUsers.Any())
+            {
+                 Console.WriteLine("✅ No hay profesores ni alumnos pendientes de verificación de correo.");
+            }
+
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"⚠️  Error al verificar usuarios en el startup: {ex.Message}");
+        }
+    });
+});
 
 // ==================== INICIAR SERVIDOR ====================
 // Mostrar enlace de Swagger cuando la aplicación inicia
@@ -175,151 +298,7 @@ if (app.Environment.IsDevelopment())
             Console.WriteLine($"📚 Documentación Swagger: {swaggerUrl}");
             Console.WriteLine($"━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n");
         }
-<<<<<<< HEAD
     });
-=======
-    }
-
-    // --- 4. Crear GRUPOS si no existen ---
-    var existingGroups = await groupsService.GetAllAsync();
-    var integradorGroup = existingGroups.FirstOrDefault(g => g.AccessCode == "INT2026");
-    if (integradorGroup == null)
-    {
-        integradorGroup = new Group { Name = "Integrador 2026", AccessCode = "INT2026", CreatedAt = DateTime.UtcNow };
-        await groupsService.CreateAsync(integradorGroup);
-    }
-    
-    var videoGamesGroup = existingGroups.FirstOrDefault(g => g.AccessCode == "VG2026");
-    if (videoGamesGroup == null)
-    {
-        videoGamesGroup = new Group { Name = "Videojuegos 2026", AccessCode = "VG2026", CreatedAt = DateTime.UtcNow };
-        await groupsService.CreateAsync(videoGamesGroup);
-    }
-
-    // --- 5. Crear CRITERIOS si no existen ---
-    var existingCriteria = await criteriaService.GetAllAsync();
-    if (!existingCriteria.Any())
-    {
-        logger.LogInformation("Creating Sample Criteria...");
-        var criteria = new List<Criterion>
-        {
-            new Criterion { Name = "Planificación y Organización", Description = "Evalúa la estructura y tiempos", MaxScore = 15 },
-            new Criterion { Name = "Investigación y Fundamentación", Description = "Bases teóricas y estado del arte", MaxScore = 15 },
-            new Criterion { Name = "Desarrollo Técnico", Description = "Implementación y código", MaxScore = 25 },
-            new Criterion { Name = "Innovación y Creatividad", Description = "Originalidad de la propuesta", MaxScore = 15 },
-            new Criterion { Name = "Documentación", Description = "Reporte y manuales", MaxScore = 10 },
-            new Criterion { Name = "Presentación y Defensa", Description = "Pitch y respuestas", MaxScore = 20 }
-        };
-        foreach (var c in criteria) await criteriaService.CreateAsync(c);
-        existingCriteria = await criteriaService.GetAllAsync();
-    }
-
-    // --- 6. Crear PROYECTOS si no existen ---
-    var existingProjects = await projectsService.GetAllAsync();
-    
-    // Proyectos Integrador
-    var integradorProjects = new List<Project>
-    {
-        new Project 
-        { 
-            Name = "Ólale Mobile - Auditoría de Compliance", 
-            Description = "Aplicación móvil para auditoría automatizada de cumplimiento legal.",
-            Status = "PENDIENTE",
-            Category = "Integrador",
-            GroupId = integradorGroup.GroupId!,
-            ThumbnailUrl = "https://picsum.photos/id/1/400/300",
-            ComprehensionQuestions = new List<QuestionAnswer>
-            {
-                new() { 
-                    Question = "¿Cuál es el objetivo principal de Ólale Mobile?", 
-                    Options = new List<string> { "Automatizar auditorías", "Vender seguros", "Crear juegos", "Chat social" },
-                    CorrectAnswerIndex = 0,
-                    Answer = "Automatizar auditorías." 
-                },
-                new() { 
-                    Question = "¿Qué plataforma principal utiliza?", 
-                    Options = new List<string> { "React Native", "Flutter", "Swift", "Kotlin" },
-                    CorrectAnswerIndex = 1,
-                    Answer = "Flutter." 
-                }
-            }
-        },
-        new Project 
-        { 
-            Name = "Sistema de Gestión Escolar", 
-            Description = "Plataforma integral para gestión académica.",
-            Status = "EVALUADO",
-            Category = "Integrador",
-            GroupId = integradorGroup.GroupId!,
-            ThumbnailUrl = "https://picsum.photos/id/2/400/300"
-        },
-        new Project 
-        { 
-            Name = "App de Delivery Local", 
-            Description = "Entrega a domicilio para negocios locales.",
-            Status = "EVALUADO",
-            Category = "Integrador",
-            GroupId = integradorGroup.GroupId!,
-            ThumbnailUrl = "https://picsum.photos/id/3/400/300"
-        }
-    };
-
-    foreach (var p in integradorProjects)
-    {
-        if (!existingProjects.Any(ex => ex.Name == p.Name))
-        {
-            await projectsService.CreateAsync(p);
-        }
-    }
-
-    // Proyectos Videojuegos
-    var vgProjects = new List<Project>
-    {
-        new Project 
-        { 
-            Name = "Space Defenders 3D", 
-            Description = "Juego de disparos espacial 3D.",
-            Status = "EVALUADO",
-            Category = "Videojuegos",
-            GroupId = videoGamesGroup.GroupId!,
-            ThumbnailUrl = "https://picsum.photos/id/4/400/300"
-        },
-        new Project 
-        { 
-            Name = "Puzzle Quest Adventures", 
-            Description = "Aventura narrativa de puzzles.",
-            Status = "EVALUADO",
-            Category = "Videojuegos",
-            GroupId = videoGamesGroup.GroupId!,
-            ThumbnailUrl = "https://picsum.photos/id/5/400/300"
-        },
-        new Project 
-        { 
-            Name = "Racing Legends", 
-            Description = "Simulador de carreras alta velocidad.",
-            Status = "PENDIENTE",
-            Category = "Videojuegos",
-            GroupId = videoGamesGroup.GroupId!,
-            ThumbnailUrl = "https://picsum.photos/id/6/400/300"
-        }
-    };
-
-    foreach (var p in vgProjects)
-    {
-        if (!existingProjects.Any(ex => ex.Name == p.Name))
-        {
-            await projectsService.CreateAsync(p);
-        }
-    }
-
-    logger.LogInformation("Seeding and initialization complete.");
-    }
-    catch (Exception ex)
-    {
-        logger.LogCritical(ex, "FATAL ERROR DURING SEEDING: {Message}", ex.Message);
-        throw;
-    }
->>>>>>> c6e0590b0c2315ded1dd98ef1a613f074bcc0c5f
 }
 
 app.Run();
