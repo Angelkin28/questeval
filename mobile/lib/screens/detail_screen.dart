@@ -236,9 +236,9 @@ class _ProjectDetailScreenState extends ConsumerState<ProjectDetailScreen> {
             ],
           ),
           Slider(
-            value: value,
+            value: value > c.max ? c.max : value,
             max: c.max,
-            divisions: (c.max * 2).toInt(),
+            divisions: c.max > 0 ? (c.max * 2).toInt() : 1,
             activeColor: accent,
             label: value.toStringAsFixed(1),
             onChanged: widget.readOnly ? null : (val) => setState(() => _localScores[c.label] = val),

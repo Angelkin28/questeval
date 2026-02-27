@@ -99,7 +99,7 @@ class Criterion {
     return Criterion(
       id: json['criteriaId'] ?? '',
       label: json['name'] ?? '',
-      max: json['maxScore']?.toDouble() ?? 100.0,
+      max: (json['maxScore'] ?? json['MaxScore'])?.toDouble() ?? 100.0,
     );
   }
 }

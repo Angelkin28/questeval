@@ -54,11 +54,11 @@ public class AnalysisController : ControllerBase
         var videoGamesProjects = projects.Where(p => p.Category == "Videojuegos").ToList();
 
         var integradorAvg = integradorProjects.Any() 
-            ? evaluations.Where(e => integradorProjects.Any(p => p.ProjectId == e.ProjectId)).Average(e => e.FinalScore) 
+            ? evaluations.Where(e => integradorProjects.Any(p => p.ProjectId == e.ProjectId)).Select(e => e.FinalScore).DefaultIfEmpty(0).Average() 
             : 0;
             
         var videoGamesAvg = videoGamesProjects.Any() 
-            ? evaluations.Where(e => videoGamesProjects.Any(p => p.ProjectId == e.ProjectId)).Average(e => e.FinalScore) 
+            ? evaluations.Where(e => videoGamesProjects.Any(p => p.ProjectId == e.ProjectId)).Select(e => e.FinalScore).DefaultIfEmpty(0).Average() 
             : 0;
 
         return Ok(new {
