@@ -44,29 +44,36 @@ class AppTheme {
   }
 
   static ThemeData _buildGameTheme(bool isDark) {
-    return ThemeData(
+    final base = isDark ? ThemeData.dark() : ThemeData.light();
+    return base.copyWith(
       useMaterial3: true,
-      brightness: Brightness.dark,
-      scaffoldBackgroundColor: isDark ? Colors.black : AppColors.gameDark,
-      colorScheme: ColorScheme.dark(
-        primary: AppColors.neonGreen,
-        secondary: AppColors.neonCyan,
-        tertiary: AppColors.neonPink,
-        surface: const Color(0xFF0D0D0D),
-        background: Colors.black,
+      brightness: isDark ? Brightness.dark : Brightness.light,
+      scaffoldBackgroundColor: isDark ? Colors.black : const Color(0xFFF0F0F0),
+      colorScheme: isDark 
+        ? ColorScheme.dark(
+            primary: AppColors.neonGreen,
+            secondary: AppColors.neonCyan,
+            tertiary: AppColors.neonPink,
+            surface: const Color(0xFF0D0D0D),
+          )
+        : ColorScheme.light(
+            primary: AppColors.neonGreen,
+            secondary: AppColors.neonCyan,
+            tertiary: AppColors.neonPink,
+            surface: Colors.white,
+          ),
+      textTheme: GoogleFonts.poppinsTextTheme(base.textTheme).copyWith(
+        displayLarge: TextStyle(fontFamily: 'Georgia', fontWeight: FontWeight.bold, color: AppColors.neonGreen),
+        titleLarge: TextStyle(fontFamily: 'Georgia', fontWeight: FontWeight.bold, color: AppColors.neonCyan),
       ),
-      textTheme: GoogleFonts.poppinsTextTheme(ThemeData.dark().textTheme).copyWith(
-        displayLarge: const TextStyle(fontFamily: 'Georgia', fontWeight: FontWeight.bold, color: AppColors.neonGreen),
-        titleLarge: const TextStyle(fontFamily: 'Georgia', fontWeight: FontWeight.bold, color: AppColors.neonCyan),
-      ),
-      appBarTheme: const AppBarTheme(
+      appBarTheme: AppBarTheme(
         backgroundColor: Colors.transparent,
         elevation: 0,
         titleTextStyle: TextStyle(
           fontFamily: 'Georgia',
           fontSize: 22,
           fontWeight: FontWeight.bold,
-          color: AppColors.neonPink,
+          color: isDark ? AppColors.neonPink : AppColors.neonPink.withOpacity(0.8),
         ),
       ),
     );

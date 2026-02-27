@@ -36,6 +36,9 @@ class Project {
       date: json['createdAt'] != null ? DateTime.parse(json['createdAt']) : DateTime.now(),
       isEvaluated: json['status'] == 'EVALUADO',
       score: json['score']?.toDouble() ?? (json['finalScore']?.toDouble()),
+      criteriaScores: json['criteriaScores'] != null
+          ? Map<String, double>.from(json['criteriaScores'].map((k, v) => MapEntry(k, v.toDouble())))
+          : null,
       competencies: json['teamMembers'] != null ? List<String>.from(json['teamMembers']) : [],
       videoUrl: json['videoUrl'],
       thumbnailUrl: json['thumbnailUrl'],

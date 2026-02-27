@@ -165,17 +165,7 @@ class _RankingList extends ConsumerWidget {
       leading: CircleAvatar(backgroundColor: accent, child: Text('#$pos', style: const TextStyle(color: Colors.white))),
       title: Text(p.title, style: const TextStyle(fontWeight: FontWeight.bold)),
       subtitle: Text(status, style: TextStyle(color: accent, fontSize: 10, fontWeight: FontWeight.bold)),
-      trailing: Row(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Text('${p.score?.toInt() ?? 0}', style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
-          const SizedBox(width: 8),
-          IconButton(
-            icon: const Icon(Icons.arrow_forward_ios, size: 16),
-            onPressed: () => context.push('/projects/detail/${p.id}?readOnly=true'),
-          ),
-        ],
-      ),
+      trailing: Text('${p.score?.toInt() ?? 0}', style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
     );
   }
 }
