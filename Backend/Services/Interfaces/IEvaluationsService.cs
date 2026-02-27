@@ -23,18 +23,18 @@ public interface IEvaluationsService
     Task<Evaluation?> GetByEvaluationIdAsync(string evaluationId);
     Task<List<Evaluation>> GetByProjectIdAsync(string projectId);
     Task<List<Evaluation>> GetByUserIdAsync(string userId);
+    Task<Evaluation?> GetByUserAndProjectAsync(string userId, string projectId);
 
     /// <summary>
-    /// Crea una nueva evaluación para un proyecto.
-    /// La evaluación incluye criterios y puntuaciones individuales.
+    /// Crea o actualiza una evaluación para un proyecto.
+    /// Si el usuario ya evaluó este proyecto, se actualizan los datos.
     /// </summary>
-    /// <param name="evaluation">Datos de la nueva evaluación</param>
-    /// <returns>Tarea asíncrona de creación</returns>
+    /// <param name="evaluation">Datos de la evaluación</param>
+    /// <returns>Tarea asíncrona</returns>
     Task CreateAsync(Evaluation evaluation);
 
     /// <summary>
     /// Elimina una evaluación del sistema.
-    /// No se permite actualizar evaluaciones para mantener integridad de calificaciones.
     /// </summary>
     /// <param name="id">ID de la evaluación a eliminar</param>
     /// <returns>Tarea asíncrona de eliminación</returns>

@@ -257,6 +257,7 @@ public class ProjectResponse
     /// </summary>
     public DateTime UpdatedAt { get; set; }
     public List<QuestionAnswerDto> ComprehensionQuestions { get; set; } = new();
+    public bool IsEvaluatedByUser { get; set; }
 }
 
 public class QuestionAnswerDto

@@ -151,13 +151,13 @@ class _ProjectCard extends StatelessWidget {
                   Container(
                     padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
                     decoration: BoxDecoration(
-                      color: project.isEvaluated ? Colors.green.withOpacity(0.2) : Colors.orange.withOpacity(0.2),
+                      color: project.isEvaluatedByUser ? Colors.green.withOpacity(0.2) : Colors.orange.withOpacity(0.2),
                       borderRadius: BorderRadius.circular(8),
                     ),
                     child: Text(
-                      project.isEvaluated ? 'EVALUADO' : 'PENDIENTE',
+                      project.isEvaluatedByUser ? 'EVALUADO' : 'PENDIENTE',
                       style: TextStyle(
-                        color: project.isEvaluated ? Colors.green : Colors.orange,
+                        color: project.isEvaluatedByUser ? Colors.green : Colors.orange,
                         fontSize: 10,
                         fontWeight: FontWeight.bold,
                       ),

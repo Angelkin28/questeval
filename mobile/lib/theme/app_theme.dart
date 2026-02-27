@@ -44,24 +44,19 @@ class AppTheme {
   }
 
   static ThemeData _buildGameTheme(bool isDark) {
-    final base = isDark ? ThemeData.dark() : ThemeData.light();
+    if (!isDark) return _buildIntegradorTheme(false); // Same design as integrador in light mode
+    
+    final base = ThemeData.dark();
     return base.copyWith(
       useMaterial3: true,
-      brightness: isDark ? Brightness.dark : Brightness.light,
-      scaffoldBackgroundColor: isDark ? Colors.black : const Color(0xFFF0F0F0),
-      colorScheme: isDark 
-        ? ColorScheme.dark(
-            primary: AppColors.neonGreen,
-            secondary: AppColors.neonCyan,
-            tertiary: AppColors.neonPink,
-            surface: const Color(0xFF0D0D0D),
-          )
-        : ColorScheme.light(
-            primary: AppColors.neonGreen,
-            secondary: AppColors.neonCyan,
-            tertiary: AppColors.neonPink,
-            surface: Colors.white,
-          ),
+      brightness: Brightness.dark,
+      scaffoldBackgroundColor: Colors.black,
+      colorScheme: ColorScheme.dark(
+        primary: AppColors.neonGreen,
+        secondary: AppColors.neonCyan,
+        tertiary: AppColors.neonPink,
+        surface: const Color(0xFF0D0D0D),
+      ),
       textTheme: GoogleFonts.poppinsTextTheme(base.textTheme).copyWith(
         displayLarge: TextStyle(fontFamily: 'Georgia', fontWeight: FontWeight.bold, color: AppColors.neonGreen),
         titleLarge: TextStyle(fontFamily: 'Georgia', fontWeight: FontWeight.bold, color: AppColors.neonCyan),
@@ -73,7 +68,7 @@ class AppTheme {
           fontFamily: 'Georgia',
           fontSize: 22,
           fontWeight: FontWeight.bold,
-          color: isDark ? AppColors.neonPink : AppColors.neonPink.withOpacity(0.8),
+          color: AppColors.neonPink,
         ),
       ),
     );

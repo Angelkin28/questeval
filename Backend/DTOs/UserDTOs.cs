@@ -35,10 +35,10 @@ public class RegisterRequest
     public string FullName { get; set; } = null!;
     
     /// <summary>
-    /// Rol del usuario (Alumno, Profesor, Admin)
+    /// Rol del usuario (Alumno, Profesor, Admin, Invitado)
     /// </summary>
     /// <example>Alumno</example>
-    [RegularExpression(@"^(Alumno|Profesor|Admin)$", ErrorMessage = "El rol debe ser 'Alumno', 'Profesor' o 'Admin'.")]
+    [RegularExpression(@"^(Alumno|Profesor|Admin|Invitado)$", ErrorMessage = "El rol debe ser 'Alumno', 'Profesor', 'Admin' o 'Invitado'.")]
     public string Role { get; set; } = "Alumno"; // Rol por defecto
 
     /// <summary>
@@ -173,5 +173,32 @@ public class PendingTeacherResponse
     public string Email { get; set; } = null!;
     public string FullName { get; set; } = null!;
     public DateTime CreatedAt { get; set; }
+}
+
+/// <summary>
+/// Solicitud para acceso de invitado
+/// </summary>
+public class GuestAccessRequest
+{
+    /// <summary>
+    /// Nombre completo del invitado
+    /// </summary>
+    /// <example>Juan Pérez</example>
+    [Required(ErrorMessage = "El nombre completo es requerido.")]
+    [StringLength(100, MinimumLength = 2, ErrorMessage = "El nombre debe tener entre 2 y 100 caracteres.")]
+    public string FullName { get; set; } = null!;
+}
+
+/// <summary>
+/// Respuesta de acceso de invitado
+/// </summary>
+public class GuestAccessResponse
+{
+    /// <summary>Identificador único (MongoDB ObjectId)</summary>
+    public string Id { get; set; } = null!;
+    public string FullName { get; set; } = null!;
+    public string Role { get; set; } = null!;
+    public string Token { get; set; } = null!;
+    public string? UserId { get; set; }
 }
 

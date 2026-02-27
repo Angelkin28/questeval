@@ -11,7 +11,7 @@ namespace Backend.Controllers;
 /// </summary>
 [ApiController]
 [Route("api/[controller]")]
-[Authorize]
+[Authorize(Roles = "Alumno,Profesor,Admin")]
 [Produces("application/json")]
 public class GroupsController : ControllerBase
 {

@@ -16,11 +16,13 @@ public class ProjectsController : ControllerBase
 {
     private readonly IProjectsService _service;
     private readonly IMembershipsService _membershipsService;
+    private readonly IEvaluationsService _evaluationsService;
 
-    public ProjectsController(IProjectsService service, IMembershipsService membershipsService)
+    public ProjectsController(IProjectsService service, IMembershipsService membershipsService, IEvaluationsService evaluationsService)
     {
         _service = service;
         _membershipsService = membershipsService;
+        _evaluationsService = evaluationsService;
     }
 
     /// <summary>
@@ -43,26 +45,40 @@ public class ProjectsController : ControllerBase
     {
         var (projects, total) = await _service.SearchAsync(searchTerm, category, status, page, pageSize);
         
-        var projectResponses = projects.Select(p => new ProjectResponse
+        var userId = User.FindFirst("userId")?.Value;
+        var projectResponses = new List<ProjectResponse>();
+        
+        foreach (var p in projects)
         {
-            Id = p.Id!,
-            ProjectId = p.ProjectId,
-            Name = p.Name,
-            Description = p.Description,
-            GroupId = p.GroupId,
-            Status = p.Status,
-            CreatedAt = p.CreatedAt,
-            UpdatedAt = p.UpdatedAt,
-            Category = p.Category,
-            VideoUrl = p.VideoUrl,
-            ThumbnailUrl = p.ThumbnailUrl,
-            TeamMembers = p.TeamMembers,
-            ComprehensionQuestions = p.ComprehensionQuestions.Select(q => new QuestionAnswerDto
+            bool isEvaluatedByUser = false;
+            if (!string.IsNullOrEmpty(userId))
             {
-                Question = q.Question,
-                Answer = q.Answer
-            }).ToList()
-        }).ToList();
+                var eval = await _evaluationsService.GetByUserAndProjectAsync(userId, p.ProjectId);
+                isEvaluatedByUser = eval != null;
+            }
+
+            projectResponses.Add(new ProjectResponse
+            {
+                Id = p.Id!,
+                ProjectId = p.ProjectId,
+                Name = p.Name,
+                Description = p.Description,
+                GroupId = p.GroupId,
+                Status = p.Status,
+                CreatedAt = p.CreatedAt,
+                UpdatedAt = p.UpdatedAt,
+                Category = p.Category,
+                VideoUrl = p.VideoUrl,
+                ThumbnailUrl = p.ThumbnailUrl,
+                TeamMembers = p.TeamMembers,
+                IsEvaluatedByUser = isEvaluatedByUser,
+                ComprehensionQuestions = p.ComprehensionQuestions.Select(q => new QuestionAnswerDto
+                {
+                    Question = q.Question,
+                    Answer = q.Answer
+                }).ToList()
+            });
+        }
 
         return Ok(new PagedProjectResponse
         {
@@ -84,26 +100,40 @@ public class ProjectsController : ControllerBase
     public async Task<ActionResult<List<ProjectResponse>>> Get()
     {
         var projects = await _service.GetAllAsync();
-        var response = projects.Select(p => new ProjectResponse
+        var userId = User.FindFirst("userId")?.Value;
+        
+        var response = new List<ProjectResponse>();
+        foreach (var p in projects)
         {
-            Id = p.Id!,
-            ProjectId = p.ProjectId,
-            Name = p.Name,
-            Description = p.Description,
-            GroupId = p.GroupId,
-            Status = p.Status,
-            CreatedAt = p.CreatedAt,
-            UpdatedAt = p.UpdatedAt,
-            Category = p.Category,
-            VideoUrl = p.VideoUrl,
-            ThumbnailUrl = p.ThumbnailUrl,
-            TeamMembers = p.TeamMembers,
-            ComprehensionQuestions = p.ComprehensionQuestions.Select(q => new QuestionAnswerDto
+            bool isEvaluatedByUser = false;
+            if (!string.IsNullOrEmpty(userId))
             {
-                Question = q.Question,
-                Answer = q.Answer
-            }).ToList()
-        }).ToList();
+                var eval = await _evaluationsService.GetByUserAndProjectAsync(userId, p.ProjectId);
+                isEvaluatedByUser = eval != null;
+            }
+
+            response.Add(new ProjectResponse
+            {
+                Id = p.Id!,
+                ProjectId = p.ProjectId,
+                Name = p.Name,
+                Description = p.Description,
+                GroupId = p.GroupId,
+                Status = p.Status,
+                CreatedAt = p.CreatedAt,
+                UpdatedAt = p.UpdatedAt,
+                Category = p.Category,
+                VideoUrl = p.VideoUrl,
+                ThumbnailUrl = p.ThumbnailUrl,
+                TeamMembers = p.TeamMembers,
+                IsEvaluatedByUser = isEvaluatedByUser,
+                ComprehensionQuestions = p.ComprehensionQuestions.Select(q => new QuestionAnswerDto
+                {
+                    Question = q.Question,
+                    Answer = q.Answer
+                }).ToList()
+            });
+        }
         return Ok(response);
     }
 
@@ -112,7 +142,7 @@ public class ProjectsController : ControllerBase
     /// </summary>
     /// <returns>Lista de mis proyectos</returns>
     [HttpGet("mine")]
-    [Authorize]
+    [Authorize(Roles = "Alumno,Profesor,Admin")]
     [ProducesResponseType(typeof(List<ProjectResponse>), StatusCodes.Status200OK)]
     public async Task<ActionResult<List<ProjectResponse>>> GetMine()
     {
@@ -130,26 +160,37 @@ public class ProjectsController : ControllerBase
         foreach (var groupId in groupIds)
         {
             var groupProjects = await _service.GetByGroupIdAsync(groupId);
-            response.AddRange(groupProjects.Select(p => new ProjectResponse
+            foreach (var p in groupProjects)
             {
-                Id = p.Id!,
-                ProjectId = p.ProjectId,
-                Name = p.Name,
-                Description = p.Description,
-                GroupId = p.GroupId,
-                Status = p.Status,
-                CreatedAt = p.CreatedAt,
-                UpdatedAt = p.UpdatedAt,
-                Category = p.Category,
-                VideoUrl = p.VideoUrl,
-                ThumbnailUrl = p.ThumbnailUrl,
-                TeamMembers = p.TeamMembers,
-                ComprehensionQuestions = p.ComprehensionQuestions.Select(q => new QuestionAnswerDto
+                bool isEvaluatedByUser = false;
+                if (!string.IsNullOrEmpty(userId))
                 {
-                    Question = q.Question,
-                    Answer = q.Answer
-                }).ToList()
-            }));
+                    var eval = await _evaluationsService.GetByUserAndProjectAsync(userId, p.ProjectId);
+                    isEvaluatedByUser = eval != null;
+                }
+
+                response.Add(new ProjectResponse
+                {
+                    Id = p.Id!,
+                    ProjectId = p.ProjectId,
+                    Name = p.Name,
+                    Description = p.Description,
+                    GroupId = p.GroupId,
+                    Status = p.Status,
+                    CreatedAt = p.CreatedAt,
+                    UpdatedAt = p.UpdatedAt,
+                    Category = p.Category,
+                    VideoUrl = p.VideoUrl,
+                    ThumbnailUrl = p.ThumbnailUrl,
+                    TeamMembers = p.TeamMembers,
+                    IsEvaluatedByUser = isEvaluatedByUser,
+                    ComprehensionQuestions = p.ComprehensionQuestions.Select(q => new QuestionAnswerDto
+                    {
+                        Question = q.Question,
+                        Answer = q.Answer
+                    }).ToList()
+                });
+            }
         }
 
         return Ok(response);
@@ -181,6 +222,14 @@ public class ProjectsController : ControllerBase
             return NotFound();
         }
 
+        var userId = User.FindFirst("userId")?.Value;
+        bool isEvaluatedByUser = false;
+        if (!string.IsNullOrEmpty(userId))
+        {
+            var eval = await _evaluationsService.GetByUserAndProjectAsync(userId, project.ProjectId);
+            isEvaluatedByUser = eval != null;
+        }
+
         var response = new ProjectResponse
         {
             Id = project.Id!,
@@ -195,6 +244,7 @@ public class ProjectsController : ControllerBase
             VideoUrl = project.VideoUrl,
             ThumbnailUrl = project.ThumbnailUrl,
             TeamMembers = project.TeamMembers,
+            IsEvaluatedByUser = isEvaluatedByUser,
             ComprehensionQuestions = project.ComprehensionQuestions.Select(q => new QuestionAnswerDto
             {
                 Question = q.Question,

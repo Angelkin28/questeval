@@ -34,7 +34,7 @@ public class User
     public string Email { get; set; } = null!;
     public string PasswordHash { get; set; } = null!; // Password hasheado
     public string FullName { get; set; } = null!;
-    public string Role { get; set; } = "Alumno"; // Alumno, Profesor, Admin
+    public string Role { get; set; } = "Alumno"; // Alumno, Profesor, Admin, Invitado
     public string? AvatarUrl { get; set; }
     
     // Campos de verificación de email y aprobación

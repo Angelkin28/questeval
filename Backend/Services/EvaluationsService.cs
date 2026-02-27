@@ -80,13 +80,34 @@ public class EvaluationsService : IEvaluationsService
     /// <summary>
     /// Crea una nueva evaluación de un proyecto con Códice secular.
     /// </summary>
+    public async Task<Evaluation?> GetByUserAndProjectAsync(string userId, string projectId) =>
+        await _collection.Find(x => x.UserId == userId && x.ProjectId == projectId).FirstOrDefaultAsync();
+
+    /// <summary>
+    /// Crea o actualiza una evaluación de un proyecto.
+    /// Si el usuario ya evaluó este proyecto, se actualizan los datos.
+    /// </summary>
     public async Task CreateAsync(Evaluation evaluation)
     {
-        if (string.IsNullOrEmpty(evaluation.EvaluationId))
+        var existing = await GetByUserAndProjectAsync(evaluation.UserId, evaluation.ProjectId);
+        if (existing != null)
         {
-            evaluation.EvaluationId = await GetNextIdAsync("evaluations");
+            evaluation.Id = existing.Id;
+            evaluation.EvaluationId = existing.EvaluationId;
+            evaluation.CreatedAt = existing.CreatedAt;
+            evaluation.UpdatedAt = DateTime.UtcNow;
+            await _collection.ReplaceOneAsync(x => x.Id == existing.Id, evaluation);
         }
-        await _collection.InsertOneAsync(evaluation);
+        else
+        {
+            if (string.IsNullOrEmpty(evaluation.EvaluationId))
+            {
+                evaluation.EvaluationId = await GetNextIdAsync("evaluations");
+            }
+            evaluation.CreatedAt = DateTime.UtcNow;
+            evaluation.UpdatedAt = DateTime.UtcNow;
+            await _collection.InsertOneAsync(evaluation);
+        }
     }
 
     /// <summary>

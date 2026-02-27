@@ -25,7 +25,7 @@ class ProfileScreen extends ConsumerWidget {
       appBar: AppBar(title: const Text('Mi Perfil')),
       body: projectsAsync.when(
         data: (allProjects) {
-          final evaluatedProjects = allProjects.where((p) => p.isEvaluated).toList();
+          final evaluatedProjects = allProjects.where((p) => p.isEvaluatedByUser).toList();
           final avg = evaluatedProjects.isEmpty 
               ? 0.0 
               : evaluatedProjects.fold(0.0, (sum, p) => sum + (p.score ?? 0)) / evaluatedProjects.length;

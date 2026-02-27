@@ -10,6 +10,7 @@ class Project {
   final List<String> competencies;
   final String? videoUrl;
   final String? thumbnailUrl;
+  final bool isEvaluatedByUser;
 
   final List<ComprehensionQuestion> questions;
 
@@ -26,6 +27,7 @@ class Project {
     this.videoUrl,
     this.thumbnailUrl,
     this.questions = const [],
+    this.isEvaluatedByUser = false,
   });
 
   factory Project.fromJson(Map<String, dynamic> json) {
@@ -45,6 +47,7 @@ class Project {
       questions: json['comprehensionQuestions'] != null 
           ? (json['comprehensionQuestions'] as List).map((q) => ComprehensionQuestion.fromJson(q)).toList()
           : [],
+      isEvaluatedByUser: json['isEvaluatedByUser'] ?? false,
     );
   }
 
