@@ -1,6 +1,6 @@
-# Resumen de Cambios: Panel de Administración, Auditoría y Correcciones
+# Cambios 27/02/26
 
-Este documento resume las nuevas funcionalidades y correcciones implementadas recientemente en el sistema QuestEval.
+Este documento resume las nuevas funcionalidades y correcciones implementadas el 27 de febrero de 2026 en el sistema QuestEval.
 
 ## 1. Mejoras en el Backend
 
