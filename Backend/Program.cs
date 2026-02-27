@@ -36,10 +36,26 @@ builder.Services.AddCors(options =>
 {
     options.AddPolicy("AllowFrontend", policy =>
     {
+<<<<<<< HEAD
         // Agregar URLs del frontend aquí (servidores dev, URLs de producción, etc.)
         policy.WithOrigins("http://localhost:5173", "http://localhost:5248")
               .AllowAnyMethod()    // Permitir GET, POST, PUT, DELETE, etc.
               .AllowAnyHeader();   // Permitir todos los headers (Authorization, Content-Type, etc.)
+=======
+        // En desarrollo, permitimos cualquier origen para facilitar las pruebas móviles/web
+        if (builder.Environment.IsDevelopment())
+        {
+            policy.AllowAnyOrigin()
+                  .AllowAnyMethod()
+                  .AllowAnyHeader();
+        }
+        else
+        {
+            policy.WithOrigins("http://localhost:5173", "http://localhost:5248", "http://localhost:4200", "http://localhost:4201")
+                  .AllowAnyMethod()
+                  .AllowAnyHeader();
+        }
+>>>>>>> c6e0590b0c2315ded1dd98ef1a613f074bcc0c5f
     });
 });
 
@@ -159,7 +175,151 @@ if (app.Environment.IsDevelopment())
             Console.WriteLine($"📚 Documentación Swagger: {swaggerUrl}");
             Console.WriteLine($"━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n");
         }
+<<<<<<< HEAD
     });
+=======
+    }
+
+    // --- 4. Crear GRUPOS si no existen ---
+    var existingGroups = await groupsService.GetAllAsync();
+    var integradorGroup = existingGroups.FirstOrDefault(g => g.AccessCode == "INT2026");
+    if (integradorGroup == null)
+    {
+        integradorGroup = new Group { Name = "Integrador 2026", AccessCode = "INT2026", CreatedAt = DateTime.UtcNow };
+        await groupsService.CreateAsync(integradorGroup);
+    }
+    
+    var videoGamesGroup = existingGroups.FirstOrDefault(g => g.AccessCode == "VG2026");
+    if (videoGamesGroup == null)
+    {
+        videoGamesGroup = new Group { Name = "Videojuegos 2026", AccessCode = "VG2026", CreatedAt = DateTime.UtcNow };
+        await groupsService.CreateAsync(videoGamesGroup);
+    }
+
+    // --- 5. Crear CRITERIOS si no existen ---
+    var existingCriteria = await criteriaService.GetAllAsync();
+    if (!existingCriteria.Any())
+    {
+        logger.LogInformation("Creating Sample Criteria...");
+        var criteria = new List<Criterion>
+        {
+            new Criterion { Name = "Planificación y Organización", Description = "Evalúa la estructura y tiempos", MaxScore = 15 },
+            new Criterion { Name = "Investigación y Fundamentación", Description = "Bases teóricas y estado del arte", MaxScore = 15 },
+            new Criterion { Name = "Desarrollo Técnico", Description = "Implementación y código", MaxScore = 25 },
+            new Criterion { Name = "Innovación y Creatividad", Description = "Originalidad de la propuesta", MaxScore = 15 },
+            new Criterion { Name = "Documentación", Description = "Reporte y manuales", MaxScore = 10 },
+            new Criterion { Name = "Presentación y Defensa", Description = "Pitch y respuestas", MaxScore = 20 }
+        };
+        foreach (var c in criteria) await criteriaService.CreateAsync(c);
+        existingCriteria = await criteriaService.GetAllAsync();
+    }
+
+    // --- 6. Crear PROYECTOS si no existen ---
+    var existingProjects = await projectsService.GetAllAsync();
+    
+    // Proyectos Integrador
+    var integradorProjects = new List<Project>
+    {
+        new Project 
+        { 
+            Name = "Ólale Mobile - Auditoría de Compliance", 
+            Description = "Aplicación móvil para auditoría automatizada de cumplimiento legal.",
+            Status = "PENDIENTE",
+            Category = "Integrador",
+            GroupId = integradorGroup.GroupId!,
+            ThumbnailUrl = "https://picsum.photos/id/1/400/300",
+            ComprehensionQuestions = new List<QuestionAnswer>
+            {
+                new() { 
+                    Question = "¿Cuál es el objetivo principal de Ólale Mobile?", 
+                    Options = new List<string> { "Automatizar auditorías", "Vender seguros", "Crear juegos", "Chat social" },
+                    CorrectAnswerIndex = 0,
+                    Answer = "Automatizar auditorías." 
+                },
+                new() { 
+                    Question = "¿Qué plataforma principal utiliza?", 
+                    Options = new List<string> { "React Native", "Flutter", "Swift", "Kotlin" },
+                    CorrectAnswerIndex = 1,
+                    Answer = "Flutter." 
+                }
+            }
+        },
+        new Project 
+        { 
+            Name = "Sistema de Gestión Escolar", 
+            Description = "Plataforma integral para gestión académica.",
+            Status = "EVALUADO",
+            Category = "Integrador",
+            GroupId = integradorGroup.GroupId!,
+            ThumbnailUrl = "https://picsum.photos/id/2/400/300"
+        },
+        new Project 
+        { 
+            Name = "App de Delivery Local", 
+            Description = "Entrega a domicilio para negocios locales.",
+            Status = "EVALUADO",
+            Category = "Integrador",
+            GroupId = integradorGroup.GroupId!,
+            ThumbnailUrl = "https://picsum.photos/id/3/400/300"
+        }
+    };
+
+    foreach (var p in integradorProjects)
+    {
+        if (!existingProjects.Any(ex => ex.Name == p.Name))
+        {
+            await projectsService.CreateAsync(p);
+        }
+    }
+
+    // Proyectos Videojuegos
+    var vgProjects = new List<Project>
+    {
+        new Project 
+        { 
+            Name = "Space Defenders 3D", 
+            Description = "Juego de disparos espacial 3D.",
+            Status = "EVALUADO",
+            Category = "Videojuegos",
+            GroupId = videoGamesGroup.GroupId!,
+            ThumbnailUrl = "https://picsum.photos/id/4/400/300"
+        },
+        new Project 
+        { 
+            Name = "Puzzle Quest Adventures", 
+            Description = "Aventura narrativa de puzzles.",
+            Status = "EVALUADO",
+            Category = "Videojuegos",
+            GroupId = videoGamesGroup.GroupId!,
+            ThumbnailUrl = "https://picsum.photos/id/5/400/300"
+        },
+        new Project 
+        { 
+            Name = "Racing Legends", 
+            Description = "Simulador de carreras alta velocidad.",
+            Status = "PENDIENTE",
+            Category = "Videojuegos",
+            GroupId = videoGamesGroup.GroupId!,
+            ThumbnailUrl = "https://picsum.photos/id/6/400/300"
+        }
+    };
+
+    foreach (var p in vgProjects)
+    {
+        if (!existingProjects.Any(ex => ex.Name == p.Name))
+        {
+            await projectsService.CreateAsync(p);
+        }
+    }
+
+    logger.LogInformation("Seeding and initialization complete.");
+    }
+    catch (Exception ex)
+    {
+        logger.LogCritical(ex, "FATAL ERROR DURING SEEDING: {Message}", ex.Message);
+        throw;
+    }
+>>>>>>> c6e0590b0c2315ded1dd98ef1a613f074bcc0c5f
 }
 
 app.Run();

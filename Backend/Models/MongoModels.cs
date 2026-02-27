@@ -119,6 +119,8 @@ public class Project
 public class QuestionAnswer
 {
     public string Question { get; set; } = null!;
+    public List<string> Options { get; set; } = new();
+    public int CorrectAnswerIndex { get; set; }
     public string Answer { get; set; } = null!;
 }
 
@@ -183,7 +185,7 @@ public class EvaluationDetail
     // Desnormalización: Captura instantánea del nombre del criterio al momento de la evaluación.
     public string CriterionName { get; set; } = null!;
 
-    public int Score { get; set; }
+    public double Score { get; set; }
 }
 
 /// <summary>

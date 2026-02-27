@@ -167,7 +167,14 @@ public class ProjectsController : ControllerBase
     [ProducesResponseType(StatusCodes.Status404NotFound)]
     public async Task<ActionResult<ProjectResponse>> Get(string id)
     {
+        // Intentar buscar por ID interno (ObjectId)
         var project = await _service.GetByIdAsync(id);
+        
+        // Si no se encuentra, intentar buscar por ProjectId secuencial (ej: "1", "2")
+        if (project is null)
+        {
+            project = await _service.GetByProjectIdAsync(id);
+        }
 
         if (project is null)
         {

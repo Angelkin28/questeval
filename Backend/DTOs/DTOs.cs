@@ -263,6 +263,8 @@ public class QuestionAnswerDto
 {
     [Required]
     public string Question { get; set; } = null!;
+    public List<string> Options { get; set; } = new();
+    public int CorrectAnswerIndex { get; set; }
     [Required]
     public string Answer { get; set; } = null!;
 }
@@ -322,7 +324,7 @@ public class EvaluationDetailRequest
     /// <example>85</example>
     [Required]
     [Range(0, 100, ErrorMessage = "El puntaje debe estar entre 0 y 100.")]
-    public int Score { get; set; }
+    public double Score { get; set; }
 }
 
 /// <summary>
@@ -421,7 +423,7 @@ public class EvaluationDetailResponse
     /// Puntuación asignada
     /// </summary>
     /// <example>85</example>
-    public int Score { get; set; }
+    public double Score { get; set; }
 }
 
 // ============================================
