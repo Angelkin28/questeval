@@ -1,4 +1,5 @@
 ﻿using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Authorization;
 using Backend.Models;
 using Backend.Services.Interfaces;
 using System.Security.Cryptography;
@@ -153,6 +154,8 @@ public class UsersController : ControllerBase
             });
         }
 
+        // Todos los roles (Alumno, Profesor, Admin) acceden directamente con sus credenciales.
+        // No se requiere aprobación previa para ningún rol.
         var response = new LoginResponse
         {
             UserId = user.Id!,
@@ -218,6 +221,7 @@ public class UsersController : ControllerBase
     }
 
     [HttpDelete("{id}")]
+    [Authorize(Roles = "Admin")]
     public async Task<IActionResult> Delete(string id)
     {
         var user = await _service.GetByIdAsync(id);

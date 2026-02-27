@@ -200,7 +200,7 @@ public class ProjectsService : IProjectsService
                 string userIdStr;
                 if (user != null)
                 {
-                    userIdStr = user.Contains("UserId") ? user["UserId"].ToString() : (user.Contains("Enrollment") ? user["Enrollment"].ToString() : (user.Contains("IncrementalId") ? user["IncrementalId"].ToString() : userObjId.ToString()));
+                    userIdStr = user.Contains("UserId") ? user["UserId"].ToString() ?? string.Empty : (user.Contains("Enrollment") ? user["Enrollment"].ToString() ?? string.Empty : (user.Contains("IncrementalId") ? user["IncrementalId"].ToString() ?? string.Empty : userObjId.ToString()));
                 }
                 else
                 {

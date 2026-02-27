@@ -217,6 +217,18 @@ export const api = {
             const response = await fetch(`${API_URL}/Users`, { headers });
             if (!response.ok) throw new Error('Error al obtener usuarios');
             return response.json();
+        },
+
+        deleteUser: async (id: string): Promise<void> => {
+            const token = localStorage.getItem('token');
+            const headers: HeadersInit = { 'Content-Type': 'application/json' };
+            if (token) headers['Authorization'] = `Bearer ${token}`;
+
+            const response = await fetch(`${API_URL}/Users/${id}`, {
+                method: 'DELETE',
+                headers,
+            });
+            if (!response.ok) throw new Error('Error al eliminar usuario');
         }
     },
 
@@ -249,16 +261,14 @@ export const api = {
                 headers['Authorization'] = `Bearer ${token}`;
             }
 
-            const response = await fetch(`${API_URL}/Projects/mine`, { headers });
-
-            if (!response.ok) {
-                // Return empty array instead of error if api returns 404/204 or handle gracefully
-                // Using getAll fallback or error? Let's check controller. Controller returns [] if none found.
-                // If endpoint doesn't exist yet, it'll fail. But we just added it.
-                if (response.status === 404) return [];
-                throw new Error('Error al obtener mis proyectos');
+            try {
+                const response = await fetch(`${API_URL}/Projects/mine`, { headers });
+                // Retornar [] ante cualquier error (404, 401, etc.)
+                if (!response.ok) return [];
+                return response.json();
+            } catch {
+                return [];
             }
-            return response.json();
         },
 
         getById: async (id: string): Promise<Project> => {

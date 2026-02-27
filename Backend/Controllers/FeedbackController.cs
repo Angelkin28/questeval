@@ -29,7 +29,7 @@ public class FeedbackController : ControllerBase
         {
             Id = f.Id!,
             FeedbackId = f.FeedbackId,
-            EvaluationId = f.EvaluationId,
+            EvaluationId = f.EvaluationId ?? string.Empty,
             Comment = f.Comment,
             IsPublic = f.IsPublic,
             CreatedAt = f.CreatedAt
@@ -56,7 +56,7 @@ public class FeedbackController : ControllerBase
         {
             Id = feedback.Id!,
             FeedbackId = feedback.FeedbackId,
-            EvaluationId = feedback.EvaluationId,
+            EvaluationId = feedback.EvaluationId ?? string.Empty,
             Comment = feedback.Comment,
             IsPublic = feedback.IsPublic,
             CreatedAt = feedback.CreatedAt

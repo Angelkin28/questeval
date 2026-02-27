@@ -140,7 +140,7 @@ public class GroupsController : ControllerBase
             ProjectId = p.ProjectId,
             Name = p.Name,
             Description = p.Description,
-            GroupId = p.GroupId,
+            GroupId = p.GroupId ?? string.Empty,
             Status = p.Status,
             CreatedAt = p.CreatedAt,
             UpdatedAt = p.UpdatedAt,

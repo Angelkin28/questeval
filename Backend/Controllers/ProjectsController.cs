@@ -49,7 +49,7 @@ public class ProjectsController : ControllerBase
             ProjectId = p.ProjectId,
             Name = p.Name,
             Description = p.Description,
-            GroupId = p.GroupId,
+            GroupId = p.GroupId ?? string.Empty,
             Status = p.Status,
             CreatedAt = p.CreatedAt,
             UpdatedAt = p.UpdatedAt,
@@ -90,7 +90,7 @@ public class ProjectsController : ControllerBase
             ProjectId = p.ProjectId,
             Name = p.Name,
             Description = p.Description,
-            GroupId = p.GroupId,
+            GroupId = p.GroupId ?? string.Empty,
             Status = p.Status,
             CreatedAt = p.CreatedAt,
             UpdatedAt = p.UpdatedAt,
@@ -136,7 +136,7 @@ public class ProjectsController : ControllerBase
                 ProjectId = p.ProjectId,
                 Name = p.Name,
                 Description = p.Description,
-                GroupId = p.GroupId,
+                GroupId = p.GroupId ?? string.Empty,
                 Status = p.Status,
                 CreatedAt = p.CreatedAt,
                 UpdatedAt = p.UpdatedAt,
@@ -187,7 +187,7 @@ public class ProjectsController : ControllerBase
             ProjectId = project.ProjectId,
             Name = project.Name,
             Description = project.Description,
-            GroupId = project.GroupId,
+            GroupId = project.GroupId ?? string.Empty,
             Status = project.Status,
             CreatedAt = project.CreatedAt,
             UpdatedAt = project.UpdatedAt,
@@ -330,3 +330,4 @@ public class ProjectsController : ControllerBase
         return NoContent();
     }
 }
+

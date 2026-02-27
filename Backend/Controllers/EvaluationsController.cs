@@ -34,15 +34,15 @@ public class EvaluationsController : ControllerBase
         var response = evaluations.Select(e => new EvaluationResponse
         {
             Id = e.Id!,
-            EvaluationId = e.EvaluationId,
-            ProjectId = e.ProjectId,
-            UserId = e.UserId,
+            EvaluationId = e.EvaluationId ?? string.Empty,
+            ProjectId = e.ProjectId ?? string.Empty,
+            UserId = e.UserId ?? string.Empty,
             EvaluatorRole = e.EvaluatorRole,
             EvaluatorName = e.EvaluatorName,
             FinalScore = e.FinalScore,
             Details = e.Details.Select(d => new EvaluationDetailResponse
             {
-                CriteriaId = d.CriteriaId,
+                CriteriaId = d.CriteriaId ?? string.Empty,
                 CriterionName = d.CriterionName,
                 Score = d.Score
             }).ToList(),
@@ -74,15 +74,15 @@ public class EvaluationsController : ControllerBase
         var response = new EvaluationResponse
         {
             Id = evaluation.Id!,
-            EvaluationId = evaluation.EvaluationId,
-            ProjectId = evaluation.ProjectId,
-            UserId = evaluation.UserId,
+            EvaluationId = evaluation.EvaluationId ?? string.Empty,
+            ProjectId = evaluation.ProjectId ?? string.Empty,
+            UserId = evaluation.UserId ?? string.Empty,
             EvaluatorRole = evaluation.EvaluatorRole,
             EvaluatorName = evaluation.EvaluatorName,
             FinalScore = evaluation.FinalScore,
             Details = evaluation.Details.Select(d => new EvaluationDetailResponse
             {
-                CriteriaId = d.CriteriaId,
+                CriteriaId = d.CriteriaId ?? string.Empty,
                 CriterionName = d.CriterionName,
                 Score = d.Score
             }).ToList(),
@@ -106,15 +106,15 @@ public class EvaluationsController : ControllerBase
         var response = evaluations.Select(e => new EvaluationResponse
         {
             Id = e.Id!,
-            EvaluationId = e.EvaluationId,
-            ProjectId = e.ProjectId,
-            UserId = e.UserId,
+            EvaluationId = e.EvaluationId ?? string.Empty,
+            ProjectId = e.ProjectId ?? string.Empty,
+            UserId = e.UserId ?? string.Empty,
             EvaluatorRole = e.EvaluatorRole,
             EvaluatorName = e.EvaluatorName,
             FinalScore = e.FinalScore,
             Details = e.Details.Select(d => new EvaluationDetailResponse
             {
-                CriteriaId = d.CriteriaId,
+                CriteriaId = d.CriteriaId ?? string.Empty,
                 CriterionName = d.CriterionName,
                 Score = d.Score
             }).ToList(),
@@ -165,15 +165,15 @@ public class EvaluationsController : ControllerBase
         var response = new EvaluationResponse
         {
             Id = newEvaluation.Id!,
-            EvaluationId = newEvaluation.EvaluationId,
-            ProjectId = newEvaluation.ProjectId,
-            UserId = newEvaluation.UserId,
+            EvaluationId = newEvaluation.EvaluationId ?? string.Empty,
+            ProjectId = newEvaluation.ProjectId ?? string.Empty,
+            UserId = newEvaluation.UserId ?? string.Empty,
             EvaluatorRole = newEvaluation.EvaluatorRole,
             EvaluatorName = newEvaluation.EvaluatorName,
             FinalScore = newEvaluation.FinalScore,
             Details = newEvaluation.Details.Select(d => new EvaluationDetailResponse
             {
-                CriteriaId = d.CriteriaId,
+                CriteriaId = d.CriteriaId ?? string.Empty,
                 CriterionName = d.CriterionName,
                 Score = d.Score
             }).ToList(),

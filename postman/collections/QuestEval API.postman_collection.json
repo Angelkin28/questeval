@@ -1,0 +1,1051 @@
+{
+	"info": {
+		"name": "QuestEval API",
+		"description": "Colección completa para probar todos los endpoints del backend de QuestEval.\n\n**Base URL:** `{{baseUrl}}`\n\n**Autenticación:** JWT Bearer Token (obtenido del endpoint de login)\n\n## Módulos:\n1. **Users** - Registro, login, OTP, aprobación de maestros\n2. **Groups** - CRUD de grupos, unirse a grupo, miembros y proyectos del grupo\n3. **Projects** - CRUD de proyectos\n4. **Criteria** - CRUD de criterios de evaluación\n5. **Evaluations** - CRUD de evaluaciones\n6. **Feedback** - CRUD de retroalimentación\n7. **Memberships** - CRUD de membresías\n8. **Storage** - Subida de imágenes",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+	},
+	"auth": {
+		"type": "bearer",
+		"bearer": [
+			{
+				"key": "token",
+				"value": "{{authToken}}",
+				"type": "string"
+			}
+		]
+	},
+	"variable": [
+		{
+			"key": "baseUrl",
+			"value": "http://localhost:5122"
+		}
+	],
+	"item": [
+		{
+			"name": "Users",
+			"description": "Endpoints para gestión de usuarios: registro, login, verificación OTP y aprobación de maestros.",
+			"item": [
+				{
+					"name": "Register",
+					"request": {
+						"auth": {
+							"type": "noauth"
+						},
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"email\": \"estudiante@ejemplo.com\",\n  \"password\": \"ContraseñaSegura123!\",\n  \"fullName\": \"Juan Pérez\",\n  \"role\": \"Alumno\"\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/api/Users/register",
+							"host": ["{{baseUrl}}"],
+							"path": ["api", "Users", "register"]
+						},
+						"description": "Registra un nuevo usuario. Roles válidos: `Alumno`, `Profesor`, `Admin`.\n\n- Si el rol es `Profesor`, el `verificationStatus` será `pending` hasta que un Admin lo apruebe.\n- Retorna 400 si el email ya existe."
+					},
+					"response": []
+				},
+				{
+					"name": "Login",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"type": "text/javascript",
+								"exec": [
+									"if (pm.response.code === 200) {",
+									"    var jsonData = pm.response.json();",
+									"    pm.collectionVariables.set(\"authToken\", jsonData.token);",
+									"    pm.collectionVariables.set(\"userId\", jsonData.userId);",
+									"}"
+								]
+							}
+						}
+					],
+					"request": {
+						"auth": {
+							"type": "noauth"
+						},
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"email\": \"won.dorado.mid@gmail.com\",\n  \"password\": \"admin123\"\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/api/Users/login",
+							"host": ["{{baseUrl}}"],
+							"path": ["api", "Users", "login"]
+						},
+						"description": "Inicia sesión y obtiene un JWT token válido por 7 días.\n\nEl token se guarda automáticamente en la variable `authToken` para usarse en los demás endpoints protegidos."
+					},
+					"response": []
+				},
+				{
+					"name": "Get All Users",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/api/Users",
+							"host": ["{{baseUrl}}"],
+							"path": ["api", "Users"]
+						},
+						"description": "Obtiene la lista de todos los usuarios registrados."
+					},
+					"response": []
+				},
+				{
+					"name": "Get User by ID",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/api/Users/{{userId}}",
+							"host": ["{{baseUrl}}"],
+							"path": ["api", "Users", "{{userId}}"]
+						},
+						"description": "Obtiene un usuario específico por su ID (ObjectId de MongoDB)."
+					},
+					"response": []
+				},
+				{
+					"name": "Delete User",
+					"request": {
+						"method": "DELETE",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/api/Users/:id",
+							"host": ["{{baseUrl}}"],
+							"path": ["api", "Users", ":id"],
+							"variable": [
+								{
+									"key": "id",
+									"value": "",
+									"description": "ID del usuario a eliminar"
+								}
+							]
+						},
+						"description": "Elimina un usuario por ID. Retorna 204 No Content si fue exitoso, 404 si no existe."
+					},
+					"response": []
+				},
+				{
+					"name": "Send OTP",
+					"request": {
+						"auth": {
+							"type": "noauth"
+						},
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"email\": \"estudiante@ejemplo.com\"\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/api/Users/send-otp",
+							"host": ["{{baseUrl}}"],
+							"path": ["api", "Users", "send-otp"]
+						},
+						"description": "Envía un código OTP de 6 dígitos al email proporcionado para verificación."
+					},
+					"response": []
+				},
+				{
+					"name": "Verify OTP",
+					"request": {
+						"auth": {
+							"type": "noauth"
+						},
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"email\": \"estudiante@ejemplo.com\",\n  \"otpCode\": \"123456\"\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/api/Users/verify-otp",
+							"host": ["{{baseUrl}}"],
+							"path": ["api", "Users", "verify-otp"]
+						},
+						"description": "Verifica el código OTP enviado al email. Si es válido, marca el email como verificado."
+					},
+					"response": []
+				},
+				{
+					"name": "Get Pending Teachers",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/api/Users/pending-teachers",
+							"host": ["{{baseUrl}}"],
+							"path": ["api", "Users", "pending-teachers"]
+						},
+						"description": "Obtiene la lista de maestros pendientes de aprobación.\n\n**Requiere:** Rol `Admin` (JWT con claim de rol Admin)."
+					},
+					"response": []
+				},
+				{
+					"name": "Approve/Reject Teacher",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"teacherId\": \"<teacher_object_id>\",\n  \"status\": \"approved\"\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/api/Users/approve-teacher",
+							"host": ["{{baseUrl}}"],
+							"path": ["api", "Users", "approve-teacher"]
+						},
+						"description": "Aprueba o rechaza un maestro pendiente.\n\n**Requiere:** Rol `Admin`.\n\nValores válidos para `status`: `approved`, `rejected`."
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "Groups",
+			"description": "Endpoints para gestión de grupos de estudiantes. Todos los endpoints requieren autenticación JWT (excepto donde se indique).",
+			"item": [
+				{
+					"name": "Get All Groups",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/api/Groups",
+							"host": ["{{baseUrl}}"],
+							"path": ["api", "Groups"]
+						},
+						"description": "Obtiene todos los grupos. Requiere autenticación."
+					},
+					"response": []
+				},
+				{
+					"name": "Get My Groups",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/api/Groups/mine",
+							"host": ["{{baseUrl}}"],
+							"path": ["api", "Groups", "mine"]
+						},
+						"description": "Obtiene los grupos del usuario autenticado (basado en sus membresías)."
+					},
+					"response": []
+				},
+				{
+					"name": "Get Group by ID",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/api/Groups/:id",
+							"host": ["{{baseUrl}}"],
+							"path": ["api", "Groups", ":id"],
+							"variable": [
+								{
+									"key": "id",
+									"value": "",
+									"description": "ID del grupo"
+								}
+							]
+						},
+						"description": "Obtiene un grupo específico por su ID."
+					},
+					"response": []
+				},
+				{
+					"name": "Get Group Members",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/api/Groups/:id/members",
+							"host": ["{{baseUrl}}"],
+							"path": ["api", "Groups", ":id", "members"],
+							"variable": [
+								{
+									"key": "id",
+									"value": "",
+									"description": "ID del grupo"
+								}
+							]
+						},
+						"description": "Obtiene la lista de miembros (usuarios) de un grupo específico."
+					},
+					"response": []
+				},
+				{
+					"name": "Get Group Projects",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/api/Groups/:id/projects",
+							"host": ["{{baseUrl}}"],
+							"path": ["api", "Groups", ":id", "projects"],
+							"variable": [
+								{
+									"key": "id",
+									"value": "",
+									"description": "ID del grupo"
+								}
+							]
+						},
+						"description": "Obtiene la lista de proyectos de un grupo específico."
+					},
+					"response": []
+				},
+				{
+					"name": "Create Group",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"type": "text/javascript",
+								"exec": [
+									"if (pm.response.code === 201) {",
+									"    var jsonData = pm.response.json();",
+									"    pm.collectionVariables.set(\"groupId\", jsonData.id);",
+									"}"
+								]
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"name\": \"Ingeniería de Software 2024\",\n  \"accessCode\": \"IS2024ABC\"\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/api/Groups",
+							"host": ["{{baseUrl}}"],
+							"path": ["api", "Groups"]
+						},
+						"description": "Crea un nuevo grupo y automáticamente une al creador como miembro.\n\n- `name`: 3-100 caracteres\n- `accessCode`: 4-20 caracteres alfanuméricos"
+					},
+					"response": []
+				},
+				{
+					"name": "Update Group",
+					"request": {
+						"method": "PUT",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"name\": \"Ingeniería de Software 2024 - Actualizado\",\n  \"accessCode\": \"IS2024UPD\"\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/api/Groups/:id",
+							"host": ["{{baseUrl}}"],
+							"path": ["api", "Groups", ":id"],
+							"variable": [
+								{
+									"key": "id",
+									"value": "{{groupId}}",
+									"description": "ID del grupo a actualizar"
+								}
+							]
+						},
+						"description": "Actualiza nombre y código de acceso de un grupo existente."
+					},
+					"response": []
+				},
+				{
+					"name": "Join Group",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"accessCode\": \"IS2024ABC\"\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/api/Groups/join",
+							"host": ["{{baseUrl}}"],
+							"path": ["api", "Groups", "join"]
+						},
+						"description": "Unirse a un grupo usando el código de acceso. Retorna error si ya eres miembro."
+					},
+					"response": []
+				},
+				{
+					"name": "Delete Group",
+					"request": {
+						"method": "DELETE",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/api/Groups/:id",
+							"host": ["{{baseUrl}}"],
+							"path": ["api", "Groups", ":id"],
+							"variable": [
+								{
+									"key": "id",
+									"value": "",
+									"description": "ID del grupo a eliminar"
+								}
+							]
+						},
+						"description": "Elimina un grupo por ID. Retorna 204 si fue exitoso."
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "Projects",
+			"description": "Endpoints para gestión de proyectos estudiantiles.",
+			"item": [
+				{
+					"name": "Get All Projects",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/api/Projects",
+							"host": ["{{baseUrl}}"],
+							"path": ["api", "Projects"]
+						},
+						"description": "Obtiene todos los proyectos."
+					},
+					"response": []
+				},
+				{
+					"name": "Get My Projects",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/api/Projects/mine",
+							"host": ["{{baseUrl}}"],
+							"path": ["api", "Projects", "mine"]
+						},
+						"description": "Obtiene los proyectos del usuario autenticado (basado en los grupos a los que pertenece). Requiere autenticación."
+					},
+					"response": []
+				},
+				{
+					"name": "Get Project by ID",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/api/Projects/:id",
+							"host": ["{{baseUrl}}"],
+							"path": ["api", "Projects", ":id"],
+							"variable": [
+								{
+									"key": "id",
+									"value": "",
+									"description": "ID del proyecto"
+								}
+							]
+						},
+						"description": "Obtiene un proyecto específico por su ID."
+					},
+					"response": []
+				},
+				{
+					"name": "Create Project",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"type": "text/javascript",
+								"exec": [
+									"if (pm.response.code === 201) {",
+									"    var jsonData = pm.response.json();",
+									"    pm.collectionVariables.set(\"projectId\", jsonData.id);",
+									"}"
+								]
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"name\": \"Sitio Web de E-commerce\",\n  \"description\": \"Plataforma de e-commerce full-stack con autenticación de usuarios e integración de pagos\",\n  \"groupId\": \"{{groupId}}\",\n  \"status\": \"Active\",\n  \"category\": \"Integrador\",\n  \"videoUrl\": \"https://youtube.com/watch?v=example\",\n  \"thumbnailUrl\": \"https://example.com/thumb.jpg\",\n  \"teamMembers\": [\"{{userId}}\"],\n  \"comprehensionQuestions\": [\n    {\n      \"question\": \"¿Cuál es el objetivo principal del proyecto?\",\n      \"answer\": \"Crear una plataforma de e-commerce funcional\"\n    }\n  ]\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/api/Projects",
+							"host": ["{{baseUrl}}"],
+							"path": ["api", "Projects"]
+						},
+						"description": "Crea un nuevo proyecto.\n\n- `groupId`: ID del grupo al que pertenece (requerido)\n- `status`: Active, Finalized, Archived (default: Active)\n- `category`: default \"Integrador\"\n- `teamMembers`: array de IDs de usuarios\n- `comprehensionQuestions`: array de objetos {question, answer}"
+					},
+					"response": []
+				},
+				{
+					"name": "Update Project",
+					"request": {
+						"method": "PUT",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"name\": \"Sitio Web de E-commerce - Actualizado\",\n  \"description\": \"Plataforma actualizada con nuevas funcionalidades\",\n  \"groupId\": \"{{groupId}}\",\n  \"status\": \"Active\",\n  \"category\": \"Integrador\",\n  \"videoUrl\": \"https://youtube.com/watch?v=updated\",\n  \"thumbnailUrl\": \"https://example.com/thumb-new.jpg\",\n  \"teamMembers\": [\"{{userId}}\"],\n  \"comprehensionQuestions\": [\n    {\n      \"question\": \"¿Qué tecnologías se usaron?\",\n      \"answer\": \".NET Core y MongoDB\"\n    }\n  ]\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/api/Projects/:id",
+							"host": ["{{baseUrl}}"],
+							"path": ["api", "Projects", ":id"],
+							"variable": [
+								{
+									"key": "id",
+									"value": "{{projectId}}",
+									"description": "ID del proyecto a actualizar"
+								}
+							]
+						},
+						"description": "Actualiza un proyecto existente. Usa el mismo body que Create."
+					},
+					"response": []
+				},
+				{
+					"name": "Delete Project",
+					"request": {
+						"method": "DELETE",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/api/Projects/:id",
+							"host": ["{{baseUrl}}"],
+							"path": ["api", "Projects", ":id"],
+							"variable": [
+								{
+									"key": "id",
+									"value": "",
+									"description": "ID del proyecto a eliminar"
+								}
+							]
+						},
+						"description": "Elimina un proyecto por ID."
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "Criteria",
+			"description": "Endpoints para gestión de criterios de evaluación.",
+			"item": [
+				{
+					"name": "Get All Criteria",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/api/Criteria",
+							"host": ["{{baseUrl}}"],
+							"path": ["api", "Criteria"]
+						},
+						"description": "Obtiene todos los criterios de evaluación."
+					},
+					"response": []
+				},
+				{
+					"name": "Get Criterion by ID",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/api/Criteria/:id",
+							"host": ["{{baseUrl}}"],
+							"path": ["api", "Criteria", ":id"],
+							"variable": [
+								{
+									"key": "id",
+									"value": "",
+									"description": "ID del criterio"
+								}
+							]
+						},
+						"description": "Obtiene un criterio específico por su ID."
+					},
+					"response": []
+				},
+				{
+					"name": "Create Criterion",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"type": "text/javascript",
+								"exec": [
+									"if (pm.response.code === 201) {",
+									"    var jsonData = pm.response.json();",
+									"    pm.collectionVariables.set(\"criterionId\", jsonData.id);",
+									"}"
+								]
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"name\": \"Calidad de Código\",\n  \"description\": \"Evalúa la calidad, legibilidad y mantenibilidad del código fuente\",\n  \"maxScore\": 100\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/api/Criteria",
+							"host": ["{{baseUrl}}"],
+							"path": ["api", "Criteria"]
+						},
+						"description": "Crea un nuevo criterio de evaluación.\n\n- `name`: 3-100 caracteres (requerido)\n- `description`: 10-500 caracteres (requerido)\n- `maxScore`: 1-1000 (requerido)"
+					},
+					"response": []
+				},
+				{
+					"name": "Update Criterion",
+					"request": {
+						"method": "PUT",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"name\": \"Calidad de Código - Actualizado\",\n  \"description\": \"Evalúa la calidad, legibilidad, mantenibilidad y documentación del código\",\n  \"maxScore\": 100\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/api/Criteria/:id",
+							"host": ["{{baseUrl}}"],
+							"path": ["api", "Criteria", ":id"],
+							"variable": [
+								{
+									"key": "id",
+									"value": "{{criterionId}}",
+									"description": "ID del criterio a actualizar"
+								}
+							]
+						},
+						"description": "Actualiza un criterio existente."
+					},
+					"response": []
+				},
+				{
+					"name": "Delete Criterion",
+					"request": {
+						"method": "DELETE",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/api/Criteria/:id",
+							"host": ["{{baseUrl}}"],
+							"path": ["api", "Criteria", ":id"],
+							"variable": [
+								{
+									"key": "id",
+									"value": "",
+									"description": "ID del criterio a eliminar"
+								}
+							]
+						},
+						"description": "Elimina un criterio por ID."
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "Evaluations",
+			"description": "Endpoints para gestión de evaluaciones de proyectos.",
+			"item": [
+				{
+					"name": "Get All Evaluations",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/api/Evaluations",
+							"host": ["{{baseUrl}}"],
+							"path": ["api", "Evaluations"]
+						},
+						"description": "Obtiene todas las evaluaciones."
+					},
+					"response": []
+				},
+				{
+					"name": "Get Evaluation by ID",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/api/Evaluations/:id",
+							"host": ["{{baseUrl}}"],
+							"path": ["api", "Evaluations", ":id"],
+							"variable": [
+								{
+									"key": "id",
+									"value": "",
+									"description": "ID de la evaluación"
+								}
+							]
+						},
+						"description": "Obtiene una evaluación específica por su ID."
+					},
+					"response": []
+				},
+				{
+					"name": "Get Evaluations by Project",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/api/Evaluations/project/:projectId",
+							"host": ["{{baseUrl}}"],
+							"path": ["api", "Evaluations", "project", ":projectId"],
+							"variable": [
+								{
+									"key": "projectId",
+									"value": "{{projectId}}",
+									"description": "ID del proyecto"
+								}
+							]
+						},
+						"description": "Obtiene todas las evaluaciones de un proyecto específico."
+					},
+					"response": []
+				},
+				{
+					"name": "Create Evaluation",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"type": "text/javascript",
+								"exec": [
+									"if (pm.response.code === 201) {",
+									"    var jsonData = pm.response.json();",
+									"    pm.collectionVariables.set(\"evaluationId\", jsonData.id);",
+									"}"
+								]
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"projectId\": \"{{projectId}}\",\n  \"evaluatorId\": \"{{userId}}\",\n  \"details\": [\n    {\n      \"criterionId\": \"{{criterionId}}\",\n      \"criterionName\": \"Calidad de Código\",\n      \"score\": 85\n    }\n  ]\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/api/Evaluations",
+							"host": ["{{baseUrl}}"],
+							"path": ["api", "Evaluations"]
+						},
+						"description": "Crea una nueva evaluación para un proyecto.\n\n- `projectId`: ID del proyecto evaluado (requerido)\n- `evaluatorId`: ID del usuario evaluador (requerido)\n- `details`: array de puntuaciones por criterio\n  - `criterionId`: ID del criterio\n  - `criterionName`: nombre del criterio (copia instantánea)\n  - `score`: puntuación asignada (>= 0)\n\nEl `finalScore` se calcula automáticamente como el promedio de los scores."
+					},
+					"response": []
+				},
+				{
+					"name": "Delete Evaluation",
+					"request": {
+						"method": "DELETE",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/api/Evaluations/:id",
+							"host": ["{{baseUrl}}"],
+							"path": ["api", "Evaluations", ":id"],
+							"variable": [
+								{
+									"key": "id",
+									"value": "",
+									"description": "ID de la evaluación a eliminar"
+								}
+							]
+						},
+						"description": "Elimina una evaluación por ID."
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "Feedback",
+			"description": "Endpoints para gestión de retroalimentación de evaluaciones.",
+			"item": [
+				{
+					"name": "Get All Feedback",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/api/Feedback",
+							"host": ["{{baseUrl}}"],
+							"path": ["api", "Feedback"]
+						},
+						"description": "Obtiene toda la retroalimentación."
+					},
+					"response": []
+				},
+				{
+					"name": "Get Feedback by ID",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/api/Feedback/:id",
+							"host": ["{{baseUrl}}"],
+							"path": ["api", "Feedback", ":id"],
+							"variable": [
+								{
+									"key": "id",
+									"value": "",
+									"description": "ID del feedback (24 caracteres hex)"
+								}
+							]
+						},
+						"description": "Obtiene un feedback específico por su ID. El ID debe ser un ObjectId de MongoDB (24 caracteres hex)."
+					},
+					"response": []
+				},
+				{
+					"name": "Create Feedback",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"type": "text/javascript",
+								"exec": [
+									"if (pm.response.code === 201) {",
+									"    var jsonData = pm.response.json();",
+									"    pm.collectionVariables.set(\"feedbackId\", jsonData.id);",
+									"}"
+								]
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"evaluationId\": \"{{evaluationId}}\",\n  \"comment\": \"¡Excelente trabajo en la interfaz de usuario! Considera agregar más pruebas unitarias.\",\n  \"isPublic\": true\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/api/Feedback",
+							"host": ["{{baseUrl}}"],
+							"path": ["api", "Feedback"]
+						},
+						"description": "Crea nueva retroalimentación para una evaluación.\n\n- `evaluationId`: ID de la evaluación (requerido)\n- `comment`: texto de retroalimentación (requerido)\n- `isPublic`: si es visible para estudiantes (default: true)"
+					},
+					"response": []
+				},
+				{
+					"name": "Delete Feedback",
+					"request": {
+						"method": "DELETE",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/api/Feedback/:id",
+							"host": ["{{baseUrl}}"],
+							"path": ["api", "Feedback", ":id"],
+							"variable": [
+								{
+									"key": "id",
+									"value": "",
+									"description": "ID del feedback a eliminar (24 caracteres hex)"
+								}
+							]
+						},
+						"description": "Elimina un feedback por ID."
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "Memberships",
+			"description": "Endpoints para gestión de membresías (relación usuario-grupo).",
+			"item": [
+				{
+					"name": "Get All Memberships",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/api/Memberships",
+							"host": ["{{baseUrl}}"],
+							"path": ["api", "Memberships"]
+						},
+						"description": "Obtiene todas las membresías."
+					},
+					"response": []
+				},
+				{
+					"name": "Get Membership by ID",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/api/Memberships/:id",
+							"host": ["{{baseUrl}}"],
+							"path": ["api", "Memberships", ":id"],
+							"variable": [
+								{
+									"key": "id",
+									"value": "",
+									"description": "ID de la membresía (24 caracteres hex)"
+								}
+							]
+						},
+						"description": "Obtiene una membresía específica por su ID. El ID debe ser un ObjectId de MongoDB (24 caracteres hex)."
+					},
+					"response": []
+				},
+				{
+					"name": "Create Membership",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"userId\": \"{{userId}}\",\n  \"groupId\": \"{{groupId}}\"\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/api/Memberships",
+							"host": ["{{baseUrl}}"],
+							"path": ["api", "Memberships"]
+						},
+						"description": "Crea una nueva membresía (une un usuario a un grupo).\n\n- `userId`: ID del usuario (requerido)\n- `groupId`: ID del grupo (requerido)"
+					},
+					"response": []
+				},
+				{
+					"name": "Delete Membership",
+					"request": {
+						"method": "DELETE",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/api/Memberships/:id",
+							"host": ["{{baseUrl}}"],
+							"path": ["api", "Memberships", ":id"],
+							"variable": [
+								{
+									"key": "id",
+									"value": "",
+									"description": "ID de la membresía a eliminar (24 caracteres hex)"
+								}
+							]
+						},
+						"description": "Elimina una membresía (saca a un usuario de un grupo)."
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "Storage",
+			"description": "Endpoints para subida de archivos a Supabase Storage.",
+			"item": [
+				{
+					"name": "Upload Image",
+					"request": {
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "formdata",
+							"formdata": [
+								{
+									"key": "file",
+									"type": "file",
+									"src": "",
+									"description": "Archivo de imagen a subir (solo tipos image/*)"
+								}
+							]
+						},
+						"url": {
+							"raw": "{{baseUrl}}/api/Storage/upload",
+							"host": ["{{baseUrl}}"],
+							"path": ["api", "Storage", "upload"]
+						},
+						"description": "Sube una imagen a Supabase Storage (bucket: images/uploads).\n\n- Solo acepta archivos de tipo `image/*`\n- Retorna la URL pública del archivo subido\n- Enviar como `form-data` con key `file`"
+					},
+					"response": []
+				}
+			]
+		}
+	]
+}

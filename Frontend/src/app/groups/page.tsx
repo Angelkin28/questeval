@@ -24,7 +24,15 @@ export default function GruposPage() {
     useEffect(() => {
         const fetchGrupos = async () => {
             try {
-                const data = await api.groups.getMyGroups();
+                // El Profesor ve TODOS los grupos (los crea y gestiona)
+                // El Alumno ve solo los grupos a los que pertenece
+                const userData = localStorage.getItem('user');
+                const role = userData ? JSON.parse(userData).role : '';
+
+                const data = (role === 'Profesor' || role === 'Admin')
+                    ? await api.groups.getAll()
+                    : await api.groups.getMyGroups();
+
                 setGrupos(data);
             } catch (error) {
                 console.error('Error fetching groups:', error);

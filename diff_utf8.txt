@@ -1,0 +1,9 @@
+﻿commit 1f6cc1f8b7ea9ab7a95ac364daf80e16e74daebd
+Author: Vegdadego <jfytrgg@gmail.com>
+Date:   Fri Feb 20 08:11:23 2026 -0600
+
+    docs: Fuerza a m├║ltiples IAs a leer las arquitecturas de DB con instrucciones espec├¡ficas
+
+ .github/copilot-instructions.md | 16 ++++++++++++++++
+ .windsurfrules                  |  9 +++++++++
+ 2 files changed, 25 insertions(+)
