@@ -89,7 +89,7 @@ public class EvaluationsService : IEvaluationsService
     /// </summary>
     public async Task CreateAsync(Evaluation evaluation)
     {
-        var existing = await GetByUserAndProjectAsync(evaluation.UserId, evaluation.ProjectId);
+        var existing = await GetByUserAndProjectAsync(evaluation.UserId!, evaluation.ProjectId!);
         if (existing != null)
         {
             evaluation.Id = existing.Id;
