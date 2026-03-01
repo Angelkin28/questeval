@@ -404,7 +404,7 @@ export default function NewProjectPage() {
                                     </Button>
                                     {questionError && (
                                         <p className="text-destructive text-sm font-medium mt-2 animate-bounce flex items-center gap-1">
-                                            <span>⚠️</span> {questionError}
+                                            {questionError}
                                         </p>
                                     )}
                                 </div>

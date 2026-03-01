@@ -10,7 +10,11 @@ import {
     TrendingUp,
     Award,
     Target,
-    CheckCircle2
+    CheckCircle2,
+    Swords,
+    Zap,
+    Gamepad2,
+    Package
 } from 'lucide-react';
 
 interface ProyectoAnalisis {
@@ -64,10 +68,10 @@ export default function AnalisisDetalladoPage() {
     };
 
     const getIconoCategoria = (nombre: string) => {
-        if (nombre.includes('Shadow')) return '⚔️';
-        if (nombre.includes('Neon')) return '🚗';
-        if (nombre.includes('Zen')) return '🎮';
-        return '📦';
+        if (nombre.includes('Shadow')) return <Swords className="w-6 h-6 text-primary" strokeWidth={1.5} />;
+        if (nombre.includes('Neon')) return <Zap className="w-6 h-6 text-primary" strokeWidth={1.5} />;
+        if (nombre.includes('Zen')) return <Gamepad2 className="w-6 h-6 text-primary" strokeWidth={1.5} />;
+        return <Package className="w-6 h-6 text-primary" strokeWidth={1.5} />;
     };
 
     return (
@@ -91,8 +95,8 @@ export default function AnalisisDetalladoPage() {
                     <Button
                         onClick={() => setCategoriaActiva('Integrador')}
                         className={`rounded-full px-6 ${categoriaActiva === 'Integrador'
-                                ? 'bg-foreground text-background hover:bg-foreground/90'
-                                : 'bg-secondary text-secondary-foreground hover:bg-secondary/80'
+                            ? 'bg-foreground text-background hover:bg-foreground/90'
+                            : 'bg-secondary text-secondary-foreground hover:bg-secondary/80'
                             }`}
                     >
                         Integrador
@@ -100,8 +104,8 @@ export default function AnalisisDetalladoPage() {
                     <Button
                         onClick={() => setCategoriaActiva('Videojuegos')}
                         className={`rounded-full px-6 ${categoriaActiva === 'Videojuegos'
-                                ? 'bg-primary text-primary-foreground hover:bg-primary/90'
-                                : 'bg-secondary text-secondary-foreground hover:bg-secondary/80'
+                            ? 'bg-primary text-primary-foreground hover:bg-primary/90'
+                            : 'bg-secondary text-secondary-foreground hover:bg-secondary/80'
                             }`}
                     >
                         Videojuegos

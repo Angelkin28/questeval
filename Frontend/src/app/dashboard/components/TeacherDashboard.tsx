@@ -75,7 +75,7 @@ export default function TeacherDashboard({ user }: TeacherDashboardProps) {
             {/* Header */}
             <div className="flex items-center justify-between">
                 <div>
-                    <h1 className="text-3xl font-bold title-serif text-primary">Hola, {user.name.split(' ')[0]} 👋</h1>
+                    <h1 className="text-3xl font-bold title-serif text-primary">Hola, {user.name.split(' ')[0]}</h1>
                     <p className="text-sm text-muted-foreground">
                         Gestiona tus grupos y evaluaciones académicas.
                     </p>
