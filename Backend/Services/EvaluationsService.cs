@@ -89,8 +89,12 @@ public class EvaluationsService : IEvaluationsService
     /// </summary>
     public async Task CreateAsync(Evaluation evaluation)
     {
-        var existing = await GetByUserAndProjectAsync(evaluation.UserId!, evaluation.ProjectId!);
-        if (existing != null)
+        // En evaluaciones móviles el UserId puede ser null. Controlar fallback vacío.
+        var userIdSafe = evaluation.UserId ?? string.Empty;
+        var projectIdSafe = evaluation.ProjectId ?? string.Empty;
+
+        var existing = await GetByUserAndProjectAsync(userIdSafe, projectIdSafe);
+        if (existing != null && !string.IsNullOrEmpty(userIdSafe))
         {
             evaluation.Id = existing.Id;
             evaluation.EvaluationId = existing.EvaluationId;

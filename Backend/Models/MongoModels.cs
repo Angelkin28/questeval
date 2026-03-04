@@ -18,6 +18,7 @@ public class QuestEvalDatabaseSettings
     public string EvaluationsCollectionName { get; set; } = null!;
     public string FeedbackCollectionName { get; set; } = null!;
     public string ActivityLogsCollectionName { get; set; } = null!;
+    public string EvaluationDeviceRecordsCollectionName { get; set; } = null!;
 }
 
 /// <summary>
@@ -181,6 +182,9 @@ public class Evaluation
     // Almacena la Matrícula del Evaluador (UserId).
     public string? UserId { get; set; } 
 
+    // Identificador único de hardware encriptado (solo aplica para evaluaciones móviles sin login)
+    public string? EvaluatorDeviceId { get; set; }
+
     // Desnormalización: Rol del evaluador al momento de la evaluación (Alumno/Profesor)
     public string EvaluatorRole { get; set; } = null!;
 
@@ -229,4 +233,20 @@ public class Feedback
     public bool IsPublic { get; set; } = true;
 
     public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
+}
+
+/// <summary>
+/// Registro de seguridad para prevenir dobles evaluaciones desde la app móvil
+/// </summary>
+[BsonIgnoreExtraElements]
+public class EvaluationDeviceRecord
+{
+    [BsonId]
+    [BsonRepresentation(BsonType.ObjectId)]
+    public string? Id { get; set; }
+
+    public string ProjectId { get; set; } = string.Empty;
+    public string DeviceIdHash { get; set; } = string.Empty;
+    public string EvaluationId { get; set; } = string.Empty;
+    public DateTime EvaluatedAt { get; set; } = DateTime.UtcNow;
 }

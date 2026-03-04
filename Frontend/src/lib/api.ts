@@ -310,6 +310,24 @@ export const api = {
                 throw new Error('Error al crear proyecto');
             }
             return response.json();
+        },
+
+        generateQR: async (id: string): Promise<{ qrToken: string, expiresAt: string }> => {
+            const token = localStorage.getItem('token');
+            const headers: HeadersInit = {
+                'Content-Type': 'application/json'
+            };
+
+            if (token) {
+                headers['Authorization'] = `Bearer ${token}`;
+            }
+
+            const response = await fetch(`${API_URL}/Projects/${id}/qr`, { headers });
+
+            if (!response.ok) {
+                throw new Error('Error al generar Token QR del proyecto');
+            }
+            return response.json();
         }
     },
 
