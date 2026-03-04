@@ -10,8 +10,11 @@ import {
     ClipboardCheck,
     BookOpen,
     GraduationCap,
-    Loader2
+    Loader2,
+    QrCode,
+    X
 } from 'lucide-react';
+import QRCode from 'react-qr-code';
 import { api, Group } from '@/lib/api';
 
 interface TeacherDashboardProps {
@@ -24,6 +27,27 @@ export default function TeacherDashboard({ user }: TeacherDashboardProps) {
     const [pendingProjects, setPendingProjects] = useState<any[]>([]);
     const [totalStudents, setTotalStudents] = useState<number | null>(null);
     const [loading, setLoading] = useState(true);
+
+    const [showQrModal, setShowQrModal] = useState(false);
+    const [qrData, setQrData] = useState<{ token: string, expiresAt: string } | null>(null);
+    const [loadingQr, setLoadingQr] = useState(false);
+    const [selectedProjectName, setSelectedProjectName] = useState('');
+
+    const handleGenerateQR = async (projectId: string, projectName: string, e: React.MouseEvent) => {
+        e.stopPropagation(); // Prevenir navegación
+        setLoadingQr(true);
+        setSelectedProjectName(projectName);
+        try {
+            const data = await api.projects.generateQR(projectId);
+            setQrData({ token: data.qrToken, expiresAt: data.expiresAt });
+            setShowQrModal(true);
+        } catch (error) {
+            console.error("Error al generar QR", error);
+            alert("No se pudo generar el código QR");
+        } finally {
+            setLoadingQr(false);
+        }
+    };
 
     useEffect(() => {
         const fetchData = async () => {
@@ -182,12 +206,61 @@ export default function TeacherDashboard({ user }: TeacherDashboardProps) {
                                     <Button size="sm" variant="secondary" className="text-xs h-8">
                                         Calificar
                                     </Button>
+                                    <Button
+                                        size="sm"
+                                        variant="outline"
+                                        className="h-8 w-8 p-0 ml-2 border-primary/20 text-primary hover:bg-primary/10"
+                                        onClick={(e) => handleGenerateQR(project.id, project.name, e)}
+                                        disabled={loadingQr}
+                                    >
+                                        <QrCode className="w-4 h-4" />
+                                    </Button>
                                 </CardContent>
                             </Card>
                         ))
                     )}
                 </div>
             </div>
+
+            {/* Modal Código QR */}
+            {showQrModal && qrData && (
+                <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4 animate-in fade-in duration-200">
+                    <div className="bg-background rounded-2xl shadow-xl w-full max-w-sm border border-border">
+                        <div className="p-4 border-b border-border flex justify-between items-center bg-primary/5 rounded-t-2xl">
+                            <h3 className="font-bold text-lg flex items-center gap-2">
+                                <QrCode className="w-5 h-5 text-primary" />
+                                Código de Evaluación
+                            </h3>
+                            <button
+                                onClick={() => setShowQrModal(false)}
+                                className="text-muted-foreground hover:text-foreground hover:bg-muted p-1 rounded-full transition-colors"
+                            >
+                                <X className="w-5 h-5" />
+                            </button>
+                        </div>
+                        <div className="p-8 flex flex-col items-center">
+                            <p className="text-center font-medium mb-6 text-foreground/90">
+                                {selectedProjectName}
+                            </p>
+                            <div className="bg-white p-4 rounded-xl shadow-inner mb-6">
+                                <QRCode
+                                    value={qrData.token}
+                                    size={200}
+                                    level="M"
+                                />
+                            </div>
+                            <div className="w-full bg-secondary/50 rounded-lg p-3 text-center">
+                                <p className="text-xs text-muted-foreground font-medium uppercase tracking-wider mb-1">
+                                    Válido hasta
+                                </p>
+                                <p className="text-sm font-bold text-primary">
+                                    {new Date(qrData.expiresAt).toLocaleTimeString('es-MX', { hour: '2-digit', minute: '2-digit' })} hrs
+                                </p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            )}
         </div>
     );
 }

@@ -16,11 +16,13 @@ public class ProjectsController : ControllerBase
 {
     private readonly IProjectsService _service;
     private readonly IMembershipsService _membershipsService;
+    private readonly IMobileAuthService _mobileAuthService;
 
-    public ProjectsController(IProjectsService service, IMembershipsService membershipsService)
+    public ProjectsController(IProjectsService service, IMembershipsService membershipsService, IMobileAuthService mobileAuthService)
     {
         _service = service;
         _membershipsService = membershipsService;
+        _mobileAuthService = mobileAuthService;
     }
 
     /// <summary>
@@ -328,6 +330,30 @@ public class ProjectsController : ControllerBase
         await _service.DeleteAsync(id);
 
         return NoContent();
+    }
+
+    /// <summary>
+    /// Genera un Token temporal (Código QR) para permitir evaluación móvil sin login.
+    /// </summary>
+    /// <param name="id">ID del proyecto</param>
+    /// <returns>QR Token y fecha de expiración</returns>
+    [HttpGet("{id}/qr")]
+    [Authorize(Roles = "Profesor,Admin")] // Solo organizadores pueden generar QRs
+    [ProducesResponseType(StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
+    public async Task<IActionResult> GetQrToken(string id)
+    {
+        var project = await _service.GetByIdAsync(id);
+        if (project == null) return NotFound();
+
+        // Generar un token válido por 120 minutos (2 horas)
+        var token = _mobileAuthService.GenerateQRToken(id, 120);
+
+        return Ok(new
+        {
+            qrToken = token,
+            expiresAt = DateTime.UtcNow.AddMinutes(120).ToString("o")
+        });
     }
 }
 
