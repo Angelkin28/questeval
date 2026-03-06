@@ -43,19 +43,23 @@ public class UsersController : ControllerBase
         return users.Select(u => new UserResponse
         {
             Id = u.Id!,
-            UserId = u.UserId,   // ID incremental (matrícula)
+            UserId = u.UserId,
             Email = u.Email,
             FullName = u.FullName,
             Role = u.Role,
             AvatarUrl = u.AvatarUrl,
-            CreatedAt = u.CreatedAt
+            CreatedAt = u.CreatedAt,
+            EmailVerified = u.EmailVerified,
+            VerificationStatus = u.VerificationStatus
         }).ToList();
     }
 
     [HttpGet("{id}")]
     public async Task<ActionResult<UserResponse>> GetById(string id)
     {
-        var user = await _service.GetByIdAsync(id);
+        // Buscar primero por MongoDB ObjectId, luego por UserId incremental
+        var user = await _service.GetByIdAsync(id)
+                ?? await _service.GetByUserIdAsync(id);
 
         if (user == null)
         {
@@ -65,11 +69,14 @@ public class UsersController : ControllerBase
         var response = new UserResponse
         {
             Id = user.Id!,
+            UserId = user.UserId,
             Email = user.Email,
             FullName = user.FullName,
             Role = user.Role,
             AvatarUrl = user.AvatarUrl,
-            CreatedAt = user.CreatedAt
+            CreatedAt = user.CreatedAt,
+            EmailVerified = user.EmailVerified,
+            VerificationStatus = user.VerificationStatus
         };
 
         return response;
@@ -105,6 +112,31 @@ public class UsersController : ControllerBase
             });
         }
 
+        // Validar dominio de correo institucional (excepto cuentas de test)
+        bool isTestAccount = request.Email.ToLower().EndsWith("testquesteval@gmail.com");
+        if (!isTestAccount)
+        {
+            var emailDomain = request.Email.Split('@').LastOrDefault()?.ToLower();
+            if (request.Role == "Alumno" && emailDomain != "alumno.utmetropolitana.edu.mx")
+            {
+                return BadRequest(new ProblemDetails
+                {
+                    Title = "Correo no institucional",
+                    Status = StatusCodes.Status400BadRequest,
+                    Detail = "Los alumnos deben usar su correo institucional (@alumno.utmetropolitana.edu.mx)."
+                });
+            }
+            if (request.Role == "Profesor" && emailDomain != "utmetropolitana.edu.mx")
+            {
+                return BadRequest(new ProblemDetails
+                {
+                    Title = "Correo no institucional",
+                    Status = StatusCodes.Status400BadRequest,
+                    Detail = "Los profesores deben usar su correo institucional (@utmetropolitana.edu.mx)."
+                });
+            }
+        }
+
         // Hash password
         var passwordHash = HashPassword(request.Password);
 
@@ -115,6 +147,8 @@ public class UsersController : ControllerBase
             PasswordHash = passwordHash,
             FullName = request.FullName,
             Role = request.Role,
+            EmailVerified = isTestAccount,
+            VerificationStatus = isTestAccount ? "approved" : "pending",
             CreatedAt = DateTime.UtcNow,
             UpdatedAt = DateTime.UtcNow
         };
@@ -125,11 +159,14 @@ public class UsersController : ControllerBase
         var response = new UserResponse
         {
             Id = newUser.Id!,
+            UserId = newUser.UserId,
             Email = newUser.Email,
             FullName = newUser.FullName,
             Role = newUser.Role,
             AvatarUrl = newUser.AvatarUrl,
-            CreatedAt = newUser.CreatedAt
+            CreatedAt = newUser.CreatedAt,
+            EmailVerified = newUser.EmailVerified,
+            VerificationStatus = newUser.VerificationStatus
         };
 
         return CreatedAtAction(nameof(GetById), new { id = newUser.Id }, response);
@@ -184,7 +221,8 @@ public class UsersController : ControllerBase
         // No se requiere aprobación previa para ningún rol.
         var response = new LoginResponse
         {
-            UserId = user.Id!,
+            Id = user.Id!,
+            UserId = user.UserId,   // Matrícula incremental
             Email = user.Email,
             FullName = user.FullName,
             Role = user.Role,
@@ -311,7 +349,7 @@ public class UsersController : ControllerBase
     [Authorize(Roles = "Admin")]
     public async Task<IActionResult> Delete(string id)
     {
-        var user = await _service.GetByIdAsync(id);
+        var user = await _service.GetByIdAsync(id) ?? await _service.GetByUserIdAsync(id);
 
         if (user == null)
         {
@@ -321,8 +359,8 @@ public class UsersController : ControllerBase
         // 1. Eliminar también de Supabase Auth
         await _otpService.DeleteUserByEmailAsync(user.Email);
 
-        // 2. Eliminar de MongoDB local
-        await _service.DeleteAsync(id);
+        // 2. Eliminar de MongoDB local (usar el Id de Mongo real)
+        await _service.DeleteAsync(user.Id!);
 
         // 3. Registrar en el log
         var adminId = User.FindFirst("userId")?.Value;

@@ -77,6 +77,8 @@ export default function AdminDashboard() {
     const [changeTeacherModal, setChangeTeacherModal] = useState<AdminGroup | null>(null);
     const [selectedTeacherId, setSelectedTeacherId] = useState('');
     const [savingTeacher, setSavingTeacher] = useState(false);
+    const [confirmDeleteGroup, setConfirmDeleteGroup] = useState<AdminGroup | null>(null);
+    const [deletingGroup, setDeletingGroup] = useState(false);
 
     useEffect(() => {
         const userData = localStorage.getItem('user');
@@ -152,6 +154,29 @@ export default function AdminDashboard() {
             setTimeout(() => setError(''), 5000);
         } finally {
             setDeletingId(null);
+        }
+    };
+
+
+    const handleDeleteGroup = async () => {
+        if (!confirmDeleteGroup) return;
+        setDeletingGroup(true);
+        try {
+            const res = await fetch(`${API_URL}/Admin/groups/${confirmDeleteGroup.id}`, {
+                method: 'DELETE',
+                headers: authHeaders()
+            });
+            if (!res.ok) {
+                const errBody = await res.json().catch(() => ({}));
+                throw new Error(errBody.detail || `Error al eliminar grupo (${res.status})`);
+            }
+            setConfirmDeleteGroup(null);
+            setSuccessMsg(`Grupo "${confirmDeleteGroup.name}" eliminado correctamente.`);
+            await fetchGroups();
+        } catch (err: unknown) {
+            setError(err instanceof Error ? err.message : 'Error al eliminar el grupo');
+        } finally {
+            setDeletingGroup(false);
         }
     };
 
@@ -322,6 +347,7 @@ export default function AdminDashboard() {
                                 <RefreshCw className={`w-4 h-4 ${loading ? 'animate-spin' : ''}`} />
                                 Actualizar
                             </Button>
+
                         </div>
 
                         <Card>
@@ -459,16 +485,25 @@ export default function AdminDashboard() {
                                                             {new Date(group.createdAt).toLocaleDateString('es-MX', { day: '2-digit', month: 'short', year: 'numeric' })}
                                                         </td>
                                                         <td className="px-6 py-4 text-center">
-                                                            <button
-                                                                onClick={() => {
-                                                                    setChangeTeacherModal(group);
-                                                                    setSelectedTeacherId(group.teacherId || '');
-                                                                }}
-                                                                className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-primary/10 text-primary hover:bg-primary/20 font-medium text-xs transition-colors"
-                                                            >
-                                                                <ChevronDown className="w-3.5 h-3.5" />
-                                                                Cambiar Maestro
-                                                            </button>
+                                                            <div className="flex items-center justify-center gap-2">
+                                                                <button
+                                                                    onClick={() => {
+                                                                        setChangeTeacherModal(group);
+                                                                        setSelectedTeacherId(group.teacherId || '');
+                                                                    }}
+                                                                    className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-primary/10 text-primary hover:bg-primary/20 font-medium text-xs transition-colors"
+                                                                >
+                                                                    <ChevronDown className="w-3.5 h-3.5" />
+                                                                    Cambiar Maestro
+                                                                </button>
+                                                                <button
+                                                                    onClick={() => setConfirmDeleteGroup(group)}
+                                                                    className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-destructive/10 text-destructive hover:bg-destructive/20 font-medium text-xs transition-colors"
+                                                                >
+                                                                    <Trash2 className="w-3.5 h-3.5" />
+                                                                    Eliminar
+                                                                </button>
+                                                            </div>
                                                         </td>
                                                     </tr>
                                                 ))}
@@ -558,6 +593,37 @@ export default function AdminDashboard() {
                         <div className="flex gap-3">
                             <button onClick={() => setConfirmDelete(null)} className="flex-1 py-2.5 rounded-lg border border-border text-sm font-medium hover:bg-muted transition-colors">Cancelar</button>
                             <button onClick={handleDeleteConfirm} className="flex-1 py-2.5 rounded-lg bg-red-600 text-white text-sm font-medium hover:bg-red-700 transition-colors">Sí, eliminar</button>
+                        </div>
+                    </div>
+                </div>
+            )}
+
+            {/* Modal: Confirmar Eliminar Grupo */}
+            {confirmDeleteGroup && (
+                <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm p-4">
+                    <div className="bg-background rounded-2xl shadow-2xl p-6 w-full max-w-sm border border-border animate-fade-in">
+                        <div className="flex items-center gap-3 mb-4">
+                            <div className="w-10 h-10 rounded-full bg-destructive/10 flex items-center justify-center flex-shrink-0">
+                                <Trash2 className="w-5 h-5 text-destructive" />
+                            </div>
+                            <div>
+                                <h3 className="font-semibold text-base">Eliminar Grupo</h3>
+                                <p className="text-xs text-muted-foreground">{confirmDeleteGroup.name}</p>
+                            </div>
+                        </div>
+                        <p className="text-sm text-muted-foreground mb-4">
+                            ¿Estás seguro de que deseas eliminar este grupo? Se eliminarán también todas las membresías asociadas. Esta acción no se puede deshacer.
+                        </p>
+                        <div className="flex gap-3">
+                            <button onClick={() => setConfirmDeleteGroup(null)} className="flex-1 py-2.5 rounded-lg border border-border text-sm font-medium hover:bg-muted transition-colors">Cancelar</button>
+                            <button
+                                onClick={handleDeleteGroup}
+                                disabled={deletingGroup}
+                                className="flex-1 py-2.5 rounded-lg bg-destructive text-destructive-foreground text-sm font-medium hover:bg-destructive/90 transition-colors disabled:opacity-50 flex items-center justify-center gap-2"
+                            >
+                                {deletingGroup ? <Loader2 className="w-4 h-4 animate-spin" /> : <Trash2 className="w-4 h-4" />}
+                                Eliminar
+                            </button>
                         </div>
                     </div>
                 </div>

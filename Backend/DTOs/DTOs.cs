@@ -28,12 +28,17 @@ public class CreateCriterionRequest
     public string Description { get; set; } = null!;
 
     /// <summary>
-    /// Puntuación máxima posible para este criterio
+    /// Puntuación máxima posible para este criterio (máximo 100)
     /// </summary>
     /// <example>100</example>
     [Required(ErrorMessage = "MaxScore es requerido.")]
     [Range(1, 100, ErrorMessage = "MaxScore debe estar entre 1 y 100.")]
     public int MaxScore { get; set; }
+
+    /// <summary>
+    /// ID del proyecto al que pertenece este criterio (opcional — si se omite es global)
+    /// </summary>
+    public string? ProjectId { get; set; }
 }
 
 /// <summary>
@@ -52,6 +57,11 @@ public class CriterionResponse
     /// </summary>
     /// <example>C-001</example>
     public string? CriteriaId { get; set; }
+
+    /// <summary>
+    /// ID del proyecto al que pertenece este criterio
+    /// </summary>
+    public string? ProjectId { get; set; }
 
     /// <summary>
     /// Nombre del criterio

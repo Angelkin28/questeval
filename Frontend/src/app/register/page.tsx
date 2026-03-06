@@ -45,6 +45,22 @@ export default function RegisterPage() {
             return;
         }
 
+        const emailLower = formData.email.toLowerCase();
+        const emailDomain = emailLower.split('@')[1];
+        const isTestEmail = emailLower.endsWith('testquesteval@gmail.com');
+        if (!isTestEmail) {
+            if (formData.role === 'Alumno' && emailDomain !== 'alumno.utmetropolitana.edu.mx') {
+                setError('Los alumnos deben usar su correo Institucional');
+                setLoading(false);
+                return;
+            }
+            if (formData.role === 'Profesor' && emailDomain !== 'utmetropolitana.edu.mx') {
+                setError('Los Maestros deben usar su correo Institucional');
+                setLoading(false);
+                return;
+            }
+        }
+
         try {
             await api.auth.register({
                 email: formData.email,
@@ -54,22 +70,31 @@ export default function RegisterPage() {
                 role: formData.role
             });
 
-            // Enviar OTP automáticamente
-            try {
-                await fetch('http://localhost:5122/api/Users/send-otp', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ email: formData.email })
-                });
-            } catch (otpError) {
-                console.error('Error enviando OTP:', otpError);
-                // Continuamos aunque falle el envío automático, el usuario puede pedir reenvío
-            }
+            const isTestEmail = formData.email.toLowerCase().endsWith('testquesteval@gmail.com');
 
-            // Redirigir a verificación
-            router.push(`/verify-otp?email=${encodeURIComponent(formData.email)}&role=${formData.role}`);
+            if (isTestEmail) {
+                // Cuentas de test ya están verificadas y aprobadas, ir directo al login
+                router.push(`/login?registered=true`);
+            } else {
+                // Enviar OTP automáticamente
+                try {
+                    await fetch('http://localhost:5122/api/Users/send-otp', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ email: formData.email })
+                    });
+                } catch (otpError) {
+                    console.error('Error enviando OTP:', otpError);
+                }
+                router.push(`/verify-otp?email=${encodeURIComponent(formData.email)}&role=${formData.role}`);
+            }
         } catch (err: any) {
-            setError(err.message || 'Error al registrarse');
+            const msg: string = err.message || '';
+            if (msg.toLowerCase().includes('already exists') || msg.toLowerCase().includes('already exist') || msg.toLowerCase().includes('exist')) {
+                setError('Correo ya existente, favor de ingresar uno nuevo');
+            } else {
+                setError(msg || 'Error al registrarse');
+            }
         } finally {
             setLoading(false);
         }
@@ -165,7 +190,7 @@ export default function RegisterPage() {
                                 <Input
                                     name="email"
                                     type="email"
-                                    placeholder="edu.mx"
+                                    placeholder="Correo institucional"
                                     value={formData.email}
                                     onChange={handleChange}
                                     required

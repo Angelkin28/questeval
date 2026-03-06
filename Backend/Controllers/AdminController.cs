@@ -1,5 +1,7 @@
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Authorization;
+using Microsoft.Extensions.Options;
+using MongoDB.Driver;
 using Backend.Models;
 using Backend.Services.Interfaces;
 
@@ -18,17 +20,23 @@ public class AdminController : ControllerBase
     private readonly IUsersService _usersService;
     private readonly IMembershipsService _membershipsService;
     private readonly IActivityLogService _logService;
+    private readonly IMongoCollection<DatabaseCounters> _counters;
 
     public AdminController(
         IGroupsService groupsService,
         IUsersService usersService,
         IMembershipsService membershipsService,
-        IActivityLogService logService)
+        IActivityLogService logService,
+        IOptions<QuestEvalDatabaseSettings> dbSettings)
     {
         _groupsService = groupsService;
         _usersService = usersService;
         _membershipsService = membershipsService;
         _logService = logService;
+
+        var client = new MongoClient(dbSettings.Value.ConnectionString);
+        var db = client.GetDatabase(dbSettings.Value.DatabaseName);
+        _counters = db.GetCollection<DatabaseCounters>("database_counters");
     }
 
     // ==================== GRUPOS ====================
@@ -136,6 +144,28 @@ public class AdminController : ControllerBase
         group.TeacherId = request.TeacherId;
         await _groupsService.UpdateAsync(groupId, group);
 
+        // Eliminar la membresía del maestro anterior en este grupo
+        if (!string.IsNullOrEmpty(oldTeacherId) && oldTeacherId != request.TeacherId)
+        {
+            var oldMemberships = await _membershipsService.GetByUserIdAsync(oldTeacherId);
+            var oldTeacherMembership = oldMemberships.FirstOrDefault(m => m.GroupId == group.GroupId);
+            if (oldTeacherMembership != null)
+                await _membershipsService.DeleteAsync(oldTeacherMembership.Id!);
+        }
+
+        // Crear membresía para el nuevo maestro si no la tiene ya
+        var newTeacherMemberships = await _membershipsService.GetByUserIdAsync(request.TeacherId);
+        var alreadyMember = newTeacherMemberships.Any(m => m.GroupId == group.GroupId);
+        if (!alreadyMember)
+        {
+            await _membershipsService.CreateAsync(new Membership
+            {
+                UserId = request.TeacherId,
+                GroupId = group.GroupId!,
+                JoinedAt = DateTime.UtcNow
+            });
+        }
+
         var adminId = User.FindFirst("userId")?.Value;
         var adminName = User.FindFirst(System.Security.Claims.ClaimTypes.Name)?.Value ?? "Admin";
         await _logService.LogAsync(
@@ -144,6 +174,96 @@ public class AdminController : ControllerBase
             "info", adminId, adminName, groupId, group.Name);
 
         return Ok(new { message = $"Maestro del grupo actualizado a {newTeacher.FullName}." });
+    }
+
+    /// <summary>
+    /// Eliminar un grupo y todas sus membresías (solo Admin)
+    /// </summary>
+    [HttpDelete("groups/{groupId}")]
+    [ProducesResponseType(StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
+    public async Task<IActionResult> DeleteGroup(string groupId)
+    {
+        var group = await _groupsService.GetByIdAsync(groupId);
+        if (group == null) return NotFound(new { detail = "Grupo no encontrado." });
+
+        // Eliminar todas las membresías del grupo
+        var memberships = await _membershipsService.GetByGroupIdAsync(group.GroupId!);
+        foreach (var m in memberships)
+        {
+            if (m.Id != null)
+                await _membershipsService.DeleteAsync(m.Id);
+        }
+
+        // Eliminar el grupo
+        await _groupsService.DeleteAsync(groupId);
+
+        var adminId = User.FindFirst("userId")?.Value;
+        var adminName = User.FindFirst(System.Security.Claims.ClaimTypes.Name)?.Value ?? "Admin";
+        await _logService.LogAsync("group_deleted",
+            $"Grupo \"{group.Name}\" (ID: {group.GroupId}) eliminado con {memberships.Count} membresías.",
+            "warning", adminId, adminName, groupId, group.Name);
+
+        return Ok(new { message = $"Grupo \"{group.Name}\" eliminado correctamente." });
+    }
+
+    // ==================== CONTADORES ====================
+
+    /// <summary>
+    /// Reinicia los contadores incrementales de una o todas las colecciones.
+    /// Recalcula el máximo ID existente para evitar duplicados.
+    /// </summary>
+    [HttpPost("reset-counters")]
+    [ProducesResponseType(StatusCodes.Status200OK)]
+    public async Task<IActionResult> ResetCounters([FromQuery] string? collection = null)
+    {
+        var targets = new[] { "users", "groups", "memberships", "projects", "criteria", "evaluations", "feedback" };
+
+        if (!string.IsNullOrEmpty(collection) && !targets.Contains(collection))
+            return BadRequest(new { detail = $"Colección no reconocida. Válidas: {string.Join(", ", targets)}" });
+
+        var toReset = string.IsNullOrEmpty(collection) ? targets : new[] { collection };
+        var results = new List<object>();
+
+        foreach (var col in toReset)
+        {
+            // Calcular el máximo UserId/CriteriaId/etc. existente para no generar duplicados
+            // Si no hay registros, resetea a 0
+            long maxExisting = 0;
+            try
+            {
+                // Obtener todos los IDs incrementales de la colección para calcular el máximo
+                var rawCol = _counters.Database.GetCollection<MongoDB.Bson.BsonDocument>(col);
+                var allDocs = await rawCol.Find(MongoDB.Bson.BsonDocument.Parse("{}")).ToListAsync();
+                foreach (var doc in allDocs)
+                {
+                    // Buscar campos de ID incremental (UserId, GroupId, CriteriaId, etc.)
+                    foreach (var field in new[] { "UserId", "GroupId", "MiembroId", "ProjectId", "CriteriaId", "EvaluationId", "FeedbackId" })
+                    {
+                        if (doc.Contains(field) && doc[field].IsString)
+                        {
+                            if (long.TryParse(doc[field].AsString, out var val) && val > maxExisting)
+                                maxExisting = val;
+                        }
+                    }
+                }
+            }
+            catch { /* Si la colección está vacía o no existe, maxExisting queda en 0 */ }
+
+            var filter = Builders<DatabaseCounters>.Filter.Eq(x => x.CollectionName, col);
+            var update = Builders<DatabaseCounters>.Update.Set(x => x.LastId, maxExisting);
+            await _counters.UpdateOneAsync(filter, update, new UpdateOptions { IsUpsert = true });
+
+            results.Add(new { collection = col, resetTo = maxExisting });
+        }
+
+        var adminId = User.FindFirst("userId")?.Value;
+        var adminName = User.FindFirst(System.Security.Claims.ClaimTypes.Name)?.Value ?? "Admin";
+        await _logService.LogAsync("counters_reset",
+            $"Contadores reseteados: {string.Join(", ", toReset)}",
+            "warning", adminId, adminName, null, null);
+
+        return Ok(new { message = "Contadores actualizados.", results });
     }
 
     // ==================== LOGS ====================

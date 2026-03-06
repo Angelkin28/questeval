@@ -25,13 +25,19 @@ public class CriteriaController : ControllerBase
     /// <response code="200">Retorna la lista de criterios</response>
     [HttpGet]
     [ProducesResponseType(typeof(List<CriterionResponse>), StatusCodes.Status200OK)]
-    public async Task<ActionResult<List<CriterionResponse>>> Get()
+    public async Task<ActionResult<List<CriterionResponse>>> Get([FromQuery] string? projectId = null)
     {
-        var criteria = await _service.GetAllAsync();
+        List<Criterion> criteria;
+        if (!string.IsNullOrEmpty(projectId))
+            criteria = await _service.GetByProjectIdAsync(projectId);
+        else
+            criteria = await _service.GetAllAsync();
+
         var response = criteria.Select(c => new CriterionResponse
         {
             Id = c.Id!,
             CriteriaId = c.CriteriaId,
+            ProjectId = c.ProjectId,
             Name = c.Name,
             Description = c.Description,
             MaxScore = c.MaxScore
@@ -49,7 +55,7 @@ public class CriteriaController : ControllerBase
     [HttpGet("{id}")]
     [ProducesResponseType(typeof(CriterionResponse), StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
-    public async Task<ActionResult<CriterionResponse>> Get(string id)
+    public async Task<ActionResult<CriterionResponse>> GetById(string id)
     {
         var criterion = await _service.GetByIdAsync(id);
 
@@ -62,6 +68,7 @@ public class CriteriaController : ControllerBase
         {
             Id = criterion.Id!,
             CriteriaId = criterion.CriteriaId,
+            ProjectId = criterion.ProjectId,
             Name = criterion.Name,
             Description = criterion.Description,
             MaxScore = criterion.MaxScore
@@ -87,7 +94,8 @@ public class CriteriaController : ControllerBase
         {
             Name = request.Name,
             Description = request.Description,
-            MaxScore = request.MaxScore
+            MaxScore = Math.Min(request.MaxScore, 100),
+            ProjectId = request.ProjectId
         };
 
         await _service.CreateAsync(newCriterion);
@@ -96,12 +104,13 @@ public class CriteriaController : ControllerBase
         {
             Id = newCriterion.Id!,
             CriteriaId = newCriterion.CriteriaId,
+            ProjectId = newCriterion.ProjectId,
             Name = newCriterion.Name,
             Description = newCriterion.Description,
             MaxScore = newCriterion.MaxScore
         };
 
-        return CreatedAtAction(nameof(Get), new { id = newCriterion.Id }, response);
+        return CreatedAtAction(nameof(GetById), new { id = newCriterion.Id }, response);
     }
 
     /// <summary>
