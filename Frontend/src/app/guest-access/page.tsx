@@ -64,7 +64,8 @@ export default function GuestAccessPage() {
             // Almacenar datos de sesión
             localStorage.setItem('token', response.token);
             localStorage.setItem('user', JSON.stringify({
-                userId: response.id,
+                userId: response.id,           // MongoDB ObjectId para crear evaluaciones
+                guestUserId: response.userId,  // ID incremental como referencia visual
                 fullName: response.fullName,
                 role: response.role,
                 token: response.token,

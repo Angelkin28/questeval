@@ -136,8 +136,9 @@ public class EvaluationsController : ControllerBase
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
     public async Task<ActionResult<EvaluationResponse>> Post([FromBody] CreateEvaluationRequest request)
     {
-        // Resolver rol y nombre del evaluador desde la base de datos
-        var evaluator = await _usersService.GetByUserIdAsync(request.UserId);
+        // Resolver rol y nombre del evaluador: buscar primero por UserId incremental, luego por MongoDB ObjectId
+        var evaluator = await _usersService.GetByUserIdAsync(request.UserId)
+                     ?? await _usersService.GetByIdAsync(request.UserId);
         if (evaluator == null) return BadRequest("El usuario evaluador no existe.");
 
         var evaluatorRole = evaluator.Role;

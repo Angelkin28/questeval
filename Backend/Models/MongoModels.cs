@@ -160,6 +160,8 @@ public class Criterion
 
     public string? CriteriaId { get; set; } // Antes Codice
 
+    public string? ProjectId { get; set; } // ID del proyecto al que pertenece este criterio
+
     public string Name { get; set; } = null!;
     public string Description { get; set; } = null!;
     public int MaxScore { get; set; }

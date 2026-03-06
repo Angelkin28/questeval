@@ -74,8 +74,8 @@ export default function GuestProjectPage() {
                 const projectData = await api.projects.getById(projectId);
                 setProject(projectData);
 
-                // Cargar criterios
-                const criteriaData = await api.criteria.getAll();
+                // Cargar criterios del proyecto específico
+                const criteriaData = await api.criteria.getByProject(projectId);
                 setCriteria(criteriaData);
 
                 // Inicializar scores

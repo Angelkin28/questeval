@@ -15,6 +15,11 @@ public interface ICriteriaService
     Task<List<Criterion>> GetAllAsync();
 
     /// <summary>
+    /// Obtiene los criterios de un proyecto específico.
+    /// </summary>
+    Task<List<Criterion>> GetByProjectIdAsync(string projectId);
+
+    /// <summary>
     /// Busca un criterio específico por su ID único.
     /// </summary>
     /// <param name="id">ID del criterio (MongoDB ObjectId)</param>

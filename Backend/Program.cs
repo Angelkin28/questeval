@@ -177,6 +177,25 @@ builder.Services.AddSwaggerGen(options =>
     {
         options.IncludeXmlComments(sharedXmlPath);
     }
+
+    // Agregar soporte para JWT Bearer en Swagger UI (botón "Authorize")
+    options.AddSecurityDefinition("Bearer", new Microsoft.OpenApi.OpenApiSecurityScheme
+    {
+        Name = "Authorization",
+        Type = Microsoft.OpenApi.SecuritySchemeType.Http,
+        Scheme = "Bearer",
+        BearerFormat = "JWT",
+        In = Microsoft.OpenApi.ParameterLocation.Header,
+        Description = "Ingresa tu token JWT. Ejemplo: eyJhbGci..."
+    });
+
+    options.AddSecurityRequirement(document => new Microsoft.OpenApi.OpenApiSecurityRequirement
+    {
+        {
+            new Microsoft.OpenApi.OpenApiSecuritySchemeReference("Bearer", document),
+            new List<string>()
+        }
+    });
 });
 
 // ==================== CONSTRUIR APLICACIÓN ====================

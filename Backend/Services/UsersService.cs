@@ -46,8 +46,13 @@ public class UsersService : IUsersService
     public async Task<List<User>> GetAllAsync() =>
         await _collection.Find(_ => true).ToListAsync();
 
-    public async Task<User?> GetByIdAsync(string id) =>
-        await _collection.Find(x => x.Id == id).FirstOrDefaultAsync();
+    public async Task<User?> GetByIdAsync(string id)
+    {
+        // Si no es un ObjectId válido, evitamos el FormatException del driver de MongoDB
+        if (!MongoDB.Bson.ObjectId.TryParse(id, out _))
+            return null;
+        return await _collection.Find(x => x.Id == id).FirstOrDefaultAsync();
+    }
 
     public async Task<User?> GetByEmailAsync(string email) =>
         await _collection.Find(x => x.Email == email).FirstOrDefaultAsync();

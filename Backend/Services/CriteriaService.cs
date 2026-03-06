@@ -50,6 +50,9 @@ public class CriteriaService : ICriteriaService
     public async Task<List<Criterion>> GetAllAsync() =>
         await _collection.Find(_ => true).ToListAsync();
 
+    public async Task<List<Criterion>> GetByProjectIdAsync(string projectId) =>
+        await _collection.Find(x => x.ProjectId == projectId).ToListAsync();
+
     /// <summary>
     /// Busca un criterio específico por su ID único de MongoDB.
     /// </summary>

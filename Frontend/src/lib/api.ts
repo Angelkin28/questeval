@@ -102,6 +102,8 @@ export interface UpdateGroupRequest {
 
 export interface CriterionResponse {
     id: string;
+    criteriaId?: string;
+    projectId?: string;
     name: string;
     description: string;
     maxScore: number;
@@ -173,11 +175,10 @@ export const api = {
             });
 
             if (!response.ok) {
-                // Handle specific error formats from ASP.NET Core
                 let errorMessage = 'Error al registrarse';
                 try {
                     const error = await response.json();
-                    errorMessage = error.message || JSON.stringify(error) || errorMessage;
+                    errorMessage = error.message || error.detail || error.title || errorMessage;
                 } catch (e) {
                     errorMessage = response.statusText;
                 }
@@ -477,12 +478,26 @@ export const api = {
             const headers: HeadersInit = { 'Content-Type': 'application/json' };
             if (token) headers['Authorization'] = `Bearer ${token}`;
 
+            // Mapear nombres de campo al formato que espera el backend
+            const body = {
+                projectId: data.projectId,
+                userId: data.evaluatorId,           // backend espera "userId" no "evaluatorId"
+                details: data.details.map(d => ({
+                    criteriaId: d.criterionId,      // backend espera "criteriaId" no "criterionId"
+                    criterionName: d.criterionName,
+                    score: d.score,
+                })),
+            };
+
             const response = await fetch(`${API_URL}/Evaluations`, {
                 method: 'POST',
                 headers,
-                body: JSON.stringify(data),
+                body: JSON.stringify(body),
             });
-            if (!response.ok) throw new Error('Error al crear evaluación');
+            if (!response.ok) {
+                const errBody = await response.json().catch(() => ({}));
+                throw new Error(errBody.detail || errBody.title || errBody.message || 'Error al crear evaluación');
+            }
             return response.json();
         }
     },
@@ -495,7 +510,15 @@ export const api = {
 
             const response = await fetch(`${API_URL}/Criteria`, { headers });
             if (!response.ok) throw new Error('Error al obtener criterios');
-            if (!response.ok) throw new Error('Error al obtener criterios');
+            return response.json();
+        },
+        getByProject: async (projectId: string): Promise<CriterionResponse[]> => {
+            const token = localStorage.getItem('token');
+            const headers: HeadersInit = { 'Content-Type': 'application/json' };
+            if (token) headers['Authorization'] = `Bearer ${token}`;
+
+            const response = await fetch(`${API_URL}/Criteria?projectId=${projectId}`, { headers });
+            if (!response.ok) throw new Error('Error al obtener criterios del proyecto');
             return response.json();
         },
         create: async (data: Omit<CriterionResponse, 'id'>): Promise<CriterionResponse> => {
