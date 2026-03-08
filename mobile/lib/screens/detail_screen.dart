@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:carousel_slider/carousel_slider.dart';
+import 'package:go_router/go_router.dart';
 import '../providers/data_provider.dart';
 import '../providers/theme_provider.dart';
 import '../providers/auth_provider.dart';
@@ -166,19 +167,25 @@ class _ProjectDetailScreenState extends ConsumerState<ProjectDetailScreen> {
                     border: OutlineInputBorder(borderRadius: BorderRadius.circular(15)),
                   ),
                 ),
-                const SizedBox(height: 40),
+                const SizedBox(height: 30),
+                // ── Botón evaluar vía QR (visitantes de feria) ──────
+                _QrEvaluateButton(
+                  accentColor: accentColor,
+                  projectName: project.title,
+                ),
+                const SizedBox(height: 16),
                 if (!widget.readOnly)
                   SizedBox(
                     width: double.infinity,
                     height: 60,
-                    child: ElevatedButton(
+                    child: OutlinedButton(
                       onPressed: _submit,
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: accentColor,
-                        foregroundColor: Colors.white,
+                      style: OutlinedButton.styleFrom(
+                        foregroundColor: accentColor,
+                        side: BorderSide(color: accentColor),
                         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(15)),
                       ),
-                      child: const Text('ENVIAR EVALUACIÓN', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
+                      child: const Text('EVALUAR (Vista Web)', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 14)),
                     ),
                   ),
                 const SizedBox(height: 50),
@@ -248,3 +255,97 @@ class _ProjectDetailScreenState extends ConsumerState<ProjectDetailScreen> {
     );
   }
 }
+
+// ─────────────────────────────────────────────────────────────────────
+// Botón QR para evaluar (visitantes de feria — modo móvil)
+// ─────────────────────────────────────────────────────────────────────
+
+class _QrEvaluateButton extends StatelessWidget {
+  final Color accentColor;
+  final String projectName;
+
+  const _QrEvaluateButton({
+    required this.accentColor,
+    required this.projectName,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      decoration: BoxDecoration(
+        gradient: LinearGradient(
+          colors: [
+            accentColor,
+            accentColor.withAlpha(180),
+          ],
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+        ),
+        borderRadius: BorderRadius.circular(18),
+        boxShadow: [
+          BoxShadow(
+            color: accentColor.withAlpha(100),
+            blurRadius: 20,
+            offset: const Offset(0, 6),
+          ),
+        ],
+      ),
+      child: Material(
+        color: Colors.transparent,
+        child: InkWell(
+          onTap: () => context.push('/scan'),
+          borderRadius: BorderRadius.circular(18),
+          child: Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 18),
+            child: Row(
+              children: [
+                Container(
+                  padding: const EdgeInsets.all(10),
+                  decoration: BoxDecoration(
+                    color: Colors.white.withAlpha(40),
+                    shape: BoxShape.circle,
+                  ),
+                  child: const Icon(
+                    Icons.qr_code_scanner,
+                    color: Colors.white,
+                    size: 28,
+                  ),
+                ),
+                const SizedBox(width: 16),
+                const Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        'Evaluar este proyecto',
+                        style: TextStyle(
+                          color: Colors.white,
+                          fontSize: 16,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                      SizedBox(height: 2),
+                      Text(
+                        'Escanea el QR del stand para comenzar',
+                        style: TextStyle(
+                          color: Colors.white70,
+                          fontSize: 12,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+                const Icon(
+                  Icons.arrow_forward_ios_rounded,
+                  color: Colors.white70,
+                  size: 16,
+                ),
+              ],
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+}
+

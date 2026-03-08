@@ -6,18 +6,39 @@ import '../screens/detail_screen.dart';
 import '../screens/analysis_screen.dart';
 import '../screens/profile_screen.dart';
 import '../screens/login_screen.dart';
+import '../screens/qr_scanner_screen.dart';
+import '../screens/evaluation_screen.dart';
+import '../screens/evaluation_success_screen.dart';
 
 final _rootNavigatorKey = GlobalKey<NavigatorState>();
 final _shellNavigatorKey = GlobalKey<NavigatorState>();
 
 final appRouter = GoRouter(
   navigatorKey: _rootNavigatorKey,
-  initialLocation: '/login',
+  initialLocation: '/projects',
   routes: [
+    // ── Sin barra de navegación inferior ──────────────────────────
     GoRoute(
       path: '/login',
       builder: (context, state) => const LoginScreen(),
     ),
+    GoRoute(
+      path: '/scan',
+      parentNavigatorKey: _rootNavigatorKey,
+      builder: (context, state) => const QrScannerScreen(),
+    ),
+    GoRoute(
+      path: '/evaluation',
+      parentNavigatorKey: _rootNavigatorKey,
+      builder: (context, state) => const EvaluationScreen(),
+    ),
+    GoRoute(
+      path: '/evaluation/success',
+      parentNavigatorKey: _rootNavigatorKey,
+      builder: (context, state) => const EvaluationSuccessScreen(),
+    ),
+
+    // ── Con barra de navegación inferior (ShellRoute) ──────────────
     ShellRoute(
       navigatorKey: _shellNavigatorKey,
       builder: (context, state, child) => MainScaffold(child: child),
@@ -30,8 +51,10 @@ final appRouter = GoRouter(
               path: 'detail/:id',
               builder: (context, state) {
                 final id = state.pathParameters['id']!;
-                final isReadOnly = state.uri.queryParameters['readOnly'] == 'true';
-                return ProjectDetailScreen(projectId: id, readOnly: isReadOnly);
+                final isReadOnly =
+                    state.uri.queryParameters['readOnly'] == 'true';
+                return ProjectDetailScreen(
+                    projectId: id, readOnly: isReadOnly);
               },
             ),
           ],
@@ -48,3 +71,4 @@ final appRouter = GoRouter(
     ),
   ],
 );
+

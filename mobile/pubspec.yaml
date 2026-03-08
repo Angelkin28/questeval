@@ -45,6 +45,13 @@ dependencies:
   fl_chart: ^0.70.0
   google_fonts: ^6.2.1
 
+  # ── Módulo móvil QR + Evaluación ──────────────────────────────
+  mobile_scanner: ^5.2.3            # Escaneo de QR con cámara nativa
+  device_info_plus: ^10.1.2         # DeviceId nativo (Android/iOS)
+  permission_handler: ^11.3.1       # Permiso de cámara en runtime
+  flutter_secure_storage: ^9.2.2    # Guardar sessionToken de forma segura
+  uuid: ^4.5.1                      # UUID para fallback de DeviceId
+
 dev_dependencies:
   flutter_test:
     sdk: flutter
