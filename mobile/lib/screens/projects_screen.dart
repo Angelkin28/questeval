@@ -160,7 +160,7 @@ class _ProjectCard extends StatelessWidget {
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
       elevation: 4,
       child: InkWell(
-        onTap: () => context.push('/projects/detail/${project.id}'),
+        onTap: () => context.push('/projects/detail/${project.id}?readOnly=true'),
         borderRadius: BorderRadius.circular(20),
         child: Padding(
           padding: const EdgeInsets.all(20),

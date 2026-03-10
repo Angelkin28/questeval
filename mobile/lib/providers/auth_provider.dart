@@ -66,7 +66,7 @@ class AuthNotifier extends StateNotifier<AuthState> {
     state = AuthState();
   }
 
-  Future<void> loginAsGuest() async {
+  Future<void> loginAsGuest({String guestName = 'Invitado'}) async {
     state = state.copyWith(isLoading: true, error: null);
     // Simular un retardo pequeño para feedback visual
     await Future.delayed(const Duration(milliseconds: 500));
@@ -75,7 +75,7 @@ class AuthNotifier extends StateNotifier<AuthState> {
       id: 'guest_id',
       userId: 'guest',
       email: 'invitado@questeval.com',
-      fullName: 'Invitado',
+      fullName: guestName,
       role: 'Invitado',
       token: 'guest_token',
       emailVerified: true,

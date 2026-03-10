@@ -7,6 +7,7 @@ import '../../features/evaluation/providers/evaluation_provider.dart';
 import '../../theme/colors.dart';
 import '../../theme/app_theme.dart';
 import '../../providers/theme_provider.dart';
+import '../../providers/auth_provider.dart';
 
 class EvaluationScreen extends ConsumerStatefulWidget {
   const EvaluationScreen({super.key});
@@ -18,7 +19,6 @@ class EvaluationScreen extends ConsumerStatefulWidget {
 class _EvaluationScreenState extends ConsumerState<EvaluationScreen>
     with SingleTickerProviderStateMixin {
   final Map<String, double> _scores = {};
-  final TextEditingController _nameController = TextEditingController();
   late AnimationController _fadeController;
   late Animation<double> _fadeAnim;
   bool _initialized = false;
@@ -38,7 +38,6 @@ class _EvaluationScreenState extends ConsumerState<EvaluationScreen>
   @override
   void dispose() {
     _fadeController.dispose();
-    _nameController.dispose();
     super.dispose();
   }
 
@@ -55,11 +54,12 @@ class _EvaluationScreenState extends ConsumerState<EvaluationScreen>
 
     HapticFeedback.lightImpact();
 
+    final authState = ref.read(authProvider);
+    final guestName = authState.user?.fullName;
+
     await ref.read(evaluationProvider.notifier).submit(
           scores: _scores,
-          guestName: _nameController.text.trim().isEmpty
-              ? null
-              : _nameController.text.trim(),
+          guestName: guestName == 'Invitado' ? null : guestName,
         );
 
     if (!mounted) return;
@@ -187,14 +187,7 @@ class _EvaluationScreenState extends ConsumerState<EvaluationScreen>
 
                   const SizedBox(height: 28),
 
-                  // ── Campo nombre opcional ──────────────────────────
-                  _NameField(
-                    controller: _nameController,
-                    isDark: isDark,
-                    accentColor: accentColor,
-                  ),
 
-                  const SizedBox(height: 20),
 
                   // ── Puntaje total ──────────────────────────────────
                   _TotalScoreBar(
@@ -490,55 +483,6 @@ class _CriterionCard extends StatelessWidget {
   }
 }
 
-// ─────────────────────────────────────────────────────────────────────
-// Campo de nombre opcional
-// ─────────────────────────────────────────────────────────────────────
-
-class _NameField extends StatelessWidget {
-  final TextEditingController controller;
-  final bool isDark;
-  final Color accentColor;
-
-  const _NameField({
-    required this.controller,
-    required this.isDark,
-    required this.accentColor,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    return TextField(
-      controller: controller,
-      textCapitalization: TextCapitalization.words,
-      style: TextStyle(
-        fontSize: 15,
-        color: isDark ? Colors.white : AppColors.black,
-      ),
-      decoration: InputDecoration(
-        labelText: 'Tu nombre (opcional)',
-        hintText: 'Ej: María López',
-        prefixIcon: const Icon(Icons.person_outline),
-        filled: true,
-        fillColor: isDark
-            ? const Color(0xFF1E1E1E)
-            : Colors.white.withOpacity(0.8),
-        border: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(15),
-          borderSide: BorderSide.none,
-        ),
-        enabledBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(15),
-          borderSide:
-              BorderSide(color: accentColor.withOpacity(0.2)),
-        ),
-        focusedBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(15),
-          borderSide: BorderSide(color: accentColor, width: 2),
-        ),
-      ),
-    );
-  }
-}
 
 // ─────────────────────────────────────────────────────────────────────
 // Barra de puntaje total

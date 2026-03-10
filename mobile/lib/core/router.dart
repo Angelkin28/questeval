@@ -5,7 +5,7 @@ import '../screens/projects_screen.dart';
 import '../screens/detail_screen.dart';
 import '../screens/analysis_screen.dart';
 import '../screens/profile_screen.dart';
-import '../screens/login_screen.dart';
+import '../screens/guest_name_screen.dart';
 import '../screens/qr_scanner_screen.dart';
 import '../screens/evaluation_screen.dart';
 import '../screens/evaluation_success_screen.dart';
@@ -15,13 +15,14 @@ final _shellNavigatorKey = GlobalKey<NavigatorState>();
 
 final appRouter = GoRouter(
   navigatorKey: _rootNavigatorKey,
-  initialLocation: '/projects',
+  initialLocation: '/welcome',
   routes: [
-    // ── Sin barra de navegación inferior ──────────────────────────
+    // ── Pantalla de Bienvenida (Nombre de Invitado) ──────────────────
     GoRoute(
-      path: '/login',
-      builder: (context, state) => const LoginScreen(),
+      path: '/welcome',
+      builder: (context, state) => const GuestNameScreen(),
     ),
+    // ── Sin barra de navegación inferior ──────────────────────────
     GoRoute(
       path: '/scan',
       parentNavigatorKey: _rootNavigatorKey,

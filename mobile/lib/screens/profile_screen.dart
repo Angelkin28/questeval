@@ -51,26 +51,7 @@ class ProfileScreen extends ConsumerWidget {
                 ),
                 const SizedBox(height: 15),
                 ...evaluatedProjects.map((p) => _buildEvaluatedItem(context, p, accentColor)),
-                const SizedBox(height: 40),
-                SizedBox(
-                  width: double.infinity,
-                  height: 55,
-                  child: OutlinedButton(
-                    onPressed: () async {
-                      await ref.read(authProvider.notifier).logout();
-                      if (context.mounted) {
-                        context.go('/login');
-                      }
-                    },
-                    style: OutlinedButton.styleFrom(
-                      foregroundColor: Colors.red,
-                      side: const BorderSide(color: Colors.red),
-                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(15)),
-                    ),
-                    child: const Text('Cerrar sesión', style: TextStyle(fontWeight: FontWeight.bold)),
-                  ),
-                ),
-                const SizedBox(height: 40),
+
               ],
             ),
           );

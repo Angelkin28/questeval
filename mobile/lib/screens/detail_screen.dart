@@ -153,26 +153,30 @@ class _ProjectDetailScreenState extends ConsumerState<ProjectDetailScreen> {
                   }),
                   const SizedBox(height: 30),
                 ],
-                const Text('Criterios de Evaluación', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 20)),
-                const SizedBox(height: 20),
-                if (criteriaAsync.hasValue)
-                  ...criteriaAsync.value!.map((c) => _buildSlider(c, accentColor)),
-                const SizedBox(height: 30),
-                TextField(
-                  controller: _obsController,
-                  enabled: !widget.readOnly,
-                  maxLines: 4,
-                  decoration: InputDecoration(
-                    labelText: 'Comentarios del revisor',
-                    border: OutlineInputBorder(borderRadius: BorderRadius.circular(15)),
+                // ── MODO SOLO-LECTURA: Ocultar criterios interactivos ──────
+                if (!widget.readOnly) ...[
+                  const Text('Criterios de Evaluación', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 20)),
+                  const SizedBox(height: 20),
+                  if (criteriaAsync.hasValue)
+                    ...criteriaAsync.value!.map((c) => _buildSlider(c, accentColor)),
+                  const SizedBox(height: 30),
+                  TextField(
+                    controller: _obsController,
+                    enabled: !widget.readOnly,
+                    maxLines: 4,
+                    decoration: InputDecoration(
+                      labelText: 'Comentarios del revisor',
+                      border: OutlineInputBorder(borderRadius: BorderRadius.circular(15)),
+                    ),
                   ),
-                ),
-                const SizedBox(height: 30),
+                  const SizedBox(height: 30),
+                ],
                 // ── Botón evaluar vía QR (visitantes de feria) ──────
-                _QrEvaluateButton(
-                  accentColor: accentColor,
-                  projectName: project.title,
-                ),
+                if (widget.readOnly)
+                  _QrEvaluateButton(
+                    accentColor: accentColor,
+                    projectName: project.title,
+                  ),
                 const SizedBox(height: 16),
                 if (!widget.readOnly)
                   SizedBox(
