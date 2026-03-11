@@ -16,11 +16,13 @@ public class ProjectsController : ControllerBase
 {
     private readonly IProjectsService _service;
     private readonly IMembershipsService _membershipsService;
+    private readonly IGroupsService _groupsService;
 
-    public ProjectsController(IProjectsService service, IMembershipsService membershipsService)
+    public ProjectsController(IProjectsService service, IMembershipsService membershipsService, IGroupsService groupsService)
     {
         _service = service;
         _membershipsService = membershipsService;
+        _groupsService = groupsService;
     }
 
     /// <summary>
@@ -117,40 +119,64 @@ public class ProjectsController : ControllerBase
     public async Task<ActionResult<List<ProjectResponse>>> GetMine()
     {
         var userId = User.FindFirst("userId")?.Value;
+        var userFullName = User.FindFirst(ClaimTypes.Name)?.Value;
         if (string.IsNullOrEmpty(userId)) return Unauthorized();
 
         // 1. Obtener grupos del usuario
         var memberships = await _membershipsService.GetByUserIdAsync(userId);
-        var groupIds = memberships.Select(m => m.GroupId).Distinct().ToList();
+        var memberGroupIds = memberships.Select(m => m.GroupId).Distinct().ToList();
 
-        if (!groupIds.Any()) return Ok(new List<ProjectResponse>());
+        if (!memberGroupIds.Any()) return Ok(new List<ProjectResponse>());
 
-        // 2. Obtener proyectos de esos grupos
-        var response = new List<ProjectResponse>();
-        foreach (var groupId in groupIds)
+        // 2. Resolver tanto el GroupId incremental como el ObjectId de cada grupo
+        var allGroupIdVariants = new HashSet<string>(memberGroupIds);
+        foreach (var gId in memberGroupIds)
+        {
+            var group = await _groupsService.GetByGroupIdAsync(gId);
+            if (group?.Id != null) allGroupIdVariants.Add(group.Id);
+            if (group?.GroupId != null) allGroupIdVariants.Add(group.GroupId);
+        }
+
+        // 3. Obtener proyectos de esos grupos (buscando por cada variante de ID)
+        var allGroupProjects = new List<Backend.Models.Project>();
+        var seenProjectIds = new HashSet<string>();
+        foreach (var groupId in allGroupIdVariants)
         {
             var groupProjects = await _service.GetByGroupIdAsync(groupId);
-            response.AddRange(groupProjects.Select(p => new ProjectResponse
+            foreach (var p in groupProjects)
             {
-                Id = p.Id!,
-                ProjectId = p.ProjectId,
-                Name = p.Name,
-                Description = p.Description,
-                GroupId = p.GroupId ?? string.Empty,
-                Status = p.Status,
-                CreatedAt = p.CreatedAt,
-                UpdatedAt = p.UpdatedAt,
-                Category = p.Category,
-                VideoUrl = p.VideoUrl,
-                ThumbnailUrl = p.ThumbnailUrl,
-                TeamMembers = p.TeamMembers,
-                ComprehensionQuestions = p.ComprehensionQuestions.Select(q => new QuestionAnswerDto
-                {
-                    Question = q.Question,
-                    Answer = q.Answer
-                }).ToList()
-            }));
+                if (p.Id != null && seenProjectIds.Add(p.Id))
+                    allGroupProjects.Add(p);
+            }
         }
+
+        // 4. Filtrar solo proyectos donde el usuario es creador o miembro del equipo
+        var myProjects = allGroupProjects.Where(p =>
+            p.UserId == userId ||
+            (!string.IsNullOrEmpty(userFullName) &&
+             p.TeamMembers.Any(tm => string.Equals(tm, userFullName, StringComparison.OrdinalIgnoreCase)))
+        ).ToList();
+
+        var response = myProjects.Select(p => new ProjectResponse
+        {
+            Id = p.Id!,
+            ProjectId = p.ProjectId,
+            Name = p.Name,
+            Description = p.Description,
+            GroupId = p.GroupId ?? string.Empty,
+            Status = p.Status,
+            CreatedAt = p.CreatedAt,
+            UpdatedAt = p.UpdatedAt,
+            Category = p.Category,
+            VideoUrl = p.VideoUrl,
+            ThumbnailUrl = p.ThumbnailUrl,
+            TeamMembers = p.TeamMembers,
+            ComprehensionQuestions = p.ComprehensionQuestions.Select(q => new QuestionAnswerDto
+            {
+                Question = q.Question,
+                Answer = q.Answer
+            }).ToList()
+        }).ToList();
 
         return Ok(response);
     }
@@ -213,17 +239,20 @@ public class ProjectsController : ControllerBase
     /// <response code="201">Retorna el newly created project</response>
     /// <response code="400">Si la solicitud es inválida</response>
     [HttpPost]
-    [Authorize(Roles = "Profesor,Admin")]
+    [Authorize(Roles = "Alumno,Profesor,Admin")]
     [ProducesResponseType(typeof(ProjectResponse), StatusCodes.Status201Created)]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
     public async Task<ActionResult<ProjectResponse>> Post(CreateProjectRequest request)
     {
+        var creatorId = User.FindFirst("userId")?.Value;
+
         var newProject = new Backend.Models.Project
         {
             Name = request.Name,
             Description = request.Description,
             GroupId = request.GroupId,
             Status = request.Status,
+            UserId = creatorId,
             CreatedAt = DateTime.UtcNow,
             UpdatedAt = DateTime.UtcNow,
             Category = request.Category,

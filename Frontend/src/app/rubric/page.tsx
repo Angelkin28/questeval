@@ -102,32 +102,33 @@ export default function RubricaPage({ searchParams }: PageProps) {
 
     const handleGuardar = async () => {
         if (!projectId) return;
+
+        const userData = localStorage.getItem('user');
+        if (!userData) {
+            alert('Sesión expirada, inicia sesión nuevamente.');
+            router.push('/login');
+            return;
+        }
+        const currentUser = JSON.parse(userData);
+        const evaluatorId = currentUser.userId ?? currentUser.id;
+
         setGuardando(true);
         try {
             await api.evaluations.create({
                 projectId: projectId,
-                evaluatorId: "current_user", // Backend handles this logic via token usually, or we pass it if needed. 
-                // The backend Controller takes EvaluatorId from body, 
-                // but api.ts definition says it's required. 
-                // Ideally we decode token to get ID, but for now we put a placeholder 
-                // assuming backend might override or we need to fix backend.
-                // WAIT: Step 362 check: EvaluationsController Post takes request.EvaluatorId.
-                // So we must provide it.
+                evaluatorId,
                 details: criterios.map(c => ({
                     criterionId: c.id,
                     criterionName: c.nombre,
                     score: c.puntajeAsignado
                 }))
             });
-            // Also save feedback? Backend endpoint for feedback is separate? 
-            // The prompt says "Connect the Rubric page to the backend API to save evaluation data."
-            // We'll stick to evaluation for now.
 
             alert('Evaluación guardada exitosamente');
-            router.push(`/dashboard`);
-        } catch (error) {
+            router.push('/dashboard');
+        } catch (error: any) {
             console.error('Error saving evaluation', error);
-            alert('Error al guardar evaluación');
+            alert(error?.message || 'Error al guardar evaluación');
         } finally {
             setGuardando(false);
         }

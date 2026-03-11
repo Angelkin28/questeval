@@ -19,7 +19,10 @@ import { api, Group } from '@/lib/api';
 export default function GruposPage() {
     const router = useRouter();
     const [grupos, setGrupos] = useState<Group[]>([]);
+    const [myGroupIds, setMyGroupIds] = useState<Set<string>>(new Set());
     const [loading, setLoading] = useState(true);
+    const [userRole, setUserRole] = useState('');
+    const [joinLoading, setJoinLoading] = useState<string | null>(null);
 
     useEffect(() => {
         const fetchGrupos = async () => {
@@ -28,12 +31,20 @@ export default function GruposPage() {
                 // El Alumno ve solo los grupos a los que pertenece
                 const userData = localStorage.getItem('user');
                 const role = userData ? JSON.parse(userData).role : '';
+                setUserRole(role);
 
-                const data = (role === 'Profesor' || role === 'Admin')
-                    ? await api.groups.getAll()
-                    : await api.groups.getMyGroups();
-
-                setGrupos(data);
+                if (role === 'Profesor' || role === 'Admin') {
+                    const [allGroups, myGroups] = await Promise.all([
+                        api.groups.getAll(),
+                        api.groups.getMyGroups()
+                    ]);
+                    setGrupos(allGroups);
+                    setMyGroupIds(new Set(myGroups.map(g => g.id)));
+                } else {
+                    const data = await api.groups.getMyGroups();
+                    setGrupos(data);
+                    setMyGroupIds(new Set(data.map(g => g.id)));
+                }
             } catch (error) {
                 console.error('Error fetching groups:', error);
             } finally {
@@ -43,6 +54,20 @@ export default function GruposPage() {
 
         fetchGrupos();
     }, []);
+
+    const handleTeacherJoin = async (e: React.MouseEvent, group: Group) => {
+        e.stopPropagation();
+        setJoinLoading(group.id);
+        try {
+            await api.groups.joinAsTeacher(group.id);
+            setMyGroupIds(prev => new Set([...prev, group.id]));
+        } catch (error) {
+            console.error('Error uniendo al grupo:', error);
+            alert('No se pudo unir al grupo');
+        } finally {
+            setJoinLoading(null);
+        }
+    };
 
     return (
         <div className="min-h-screen bg-background pb-20">
@@ -62,7 +87,9 @@ export default function GruposPage() {
             <main className="px-4 py-6">
                 {/* Título */}
                 <div className="mb-6 animate-fade-in">
-                    <h1 className="text-4xl font-bold title-serif mb-2">Mis Grupos</h1>
+                    <h1 className="text-4xl font-bold title-serif mb-2">
+                        {userRole === 'Profesor' || userRole === 'Admin' ? 'Todos los Grupos' : 'Mis Grupos'}
+                    </h1>
                     <p className="text-sm text-muted-foreground">
                         Gestiona tus equipos de trabajo y proyectos colaborativo
                     </p>
@@ -127,11 +154,24 @@ export default function GruposPage() {
                                         </div>
 
                                         {/* Miembros (Placeholder count as we don't have count in list API yet) */}
-                                        <div className="flex items-center gap-2 mt-4">
-                                            <Users className="w-4 h-4 text-primary" />
-                                            <span className="text-sm font-medium">
-                                                Ver detalles para miembros
-                                            </span>
+                                        <div className="flex items-center justify-between mt-4">
+                                            <div className="flex items-center gap-2">
+                                                <Users className="w-4 h-4 text-primary" />
+                                                <span className="text-sm font-medium">
+                                                    Ver detalles para miembros
+                                                </span>
+                                            </div>
+                                            {(userRole === 'Profesor' || userRole === 'Admin') && !myGroupIds.has(grupo.id) && (
+                                                <Button 
+                                                    size="sm" 
+                                                    variant="default"
+                                                    onClick={(e) => handleTeacherJoin(e, grupo)}
+                                                    disabled={joinLoading === grupo.id}
+                                                >
+                                                    {joinLoading === grupo.id ? <Loader2 className="w-4 h-4 animate-spin mr-2" /> : <UserPlus className="w-4 h-4 mr-2" />}
+                                                    Unirme
+                                                </Button>
+                                            )}
                                         </div>
                                     </CardContent>
                                 </Card>

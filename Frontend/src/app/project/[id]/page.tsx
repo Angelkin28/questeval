@@ -73,14 +73,15 @@ export default function ProjectDetailsPage() {
 
                 {/* Project Header Card */}
                 <Card className="mb-6 overflow-hidden shadow-lg border-border/50">
-                    <div className="h-48 bg-secondary relative">
+                    <div className="relative bg-secondary">
                         {project.thumbnailUrl ? (
-                            <div
-                                className="w-full h-full bg-cover bg-center"
-                                style={{ backgroundImage: `url(${project.thumbnailUrl})` }}
+                            <img
+                                src={project.thumbnailUrl}
+                                alt={project.name}
+                                className="w-full max-h-[400px] object-contain bg-black/5"
                             />
                         ) : (
-                            <div className="w-full h-full flex items-center justify-center bg-gradient-to-br from-secondary to-muted">
+                            <div className="w-full h-48 flex items-center justify-center bg-gradient-to-br from-secondary to-muted">
                                 <LayoutGrid className="w-16 h-16 text-muted-foreground/30" />
                             </div>
                         )}
@@ -118,8 +119,8 @@ export default function ProjectDetailsPage() {
                                 project.status === 'Evaluated' ? 'bg-blue-100 text-blue-700' :
                                     'bg-yellow-100 text-yellow-700'
                                 }`}>
-                                {project.status === 'Active' ? 'En Progreso' :
-                                    project.status === 'Completed' ? 'Entregado' : 'Evaluado'}
+                                {project.status === 'Evaluated' ? 'Evaluado' :
+                                    project.status === 'Completed' ? 'Entregado' : 'Por Evaluar'}
                             </span>
                         </div>
                     </CardContent>

@@ -31,6 +31,7 @@ builder.Services.AddScoped<IMembershipsService, MembershipsService>(); // Gestio
 builder.Services.AddScoped<IFeedbackService, FeedbackService>();      // Gestionar retroalimentación de evaluaciones
 builder.Services.AddScoped<IOtpService, OtpService>();                // Gestionar OTP y autenticación de Supabase
 builder.Services.AddScoped<IActivityLogService, ActivityLogService>(); // Gestionar logs de actividad del sistema
+builder.Services.AddScoped<IStorageService, StorageService>();        // Gestionar subida de archivos a Supabase Storage
 
 // ==================== MANEJO DE EXCEPCIONES ====================
 // GlobalExceptionHandler captura excepciones no manejadas y retorna RFC 7807 ProblemDetails

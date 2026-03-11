@@ -433,6 +433,22 @@ export const api = {
                 const error = await response.json().catch(() => ({ message: 'Error al unirse al grupo' }));
                 throw new Error(error.message || 'Error al unirse al grupo');
             }
+        },
+
+        joinAsTeacher: async (groupId: string): Promise<void> => {
+            const token = localStorage.getItem('token');
+            const headers: HeadersInit = { 'Content-Type': 'application/json' };
+            if (token) headers['Authorization'] = `Bearer ${token}`;
+
+            const response = await fetch(`${API_URL}/Groups/${groupId}/join-teacher`, {
+                method: 'POST',
+                headers,
+            });
+
+            if (!response.ok) {
+                const error = await response.json().catch(() => ({ message: 'Error al unirse al grupo' }));
+                throw new Error(error.message || 'Error al unirse al grupo');
+            }
         }
     },
 
@@ -546,8 +562,15 @@ export const api = {
             const formData = new FormData();
             formData.append('file', file);
 
+            const token = localStorage.getItem('token');
+            const headers: HeadersInit = {};
+            if (token) {
+                headers['Authorization'] = `Bearer ${token}`;
+            }
+
             const response = await fetch(`${API_URL}/Storage/upload`, {
                 method: 'POST',
+                headers,
                 // No enviar Header Content-Type, fetch lo pone automáticamente con el boundary
                 body: formData
             });
