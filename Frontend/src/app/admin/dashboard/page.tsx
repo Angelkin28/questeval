@@ -258,7 +258,7 @@ export default function AdminDashboard() {
                 )}
                 {successMsg && (
                     <div className="bg-green-50 border border-green-200 text-green-700 rounded-lg px-4 py-3 text-sm">
-                        {successMsg}
+                        ✅ {successMsg}
                     </div>
                 )}
 

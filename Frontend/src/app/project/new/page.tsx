@@ -26,6 +26,8 @@ export default function NewProjectPage() {
     const router = useRouter();
     const [step, setStep] = useState(1);
     const [isLoading, setIsLoading] = useState(false);
+    const [uploadProgress, setUploadProgress] = useState(0);
+    const [isUploading, setIsUploading] = useState(false);
 
     // Form State (Español)
     const [formData, setFormData] = useState({
@@ -34,6 +36,7 @@ export default function NewProjectPage() {
         description: '',
         videoUrl: '',
         coverImage: null as File | null,
+        coverVideo: null as File | null,
         teamMembers: [] as string[],
         comprehensionQuestions: [] as { question: string, answer: string }[]
     });
@@ -158,6 +161,7 @@ export default function NewProjectPage() {
         setIsLoading(true);
         try {
             let coverImageUrl = '';
+            let videoUrl = formData.videoUrl;
 
             // Subir imagen si existe
             if (formData.coverImage) {
@@ -166,8 +170,24 @@ export default function NewProjectPage() {
                     coverImageUrl = uploadResult.url;
                 } catch (uploadError) {
                     console.error('Error al subir imagen:', uploadError);
-                    // Podríamos mostrar un toast de error pero permitimos continuar sin imagen
-                    // o lanzar el error para detener el proceso
+                }
+            }
+
+            // Subir video si se seleccionó un archivo (tiene prioridad sobre la URL)
+            if (formData.coverVideo) {
+                try {
+                    setIsUploading(true);
+                    setUploadProgress(0);
+                    const videoResult = await api.storage.uploadVideo(formData.coverVideo, setUploadProgress);
+                    videoUrl = videoResult.url;
+                } catch (uploadError: any) {
+                    console.error('Error al subir video:', uploadError);
+                    alert(uploadError?.message || 'Error al subir el video.');
+                    setIsLoading(false);
+                    setIsUploading(false);
+                    return;
+                } finally {
+                    setIsUploading(false);
                 }
             }
 
@@ -183,7 +203,7 @@ export default function NewProjectPage() {
                 description: formData.description,
                 category: formData.category,
                 status: 'In Progress',
-                videoUrl: formData.videoUrl,
+                videoUrl: videoUrl,
                 thumbnailUrl: coverImageUrl,
                 groupId: selectedGroupId,
                 teamMembers: formData.teamMembers,
@@ -311,21 +331,72 @@ export default function NewProjectPage() {
                                 <h2 className="text-lg font-semibold mb-4">Recursos Multimedia</h2>
 
                                 <div className="space-y-6">
-                                    {/* Video URL */}
+                                {/* Video Section */}
                                     <div>
-                                        <label className="text-sm font-medium mb-1 block flex items-center gap-2">
+                                        <label className="text-sm font-medium mb-3 block flex items-center gap-2">
                                             <Video className="w-4 h-4" />
-                                            URL del Video Demo
+                                            Video Demo
                                         </label>
-                                        <Input
-                                            name="videoUrl"
-                                            placeholder="https://youtube.com/..."
-                                            value={formData.videoUrl}
-                                            onChange={handleInputChange}
-                                        />
-                                        <p className="text-xs text-muted-foreground mt-1">
-                                            Pega el enlace a tu video demo (YouTube, Vimeo, Drive).
-                                        </p>
+
+                                        {formData.coverVideo ? (
+                                            <div className="flex items-center gap-3 p-3 bg-secondary/30 rounded-lg border border-border">
+                                                <Video className="w-5 h-5 text-primary flex-shrink-0" />
+                                                <div className="flex-1 min-w-0">
+                                                    <p className="text-sm font-medium truncate">{formData.coverVideo.name}</p>
+                                                    <p className="text-xs text-muted-foreground">
+                                                        {(formData.coverVideo.size / (1024 * 1024)).toFixed(1)} MB / 500 MB máx.
+                                                    </p>
+                                                    {isUploading && (
+                                                        <div className="mt-2">
+                                                            <div className="flex justify-between text-xs text-muted-foreground mb-1">
+                                                                <span>Subiendo...</span>
+                                                                <span>{uploadProgress}%</span>
+                                                            </div>
+                                                            <div className="w-full bg-secondary rounded-full h-1.5">
+                                                                <div
+                                                                    className="bg-primary h-1.5 rounded-full transition-all duration-300"
+                                                                    style={{ width: `${uploadProgress}%` }}
+                                                                />
+                                                            </div>
+                                                        </div>
+                                                    )}
+                                                </div>
+                                                <button
+                                                    type="button"
+                                                    onClick={() => setFormData(p => ({ ...p, coverVideo: null }))}
+                                                    disabled={isUploading}
+                                                    className="text-muted-foreground hover:text-destructive transition-colors disabled:opacity-30"
+                                                >
+                                                    <span className="text-lg">×</span>
+                                                </button>
+                                            </div>
+                                        ) : (
+                                            <label
+                                                htmlFor="project-video"
+                                                className="border-2 border-dashed border-muted-foreground/25 rounded-lg p-8 text-center hover:bg-secondary/20 transition-colors cursor-pointer block"
+                                            >
+                                                <Upload className="w-8 h-8 mx-auto mb-2 text-muted-foreground" />
+                                                <p className="text-sm font-medium">Clic para subir video</p>
+                                                <p className="text-xs text-muted-foreground">MP4, WebM, MOV — máx. 500 MB</p>
+                                                <input
+                                                    id="project-video"
+                                                    type="file"
+                                                    accept="video/mp4,video/webm,video/quicktime,video/x-msvideo"
+                                                    className="hidden"
+                                                    onChange={(e) => {
+                                                        const file = e.target.files?.[0];
+                                                        if (!file) return;
+                                                        const maxBytes = 500 * 1024 * 1024;
+                                                        if (file.size > maxBytes) {
+                                                            alert(`El video supera el límite de 500 MB (${(file.size / (1024 * 1024)).toFixed(1)} MB).`);
+                                                            e.target.value = '';
+                                                            return;
+                                                        }
+                                                        setFormData(p => ({ ...p, coverVideo: file, videoUrl: '' }));
+                                                    }}
+                                                />
+                                            </label>
+                                        )}
                                     </div>
 
                                     {/* Cover Image Upload */}
@@ -419,7 +490,7 @@ export default function NewProjectPage() {
                                     </Button>
                                     {questionError && (
                                         <p className="text-destructive text-sm font-medium mt-2 animate-bounce flex items-center gap-1">
-                                            {questionError}
+                                            <span>⚠️</span> {questionError}
                                         </p>
                                     )}
                                 </div>

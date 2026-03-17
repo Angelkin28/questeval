@@ -12,6 +12,11 @@ Env.Load();
 
 var builder = WebApplication.CreateBuilder(args);
 
+// Límite de tamaño de request: 8 GB (para subida de archivos grandes)
+builder.WebHost.ConfigureKestrel(options =>
+{
+    options.Limits.MaxRequestBodySize = 8L * 1024 * 1024 * 1024; // 8 GB
+});
 // ==================== CONFIGURACIÓN ====================
 // Configurar ajustes de base de datos desde appsettings.json
 // Esto vincula la sección "QuestEvalDatabase" al modelo QuestEvalDatabaseSettings
@@ -52,10 +57,13 @@ builder.Services.AddSingleton<Supabase.Client>(provider =>
     
     var options = new Supabase.SupabaseOptions
     {
-        AutoConnectRealtime = true
+        AutoConnectRealtime = false,
+        AutoRefreshToken = false
     };
     
-    return new Supabase.Client(url, key, options);
+    var client = new Supabase.Client(url, key, options);
+    client.InitializeAsync().GetAwaiter().GetResult();
+    return client;
 });
 
 // ==================== CONFIGURACIÓN CORS ====================
@@ -82,7 +90,14 @@ builder.Services.AddCors(options =>
 });
 
 // ==================== CONFIGURACIÓN DE CONTROLLERS ====================
-builder.Services.AddControllers()
+builder.Services.AddControllers(options =>
+    {
+        options.Filters.Add(new Microsoft.AspNetCore.Mvc.RequestFormLimitsAttribute
+        {
+            MultipartBodyLengthLimit = 8L * 1024 * 1024 * 1024 // 8 GB
+        });
+        options.Filters.Add(new Microsoft.AspNetCore.Mvc.RequestSizeLimitAttribute(8L * 1024 * 1024 * 1024));
+    })
     // Usar camelCase en las respuestas JSON para coincidir con las interfaces TypeScript del frontend
     // Ejemplo: "Role" en C# → "role" en JSON, "UserId" → "userId"
     .AddJsonOptions(options => options.JsonSerializerOptions.PropertyNamingPolicy = System.Text.Json.JsonNamingPolicy.CamelCase)

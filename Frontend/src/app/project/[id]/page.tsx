@@ -100,10 +100,28 @@ export default function ProjectDetailsPage() {
 
                         <div className="flex flex-col sm:flex-row gap-4 mb-6">
                             {project.videoUrl && (
-                                <Button variant="outline" className="gap-2" onClick={() => window.open(project.videoUrl, '_blank')}>
-                                    <Video className="w-4 h-4 text-red-500" />
-                                    Ver Video Demo
-                                </Button>
+                                (() => {
+                                    const isDirectVideo = project.videoUrl.includes('.supabase.co/storage') ||
+                                        /\.(mp4|webm|mov|avi)(\?|$)/i.test(project.videoUrl);
+                                    return isDirectVideo ? (
+                                        <div className="flex justify-center w-full">
+                                            <div className="rounded-lg overflow-hidden border border-border shadow-md bg-black w-full max-w-sm">
+                                                <video
+                                                    src={project.videoUrl}
+                                                    controls
+                                                    playsInline
+                                                    preload="metadata"
+                                                    className="w-full h-auto block"
+                                                />
+                                            </div>
+                                        </div>
+                                    ) : (
+                                        <Button variant="outline" className="gap-2" onClick={() => window.open(project.videoUrl, '_blank')}>
+                                            <Video className="w-4 h-4 text-red-500" />
+                                            Ver Video Demo
+                                        </Button>
+                                    );
+                                })()
                             )}
                             {project.teamMembers && project.teamMembers.length > 0 && (
                                 <div className="flex items-center gap-2 text-sm text-muted-foreground bg-secondary/50 px-3 py-2 rounded-md">

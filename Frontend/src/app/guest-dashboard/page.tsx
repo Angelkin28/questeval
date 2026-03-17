@@ -182,7 +182,7 @@ export default function GuestDashboard() {
                                             )}
                                             {project.teamMembers && (
                                                 <div className="flex items-center gap-1">
-                                                    <span className="text-xs">{project.teamMembers.length} miembros</span>
+                                                    <span className="text-xs">👥 {project.teamMembers.length}</span>
                                                 </div>
                                             )}
                                         </div>
