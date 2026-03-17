@@ -4,7 +4,6 @@ import '../screens/main_scaffold.dart';
 import '../screens/projects_screen.dart';
 import '../screens/detail_screen.dart';
 import '../screens/analysis_screen.dart';
-import '../screens/profile_screen.dart';
 import '../screens/guest_name_screen.dart';
 import '../screens/qr_scanner_screen.dart';
 import '../screens/evaluation_screen.dart';
@@ -63,10 +62,6 @@ final appRouter = GoRouter(
         GoRoute(
           path: '/analysis',
           builder: (context, state) => const AnalysisScreen(),
-        ),
-        GoRoute(
-          path: '/profile',
-          builder: (context, state) => const ProfileScreen(),
         ),
       ],
     ),

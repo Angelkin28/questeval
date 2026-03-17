@@ -3,36 +3,32 @@
 -- ==============================================================================
 -- Ejecuta este script en el SQL Editor de tu proyecto en Supabase (https://supabase.com)
 
--- 1. Crear un Bucket llamado 'images' (si no existe)
---    Este bucket será público para que cualquiera pueda ver las imágenes subidas.
+-- 1. Crear Buckets (si no existen)
 insert into storage.buckets (id, name, public)
-values ('images', 'images', true)
+values ('images', 'images', true), ('videos', 'videos', true)
 on conflict (id) do nothing;
 
--- 2. Configurar Políticas de Seguridad (RLS) para el Bucket 'images'
+-- 2. Configurar Políticas de Seguridad (RLS)
 
--- A) Permitir acceso PÚBLICO para VER (SELECT) imágenes
---    Cualquier persona con el link puede ver la imagen.
+-- A) Permitir acceso PÚBLICO para VER (SELECT)
 create policy "Public Access"
 on storage.objects for select
-using ( bucket_id = 'images' );
+using ( bucket_id in ('images', 'videos') );
 
--- B) Permitir acceso para SUBIR (INSERT) imágenes
---    Aquí permitimos que cualquiera suba imágenes (útil para desarrollo/pruebas).
---    ⚠️ En producción, deberías restringir esto a usuarios autenticados (auth.uid() = owner).
+-- B) Permitir acceso para SUBIR (INSERT)
 create policy "Allow Uploads"
 on storage.objects for insert
-with check ( bucket_id = 'images' );
+with check ( bucket_id in ('images', 'videos') );
 
--- C) Permitir acceso para ACTUALIZAR (UPDATE) imágenes
+-- C) Permitir acceso para ACTUALIZAR (UPDATE)
 create policy "Allow Updates"
 on storage.objects for update
-using ( bucket_id = 'images' );
+using ( bucket_id in ('images', 'videos') );
 
--- D) Permitir acceso para BORRAR (DELETE) imágenes
+-- D) Permitir acceso para BORRAR (DELETE)
 create policy "Allow Deletes"
 on storage.objects for delete
-using ( bucket_id = 'images' );
+using ( bucket_id in ('images', 'videos') );
 
 
 -- ==============================================================================

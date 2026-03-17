@@ -16,24 +16,35 @@ public class StorageController : ControllerBase
     }
 
     /// <summary>
-    /// Uploads an image to Supabase Storage.
+    /// Uploads a file (image or video) to Supabase Storage.
     /// </summary>
-    /// <param name="file">The image file to upload.</param>
-    /// <returns>The public URL of the uploaded image.</returns>
+    /// <param name="file">The file to upload.</param>
+    /// <returns>The public URL of the uploaded file.</returns>
     [HttpPost("upload")]
-    public async Task<IActionResult> UploadImage([Required] IFormFile file)
+    public async Task<IActionResult> UploadFile([Required] IFormFile file)
     {
         if (file == null || file.Length == 0)
             return BadRequest("No file uploaded.");
 
-        // Validate file type (optional, but recommended)
-        if (!file.ContentType.StartsWith("image/"))
-            return BadRequest("Only image files are allowed.");
+        string bucketName = "images";
+        string folderPath = "uploads";
+
+        if (file.ContentType.StartsWith("image/"))
+        {
+            bucketName = "images";
+        }
+        else if (file.ContentType.StartsWith("video/"))
+        {
+            bucketName = "videos";
+        }
+        else
+        {
+            return BadRequest("Only image and video files are allowed.");
+        }
 
         try
         {
-            // "images" is the bucket name we will create in Supabase
-            var publicUrl = await _storageService.UploadFileAsync(file, "images", "uploads");
+            var publicUrl = await _storageService.UploadFileAsync(file, bucketName, folderPath);
             return Ok(new { Url = publicUrl });
         }
         catch (Exception ex)

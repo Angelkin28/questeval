@@ -9,7 +9,6 @@ class MainScaffold extends StatelessWidget {
     final location = GoRouterState.of(context).uri.path;
     if (location.startsWith('/projects')) return 0;
     if (location.startsWith('/analysis')) return 1;
-    if (location.startsWith('/profile')) return 2;
     return 0;
   }
 
@@ -20,9 +19,6 @@ class MainScaffold extends StatelessWidget {
         break;
       case 1:
         context.go('/analysis');
-        break;
-      case 2:
-        context.go('/profile');
         break;
     }
   }
@@ -37,7 +33,6 @@ class MainScaffold extends StatelessWidget {
         items: const [
           BottomNavigationBarItem(icon: Icon(Icons.folder), label: 'Proyectos'),
           BottomNavigationBarItem(icon: Icon(Icons.bar_chart_rounded), label: 'Análisis'),
-          BottomNavigationBarItem(icon: Icon(Icons.person), label: 'Perfil'),
         ],
       ),
     );

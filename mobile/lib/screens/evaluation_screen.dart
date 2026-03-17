@@ -8,6 +8,7 @@ import '../../theme/colors.dart';
 import '../../theme/app_theme.dart';
 import '../../providers/theme_provider.dart';
 import '../../providers/auth_provider.dart';
+import '../../shared/widgets/project_video_player.dart';
 
 class EvaluationScreen extends ConsumerStatefulWidget {
   const EvaluationScreen({super.key});
@@ -270,6 +271,14 @@ class _ProjectHeader extends StatelessWidget {
               height: 1.2,
             ),
           ),
+          if (project.videoUrl != null && project.videoUrl!.isNotEmpty) ...[
+            const SizedBox(height: 16),
+            ProjectVideoPlayer(
+              videoUrl: project.videoUrl!,
+              accentColor: accentColor,
+            ),
+            const SizedBox(height: 16),
+          ],
           if (project.description.isNotEmpty) ...[
             const SizedBox(height: 8),
             Text(

@@ -9,6 +9,7 @@ import '../models/user_models.dart';
 import '../theme/app_theme.dart';
 import '../theme/colors.dart';
 import '../models/models.dart';
+import '../shared/widgets/project_video_player.dart';
 
 class ProjectDetailScreen extends ConsumerStatefulWidget {
   final String projectId;
@@ -107,7 +108,7 @@ class _ProjectDetailScreenState extends ConsumerState<ProjectDetailScreen> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                _buildVideoSection(accentColor),
+                _buildVideoSection(accentColor, project.videoUrl),
                 const SizedBox(height: 30),
                 _buildGallery(),
                 const SizedBox(height: 30),
@@ -203,20 +204,34 @@ class _ProjectDetailScreenState extends ConsumerState<ProjectDetailScreen> {
     );
   }
 
-  Widget _buildVideoSection(Color accent) {
-    return GestureDetector(
-      onTap: () => ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Reproduciendo video de 30 segundos (placeholder)')),
-      ),
-      child: Container(
+  Widget _buildVideoSection(Color accent, String? videoUrl) {
+    if (videoUrl == null || videoUrl.isEmpty) {
+      return Container(
         height: 200,
         width: double.infinity,
         decoration: BoxDecoration(
           color: Colors.black87,
           borderRadius: BorderRadius.circular(20),
         ),
-        child: Center(child: Icon(Icons.play_circle_fill, size: 80, color: accent.withOpacity(0.8))),
-      ),
+        child: Center(
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Icon(Icons.video_library, size: 40, color: accent.withOpacity(0.5)),
+              const SizedBox(height: 8),
+              Text(
+                'Sin video disponible',
+                style: TextStyle(color: accent.withOpacity(0.5)),
+              )
+            ],
+          ),
+        ),
+      );
+    }
+    
+    return ProjectVideoPlayer(
+      videoUrl: videoUrl,
+      accentColor: accent,
     );
   }
 

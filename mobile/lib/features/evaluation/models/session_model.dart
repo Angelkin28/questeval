@@ -42,6 +42,7 @@ class ProjectInfo {
   final String description;
   final List<String> teamMembers;
   final String? thumbnailUrl;
+  final String? videoUrl;
 
   const ProjectInfo({
     required this.id,
@@ -49,6 +50,7 @@ class ProjectInfo {
     required this.description,
     required this.teamMembers,
     this.thumbnailUrl,
+    this.videoUrl,
   });
 
   factory ProjectInfo.fromJson(Map<String, dynamic> json) {
@@ -60,6 +62,7 @@ class ProjectInfo {
           ? List<String>.from(json['teamMembers'] as List)
           : [],
       thumbnailUrl: json['thumbnailUrl'] as String?,
+      videoUrl: json['videoUrl'] as String?,
     );
   }
 }
