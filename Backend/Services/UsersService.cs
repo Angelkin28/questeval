@@ -95,9 +95,51 @@ public class UsersService : IUsersService
         var memFilter = Builders<Membership>.Filter.In(m => m.UserId, userIds);
         await _memberships.DeleteManyAsync(memFilter);
 
-        // 2. Borrar proyectos donde el usuario es dueño
-        var projFilter = Builders<Project>.Filter.In(p => p.UserId, userIds);
-        await _projects.DeleteManyAsync(projFilter);
+        // 2. Manejar proyectos relacionados con este usuario
+        // 2a. Proyectos donde el usuario es dueño
+        var ownedFilter = Builders<Project>.Filter.In(p => p.UserId, userIds);
+        var ownedProjects = await _projects.Find(ownedFilter).ToListAsync();
+        foreach (var project in ownedProjects)
+        {
+            if (project.TeamMembers == null || project.TeamMembers.Count == 0)
+            {
+                // Sin integrantes de equipo → eliminar el proyecto
+                await _projects.DeleteOneAsync(p => p.Id == project.Id);
+            }
+            else
+            {
+                // Aún hay integrantes → solo limpiar el UserId del dueño
+                await _projects.UpdateOneAsync(
+                    p => p.Id == project.Id,
+                    Builders<Project>.Update.Unset(p => p.UserId));
+            }
+        }
+
+        // 2b. Proyectos donde el usuario aparece como integrante de equipo (TeamMembers por nombre)
+        if (!string.IsNullOrEmpty(user.FullName))
+        {
+            var memberFilter = Builders<Project>.Filter.AnyEq(p => p.TeamMembers, user.FullName);
+            var projectsAsMember = await _projects.Find(memberFilter).ToListAsync();
+            foreach (var project in projectsAsMember)
+            {
+                var updatedMembers = project.TeamMembers
+                    .Where(m => !m.Equals(user.FullName, StringComparison.OrdinalIgnoreCase))
+                    .ToList();
+
+                bool noOwner = string.IsNullOrEmpty(project.UserId) || userIds.Contains(project.UserId);
+                if (noOwner && updatedMembers.Count == 0)
+                {
+                    // Proyecto totalmente huérfano → eliminar
+                    await _projects.DeleteOneAsync(p => p.Id == project.Id);
+                }
+                else
+                {
+                    await _projects.UpdateOneAsync(
+                        p => p.Id == project.Id,
+                        Builders<Project>.Update.Set(p => p.TeamMembers, updatedMembers));
+                }
+            }
+        }
 
         // 3. Borrar evaluaciones hechas por este usuario
         var evalFilter = Builders<Evaluation>.Filter.In(e => e.UserId, userIds);

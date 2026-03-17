@@ -17,9 +17,11 @@ import {
     Lock,
     CheckCircle2,
     X,
-    BookOpen
+    BookOpen,
+    Star,
+    ClipboardList
 } from 'lucide-react';
-import { api, Project, Group } from '@/lib/api';
+import { api, Project, Group, EvaluationResponse } from '@/lib/api';
 import { useEffect } from 'react';
 import Header from '@/components/layout/Header';
 import TeacherDashboard from './components/TeacherDashboard';
@@ -30,6 +32,7 @@ export default function DashboardPage() {
     const [userName, setUserName] = useState('Usuario');
     const [userEnrollment, setUserEnrollment] = useState('');
     const [projects, setProjects] = useState<Project[]>([]);
+    const [projectEvaluations, setProjectEvaluations] = useState<Record<string, EvaluationResponse[]>>({});
     const [allGroups, setAllGroups] = useState<Group[]>([]);
     const [myGroupIds, setMyGroupIds] = useState<Set<string>>(new Set());
     const [isLoading, setIsLoading] = useState(true);
@@ -70,6 +73,18 @@ export default function DashboardPage() {
                     setProjects(apiProjects);
                     setAllGroups(allGroupsData);
                     setMyGroupIds(new Set(myGroupsData.map((g: Group) => g.id)));
+
+                    // Cargar evaluaciones por proyecto
+                    const evalsMap: Record<string, EvaluationResponse[]> = {};
+                    await Promise.all(
+                        apiProjects.map(async (p: Project) => {
+                            try {
+                                const evals = await api.evaluations.getByProject(p.id);
+                                if (evals.length > 0) evalsMap[p.id] = evals;
+                            } catch { /* sin evaluaciones */ }
+                        })
+                    );
+                    setProjectEvaluations(evalsMap);
                 }
             } catch (error) {
                 console.error('Error cargando dashboard:', error);
@@ -240,11 +255,12 @@ export default function DashboardPage() {
                     {/* Project Cards */}
                     {filteredProjects.map((project, idx) => (
                         <Card key={project.id || idx} onClick={() => router.push(`/project/${project.id}`)} className="overflow-hidden hover:shadow-lg transition-all group cursor-pointer border-border/50 bg-card">
-                            <div className="h-32 bg-secondary relative overflow-hidden">
+                            <div className="aspect-video bg-secondary relative overflow-hidden">
                                 {project.thumbnailUrl ? (
-                                    <div
-                                        className="w-full h-full bg-cover bg-center group-hover:scale-105 transition-transform duration-500"
-                                        style={{ backgroundImage: `url(${project.thumbnailUrl})` }}
+                                    <img
+                                        src={project.thumbnailUrl}
+                                        alt={project.name}
+                                        className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
                                     />
                                 ) : (
                                     <div className="w-full h-full flex items-center justify-center bg-gradient-to-br from-secondary to-muted">
@@ -307,6 +323,86 @@ export default function DashboardPage() {
                             >
                                 Crear mi primer proyecto
                             </Button>
+                        </div>
+                    )}
+                </div>
+
+                {/* ===== MIS EVALUACIONES ===== */}
+                <div className="mt-14 animate-fade-in" style={{ animationDelay: '225ms' }}>
+                    <div className="mb-6">
+                        <h2 className="text-4xl font-bold title-serif">Mis Evaluaciones</h2>
+                        <p className="text-muted-foreground mt-1">Resultados de las evaluaciones de tus proyectos.</p>
+                    </div>
+
+                    {Object.keys(projectEvaluations).length === 0 ? (
+                        <div className="py-14 text-center bg-secondary/20 rounded-xl border-2 border-dashed">
+                            <ClipboardList className="w-10 h-10 text-muted-foreground/40 mx-auto mb-3" />
+                            <p className="text-muted-foreground">Aún no tienes evaluaciones.</p>
+                        </div>
+                    ) : (
+                        <div className="space-y-4">
+                            {projects
+                                .filter(p => projectEvaluations[p.id])
+                                .map(project => (
+                                    <Card key={project.id} className="overflow-hidden border-border/50 hover:shadow-md transition-all">
+                                        <CardContent className="p-0">
+                                            <div
+                                                className="flex items-center gap-4 p-5 cursor-pointer hover:bg-secondary/20 transition-colors"
+                                                onClick={() => router.push(`/project/${project.id}`)}
+                                            >
+                                                {/* Thumbnail */}
+                                                <div className="w-16 h-16 rounded-lg overflow-hidden bg-secondary shrink-0">
+                                                    {project.thumbnailUrl ? (
+                                                        <img src={project.thumbnailUrl} alt={project.name} className="w-full h-full object-cover" />
+                                                    ) : (
+                                                        <div className="w-full h-full flex items-center justify-center">
+                                                            <LayoutGrid className="w-6 h-6 text-muted-foreground/40" />
+                                                        </div>
+                                                    )}
+                                                </div>
+
+                                                {/* Info */}
+                                                <div className="flex-1 min-w-0">
+                                                    <h3 className="font-bold text-base truncate">{project.name}</h3>
+                                                    <p className="text-xs text-muted-foreground">
+                                                        {projectEvaluations[project.id].length} evaluaci{projectEvaluations[project.id].length === 1 ? 'ón' : 'ones'}
+                                                    </p>
+                                                </div>
+
+                                                {/* Score */}
+                                                <div className="text-right shrink-0">
+                                                    {(() => {
+                                                        const evals = projectEvaluations[project.id];
+                                                        const avg = evals.reduce((sum, e) => sum + e.finalScore, 0) / evals.length;
+                                                        const color = avg >= 80 ? 'text-green-600 bg-green-50 border-green-200' :
+                                                            avg >= 60 ? 'text-yellow-600 bg-yellow-50 border-yellow-200' :
+                                                                'text-red-600 bg-red-50 border-red-200';
+                                                        return (
+                                                            <div className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg border ${color}`}>
+                                                                <Star className="w-4 h-4" />
+                                                                <span className="text-lg font-bold">{avg.toFixed(1)}</span>
+                                                            </div>
+                                                        );
+                                                    })()}
+                                                </div>
+                                            </div>
+
+                                            {/* Detalles por evaluación */}
+                                            <div className="border-t border-border/50 px-5 py-3 bg-secondary/10">
+                                                <div className="space-y-2">
+                                                    {projectEvaluations[project.id].map((ev, idx) => (
+                                                        <div key={ev.id || idx} className="flex items-center justify-between text-sm">
+                                                            <span className="text-muted-foreground">
+                                                                Evaluación {idx + 1} — {new Date(ev.createdAt).toLocaleDateString('es-MX', { day: 'numeric', month: 'short', year: 'numeric' })}
+                                                            </span>
+                                                            <span className="font-semibold">{ev.finalScore} pts</span>
+                                                        </div>
+                                                    ))}
+                                                </div>
+                                            </div>
+                                        </CardContent>
+                                    </Card>
+                                ))}
                         </div>
                     )}
                 </div>

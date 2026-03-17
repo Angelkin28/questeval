@@ -20,6 +20,16 @@ import {
 export default function EditCriteriaPage() {
     const router = useRouter();
     const [criteria, setCriteria] = useState<CriterionResponse[]>([]);
+
+    // Protección de rol: solo Profesor y Admin
+    useEffect(() => {
+        const userData = localStorage.getItem('user');
+        if (!userData) { router.push('/login'); return; }
+        const parsed = JSON.parse(userData);
+        if (parsed.role !== 'Profesor' && parsed.role !== 'Admin') {
+            router.push('/dashboard');
+        }
+    }, [router]);
     const [loading, setLoading] = useState(true);
     const [editingId, setEditingId] = useState<string | null>(null);
     const [formData, setFormData] = useState({

@@ -334,30 +334,45 @@ export default function NewProjectPage() {
                                             <ImageIcon className="w-4 h-4" />
                                             Imagen de Portada
                                         </label>
-                                        <label
-                                            htmlFor="project-image"
-                                            className="border-2 border-dashed border-muted-foreground/25 rounded-lg p-8 text-center hover:bg-secondary/20 transition-colors cursor-pointer block"
-                                        >
-                                            <Upload className="w-8 h-8 mx-auto mb-2 text-muted-foreground" />
-                                            <p className="text-sm font-medium">Clic para subir imagen</p>
-                                            <p className="text-xs text-muted-foreground">PNG, JPG hasta 5MB</p>
-                                            <input
-                                                id="project-image"
-                                                type="file"
-                                                accept="image/*"
-                                                className="hidden"
-                                                onChange={(e) => {
-                                                    if (e.target.files?.[0]) {
-                                                        setFormData(p => ({ ...p, coverImage: e.target.files![0] }));
-                                                    }
-                                                }}
-                                            />
-                                        </label>
-                                        {formData.coverImage && (
-                                            <div className="mt-2 flex items-center gap-2 text-sm text-primary">
-                                                <CheckCircle2 className="w-4 h-4" />
-                                                {formData.coverImage.name}
+                                        {formData.coverImage ? (
+                                            <div className="relative rounded-lg overflow-hidden border border-muted-foreground/25">
+                                                <img
+                                                    src={URL.createObjectURL(formData.coverImage)}
+                                                    alt="Preview"
+                                                    className="w-full h-48 object-cover"
+                                                />
+                                                <button
+                                                    type="button"
+                                                    onClick={() => setFormData(p => ({ ...p, coverImage: null }))}
+                                                    className="absolute top-2 right-2 bg-black/60 text-white rounded-full w-7 h-7 flex items-center justify-center text-sm hover:bg-black/80 transition-colors"
+                                                >
+                                                    ✕
+                                                </button>
+                                                <div className="p-2 bg-secondary/30 flex items-center gap-2 text-sm text-primary">
+                                                    <CheckCircle2 className="w-4 h-4" />
+                                                    {formData.coverImage.name}
+                                                </div>
                                             </div>
+                                        ) : (
+                                            <label
+                                                htmlFor="project-image"
+                                                className="border-2 border-dashed border-muted-foreground/25 rounded-lg p-8 text-center hover:bg-secondary/20 transition-colors cursor-pointer block"
+                                            >
+                                                <Upload className="w-8 h-8 mx-auto mb-2 text-muted-foreground" />
+                                                <p className="text-sm font-medium">Clic para subir imagen</p>
+                                                <p className="text-xs text-muted-foreground">PNG, JPG hasta 5MB</p>
+                                                <input
+                                                    id="project-image"
+                                                    type="file"
+                                                    accept="image/*"
+                                                    className="hidden"
+                                                    onChange={(e) => {
+                                                        if (e.target.files?.[0]) {
+                                                            setFormData(p => ({ ...p, coverImage: e.target.files![0] }));
+                                                        }
+                                                    }}
+                                                />
+                                            </label>
                                         )}
                                     </div>
                                 </div>

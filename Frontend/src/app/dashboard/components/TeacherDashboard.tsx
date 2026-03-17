@@ -12,7 +12,8 @@ import {
     GraduationCap,
     Loader2,
     QrCode,
-    X
+    X,
+    Settings2
 } from 'lucide-react';
 import QRCode from 'react-qr-code';
 import { api, Group } from '@/lib/api';
@@ -104,13 +105,23 @@ export default function TeacherDashboard({ user }: TeacherDashboardProps) {
                         Gestiona tus grupos y evaluaciones académicas.
                     </p>
                 </div>
-                <Button
-                    className="bg-primary text-primary-foreground hover:bg-primary/90 gap-2 shadow-md"
-                    onClick={() => router.push('/groups/new')}
-                >
-                    <Plus className="w-4 h-4" />
-                    Nuevo Grupo
-                </Button>
+                <div className="flex gap-2">
+                    <Button
+                        variant="outline"
+                        className="gap-2"
+                        onClick={() => router.push('/rubric/edit')}
+                    >
+                        <Settings2 className="w-4 h-4" />
+                        Rúbrica
+                    </Button>
+                    <Button
+                        className="bg-primary text-primary-foreground hover:bg-primary/90 gap-2 shadow-md"
+                        onClick={() => router.push('/groups/new')}
+                    >
+                        <Plus className="w-4 h-4" />
+                        Nuevo Grupo
+                    </Button>
+                </div>
             </div>
 
             {/* Stats Cards (Placeholders for now) */}
