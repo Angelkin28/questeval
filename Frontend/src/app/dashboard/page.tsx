@@ -255,18 +255,56 @@ export default function DashboardPage() {
                     {/* Project Cards */}
                     {filteredProjects.map((project, idx) => (
                         <Card key={project.id || idx} onClick={() => router.push(`/project/${project.id}`)} className="overflow-hidden hover:shadow-lg transition-all group cursor-pointer border-border/50 bg-card">
-                            <div className="aspect-video bg-secondary relative overflow-hidden">
-                                {project.thumbnailUrl ? (
-                                    <img
-                                        src={project.thumbnailUrl}
-                                        alt={project.name}
-                                        className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
-                                    />
-                                ) : (
-                                    <div className="w-full h-full flex items-center justify-center bg-gradient-to-br from-secondary to-muted">
-                                        <LayoutGrid className="w-10 h-10 text-muted-foreground/50" />
-                                    </div>
-                                )}
+                            <div
+                                className="aspect-video bg-secondary relative overflow-hidden"
+                                onMouseEnter={(e) => {
+                                    const video = e.currentTarget.querySelector('video') as HTMLVideoElement | null;
+                                    if (video) { video.currentTime = 0; video.play().catch(() => {}); }
+                                }}
+                                onMouseLeave={(e) => {
+                                    const video = e.currentTarget.querySelector('video') as HTMLVideoElement | null;
+                                    if (video) { video.pause(); video.currentTime = 0; }
+                                }}
+                            >
+                                {(() => {
+                                    const isDirectVideo = project.videoUrl && (
+                                        /\.(mp4|webm|mov|avi)(\?|$)/i.test(project.videoUrl) ||
+                                        project.videoUrl.includes('.supabase.co/storage')
+                                    );
+                                    return (
+                                        <>
+                                            {project.thumbnailUrl ? (
+                                                // Con imagen: imagen estática de fondo
+                                                <img
+                                                    src={project.thumbnailUrl}
+                                                    alt={project.name}
+                                                    className="w-full h-full object-cover transition-transform duration-500"
+                                                />
+                                            ) : !isDirectVideo ? (
+                                                <div className="w-full h-full flex items-center justify-center bg-gradient-to-br from-secondary to-muted">
+                                                    <LayoutGrid className="w-10 h-10 text-muted-foreground/50" />
+                                                </div>
+                                            ) : null}
+                                            {/* Video: siempre presente si hay videoUrl, encima de la imagen al hover */}
+                                            {isDirectVideo && (
+                                                <video
+                                                    src={project.videoUrl!}
+                                                    muted
+                                                    playsInline
+                                                    preload="metadata"
+                                                    className={`absolute inset-0 w-full h-full object-cover transition-opacity duration-300 ${project.thumbnailUrl ? 'opacity-0 group-hover:opacity-100' : 'opacity-100'}`}
+                                                    onTimeUpdate={(e) => {
+                                                        if (e.currentTarget.currentTime >= 5) {
+                                                            e.currentTarget.pause();
+                                                            e.currentTarget.currentTime = 0;
+                                                        }
+                                                    }}
+                                                    onClick={(e) => e.stopPropagation()}
+                                                />
+                                            )}
+                                        </>
+                                    );
+                                })()}
                                 <div className="absolute top-3 right-3">
                                     <span className={`px-2 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider backdrop-blur-md ${project.category === 'Integrador' ? 'bg-blue-500/20 text-blue-700' : 'bg-purple-500/20 text-purple-700'
                                         }`}>

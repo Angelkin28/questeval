@@ -268,6 +268,36 @@ public class GroupsController : ControllerBase
         return NoContent();
     }
 
+    [HttpPost("{id}/join-teacher")]
+    [Authorize(Roles = "Profesor,Admin")]
+    [ProducesResponseType(StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
+    public async Task<IActionResult> JoinGroupAsTeacher(string id)
+    {
+        var userId = User.FindFirst("userId")?.Value;
+        if (string.IsNullOrEmpty(userId)) return Unauthorized();
+
+        var group = await _service.GetByIdAsync(id) ?? await _service.GetByGroupIdAsync(id);
+        if (group == null)
+            return NotFound(new { message = "Grupo no encontrado." });
+
+        var existingMembership = (await _membershipsService.GetByUserIdAsync(userId))
+            .FirstOrDefault(m => m.GroupId == group.GroupId);
+
+        if (existingMembership != null)
+            return BadRequest(new { message = "Ya eres miembro de este grupo." });
+
+        await _membershipsService.CreateAsync(new Membership
+        {
+            UserId = userId,
+            GroupId = group.GroupId!,
+            JoinedAt = DateTime.UtcNow
+        });
+
+        return Ok(new { message = "Te has unido al grupo exitosamente como maestro.", groupId = group.GroupId });
+    }
+
     /// <summary>
     /// Join a group using access code
     /// </summary>

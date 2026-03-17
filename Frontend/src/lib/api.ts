@@ -580,6 +580,35 @@ export const api = {
                 throw new Error(error.message || 'Error al subir archivo');
             }
             return response.json();
+        },
+        uploadVideo: async (file: File, onProgress?: (pct: number) => void): Promise<{ url: string }> => {
+            const formData = new FormData();
+            formData.append('file', file);
+
+            const token = localStorage.getItem('token');
+
+            return new Promise((resolve, reject) => {
+                const xhr = new XMLHttpRequest();
+                xhr.open('POST', `${API_URL}/Storage/upload-video`);
+                if (token) xhr.setRequestHeader('Authorization', `Bearer ${token}`);
+
+                xhr.upload.onprogress = (e) => {
+                    if (e.lengthComputable && onProgress) {
+                        onProgress(Math.round((e.loaded / e.total) * 100));
+                    }
+                };
+
+                xhr.onload = () => {
+                    if (xhr.status >= 200 && xhr.status < 300) {
+                        resolve(JSON.parse(xhr.responseText));
+                    } else {
+                        reject(new Error(`[${xhr.status}] ${xhr.responseText}`));
+                    }
+                };
+
+                xhr.onerror = () => reject(new Error('Error de red al subir el video'));
+                xhr.send(formData);
+            });
         }
     },
 
