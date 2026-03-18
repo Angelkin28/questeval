@@ -26,6 +26,7 @@ export default function TeacherDashboard({ user }: TeacherDashboardProps) {
     const router = useRouter();
     const [groups, setGroups] = useState<Group[]>([]);
     const [pendingProjects, setPendingProjects] = useState<any[]>([]);
+    const [allGroupProjects, setAllGroupProjects] = useState<any[]>([]);
     const [totalStudents, setTotalStudents] = useState<number | null>(null);
     const [loading, setLoading] = useState(true);
 
@@ -78,11 +79,19 @@ export default function TeacherDashboard({ user }: TeacherDashboardProps) {
                 }
                 setTotalStudents(studentCount);
 
-                // Filter projects that belong to my groups AND are status 'Completed'
-                const myGroupIds = new Set(myGroups.map(g => g.id));
-                const pending = allProjects.filter(p =>
-                    myGroupIds.has(p.groupId!) && p.status === 'Completed'
-                );
+                // Construir set con TODOS los IDs posibles de cada grupo (ObjectId + incremental)
+                const myGroupIds = new Set<string>();
+                myGroups.forEach(g => {
+                    myGroupIds.add(g.id);
+                    if (g.groupId) myGroupIds.add(g.groupId);
+                });
+
+                // Proyectos de mis grupos (cualquier estado)
+                const groupProjects = allProjects.filter(p => p.groupId && myGroupIds.has(p.groupId));
+                setAllGroupProjects(groupProjects);
+
+                // Solo los 'Completed' van a "Por Calificar"
+                const pending = groupProjects.filter(p => p.status === 'Completed');
                 setPendingProjects(pending);
 
             } catch (error) {
@@ -189,6 +198,44 @@ export default function TeacherDashboard({ user }: TeacherDashboardProps) {
                     </div>
                 )}
             </div>
+
+            {/* Todos los proyectos del grupo */}
+            {allGroupProjects.length > 0 && (
+                <div>
+                    <div className="flex items-center justify-between mb-3">
+                        <h2 className="text-lg font-bold title-serif flex items-center gap-2">
+                            <ClipboardCheck className="w-5 h-5 text-primary" />
+                            Proyectos del Grupo ({allGroupProjects.length})
+                        </h2>
+                    </div>
+                    <div className="space-y-3">
+                        {allGroupProjects.map((project) => (
+                            <Card
+                                key={project.id}
+                                className="cursor-pointer hover:shadow-md transition-shadow border-l-4 border-l-primary/40"
+                                onClick={() => router.push(`/project/${project.id}`)}
+                            >
+                                <CardContent className="p-4 flex justify-between items-center">
+                                    <div>
+                                        <h3 className="font-bold text-base">{project.name}</h3>
+                                        <p className="text-xs text-muted-foreground">
+                                            {project.category} • {groups.find(g => g.id === project.groupId || g.groupId === project.groupId)?.name || 'Grupo'}
+                                        </p>
+                                    </div>
+                                    <span className={`text-xs px-2 py-1 rounded-full font-semibold ${
+                                        project.status === 'Evaluated' ? 'bg-blue-100 text-blue-700' :
+                                        project.status === 'Completed' ? 'bg-green-100 text-green-700' :
+                                        'bg-yellow-100 text-yellow-700'
+                                    }`}>
+                                        {project.status === 'Evaluated' ? 'Evaluado' :
+                                         project.status === 'Completed' ? 'Entregado' : 'En Progreso'}
+                                    </span>
+                                </CardContent>
+                            </Card>
+                        ))}
+                    </div>
+                </div>
+            )}
 
             {/* Entregas Recientes (Por Calificar) */}
             <div>

@@ -68,6 +68,7 @@ export interface Project {
 
 export interface Group {
     id: string;
+    groupId?: string;  // ID incremental (ej: "1", "G-001")
     name: string;
     accessCode: string;
     createdAt: string;
