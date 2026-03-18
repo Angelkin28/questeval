@@ -433,7 +433,7 @@ export default function DashboardPage() {
                                                             <span className="text-muted-foreground">
                                                                 Evaluación {idx + 1} — {new Date(ev.createdAt).toLocaleDateString('es-MX', { day: 'numeric', month: 'short', year: 'numeric' })}
                                                             </span>
-                                                            <span className="font-semibold">{ev.finalScore} pts</span>
+                                                            <span className="font-semibold">{Number(ev.finalScore.toFixed(2))} pts</span>
                                                         </div>
                                                     ))}
                                                 </div>
