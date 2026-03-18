@@ -26,7 +26,6 @@ public class StorageController : ControllerBase
         if (file == null || file.Length == 0)
             return BadRequest("No file uploaded.");
 
-<<<<<<< HEAD
         string bucketName = "images";
         string folderPath = "uploads";
 
@@ -46,14 +45,6 @@ public class StorageController : ControllerBase
         try
         {
             var publicUrl = await _storageService.UploadFileAsync(file, bucketName, folderPath);
-=======
-        if (!file.ContentType.StartsWith("image/"))
-            return BadRequest("Only image files are allowed.");
-
-        try
-        {
-            var publicUrl = await _storageService.UploadFileAsync(file, "images", "uploads");
->>>>>>> 519958f48ed08e0906427448352a49090ab05ad6
             return Ok(new { Url = publicUrl });
         }
         catch (Exception ex)
