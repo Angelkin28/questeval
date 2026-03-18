@@ -126,11 +126,11 @@ export default function ProjectDetailsPage() {
                             <div className="shrink-0">
                                 <span className={`px-3 py-1.5 rounded-full text-[11px] font-bold uppercase tracking-wider shadow ${
                                     project.status === 'Evaluated' ? 'bg-blue-500/90 text-white' :
-                                    project.status === 'Completed' ? 'bg-green-500/90 text-white' :
+                                    project.status === 'Completed' ? 'bg-yellow-400/90 text-black' :
                                     'bg-yellow-400/90 text-black'
                                 }`}>
                                     {project.status === 'Evaluated' ? 'Evaluado' :
-                                     project.status === 'Completed' ? 'Entregado' : 'En Progreso'}
+                                     project.status === 'Completed' ? 'Pendiente' : 'En Progreso'}
                                 </span>
                             </div>
                         </div>

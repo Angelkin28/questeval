@@ -332,10 +332,10 @@ export default function DashboardPage() {
                                         ))}
                                     </div>
                                     <div className="flex items-center gap-1 text-xs font-medium text-muted-foreground">
-                                        <span className={`w-2 h-2 rounded-full ${project.status === 'Completed' ? 'bg-green-500' :
-                                            project.status === 'In Progress' ? 'bg-yellow-500' : 'bg-gray-400'
+                                        <span className={`w-2 h-2 rounded-full ${project.status === 'Evaluated' ? 'bg-green-500' :
+                                            project.status === 'Completed' ? 'bg-yellow-500' : 'bg-gray-400'
                                             }`} />
-                                        {project.status === 'In Progress' ? 'En Progreso' : project.status === 'Completed' ? 'Completado' : project.status}
+                                        {project.status === 'Evaluated' ? 'Evaluado' : project.status === 'Completed' ? 'Pendiente' : project.status === 'In Progress' ? 'En Progreso' : project.status}
                                     </div>
                                 </div>
                             </CardContent>

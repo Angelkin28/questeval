@@ -164,12 +164,12 @@ export default function GroupDetailsPage() {
                                     <CardContent className="p-4">
                                         <div className="flex justify-between items-start mb-2">
                                             <h3 className="font-bold text-lg">{project.name}</h3>
-                                            <span className={`text-xs px-2 py-1 rounded-full ${project.status === 'Completed' ? 'bg-green-100 text-green-700' :
+                                            <span className={`text-xs px-2 py-1 rounded-full ${project.status === 'Completed' ? 'bg-yellow-100 text-yellow-700' :
                                                 project.status === 'Evaluated' ? 'bg-blue-100 text-blue-700' :
                                                     'bg-yellow-100 text-yellow-700'
                                                 }`}>
                                                 {project.status === 'Active' ? 'En Progreso' :
-                                                    project.status === 'Completed' ? 'Entregado' : 'Evaluado'}
+                                                    project.status === 'Completed' ? 'Pendiente' : 'Evaluado'}
                                             </span>
                                         </div>
                                         <p className="text-sm text-muted-foreground mb-4 line-clamp-2">

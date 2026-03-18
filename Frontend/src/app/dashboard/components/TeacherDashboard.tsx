@@ -224,11 +224,11 @@ export default function TeacherDashboard({ user }: TeacherDashboardProps) {
                                     </div>
                                     <span className={`text-xs px-2 py-1 rounded-full font-semibold ${
                                         project.status === 'Evaluated' ? 'bg-blue-100 text-blue-700' :
-                                        project.status === 'Completed' ? 'bg-green-100 text-green-700' :
+                                        project.status === 'Completed' ? 'bg-yellow-100 text-yellow-700' :
                                         'bg-yellow-100 text-yellow-700'
                                     }`}>
                                         {project.status === 'Evaluated' ? 'Evaluado' :
-                                         project.status === 'Completed' ? 'Entregado' : 'En Progreso'}
+                                         project.status === 'Completed' ? 'Pendiente' : 'En Progreso'}
                                     </span>
                                 </CardContent>
                             </Card>

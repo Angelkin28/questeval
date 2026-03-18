@@ -221,7 +221,7 @@ export default function NewProjectPage() {
                 name: formData.name,
                 description: formData.description,
                 category: formData.category,
-                status: 'In Progress',
+                status: 'Completed',
                 videoUrl: videoUrl,
                 thumbnailUrl: coverImageUrl,
                 galleryImages: galleryUrls,
