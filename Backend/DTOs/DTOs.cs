@@ -340,7 +340,7 @@ public class EvaluationDetailRequest
     /// </summary>
     /// <example>85</example>
     [Required]
-    [Range(0, double.MaxValue, ErrorMessage = "El puntaje debe ser un valor positivo.")]
+    [Range(0, 100, ErrorMessage = "El puntaje debe estar entre 0 y 100.")]
     public double Score { get; set; }
 }
 
