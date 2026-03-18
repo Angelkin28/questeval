@@ -77,20 +77,10 @@ export default function LoginPage() {
 
         } catch (err: any) {
             if (err.message?.includes('fetch') || err.message?.includes('Failed to fetch')) {
-                const demoUser = {
-                    userId: 'demo-123',
-                    email: formData.email,
-                    enrollment: 'D2024001',
-                    fullName: formData.email.includes('@') ? formData.email.split('@')[0] : 'Usuario Demo',
-                    role: formData.email.toLowerCase().includes('maestro') ? 'Maestro' : 'Alumno',
-                    token: 'demo-token',
-                };
-                localStorage.setItem('user', JSON.stringify(demoUser));
-                localStorage.setItem('token', 'demo-token');
-                router.push('/dashboard');
-                return;
+                setError('No se puede conectar con el servidor. Por favor intenta de nuevo en unos momentos.');
+            } else {
+                setError(err.message || 'Credenciales incorrectas. Verifica tus datos.');
             }
-            setError(err.message || 'Credenciales incorrectas. Verifica tus datos.');
         } finally {
             setLoading(false);
         }

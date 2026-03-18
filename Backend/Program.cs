@@ -82,7 +82,14 @@ builder.Services.AddCors(options =>
         }
         else
         {
-            policy.WithOrigins("http://localhost:5173", "http://localhost:5248", "http://localhost:4200", "http://localhost:4201")
+            // Leer orígenes permitidos desde variable de entorno (separados por coma)
+            // o usar los valores por defecto si no está definida
+            var allowedOriginsEnv = builder.Configuration["CORS_ALLOWED_ORIGINS"];
+            var allowedOrigins = string.IsNullOrWhiteSpace(allowedOriginsEnv)
+                ? new[] { "https://questeval.vercel.app" }
+                : allowedOriginsEnv.Split(',', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries);
+
+            policy.WithOrigins(allowedOrigins)
                   .AllowAnyMethod()
                   .AllowAnyHeader();
         }
