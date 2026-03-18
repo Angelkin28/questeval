@@ -231,13 +231,10 @@ var app = builder.Build();
 //    Debe ser primero para capturar errores de todos los demás middleware
 app.UseExceptionHandler();
 
-// 2. Swagger UI - Solo en entorno de desarrollo
-//    Proporciona documentación interactiva de la API en /swagger
-if (app.Environment.IsDevelopment())
-{
-    app.UseSwagger();       // Genera JSON de OpenAPI en /swagger/v1/swagger.json
-    app.UseSwaggerUI();     // Proporciona UI en /swagger/index.html
-}
+// 2. Swagger UI
+// Proporciona documentación interactiva de la API en /swagger
+app.UseSwagger();       // Genera JSON de OpenAPI en /swagger/v1/swagger.json
+app.UseSwaggerUI();     // Proporciona UI en /swagger/index.html
 
 // 3. Redirección HTTPS - Redirigir solicitudes HTTP a HTTPS
 app.UseHttpsRedirection();
