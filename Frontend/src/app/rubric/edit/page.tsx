@@ -107,9 +107,9 @@ export default function EditCriteriaPage() {
                 setCriteria(prev => prev.map(c => c.id === editingId ? { ...c, ...formData } : c));
                 setEditingId(null);
             }
-        } catch (error) {
+        } catch (error: any) {
             console.error('Error saving criterion:', error);
-            alert('Error al guardar criterio');
+            alert(error?.message || 'Error al guardar criterio');
         } finally {
             setSubmitting(false);
         }

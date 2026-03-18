@@ -24,7 +24,7 @@ public class CreateCriterionRequest
     /// </summary>
     /// <example>Evalúa la calidad, legibilidad y mantenibilidad del código</example>
     [Required(ErrorMessage = "La descripción del criterio es requerida.")]
-    [StringLength(500, MinimumLength = 10, ErrorMessage = "La descripción debe tener entre 10 y 500 caracteres.")]
+    [StringLength(500, MinimumLength = 3, ErrorMessage = "La descripción debe tener entre 3 y 500 caracteres.")]
     public string Description { get; set; } = null!;
 
     /// <summary>

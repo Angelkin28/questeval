@@ -554,7 +554,13 @@ export const api = {
                 headers,
                 body: JSON.stringify(data),
             });
-            if (!response.ok) throw new Error('Error al crear criterio');
+            if (!response.ok) {
+                const err = await response.json().catch(() => ({}));
+                const msg = err?.errors
+                    ? Object.values(err.errors).flat().join(' ')
+                    : err?.detail || err?.title || `Error ${response.status}`;
+                throw new Error(msg);
+            }
             return response.json();
         },
         update: async (id: string, data: Omit<CriterionResponse, 'id'>): Promise<void> => {
