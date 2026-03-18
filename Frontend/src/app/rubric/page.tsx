@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, Suspense } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
@@ -28,7 +28,7 @@ interface Criterio {
     puntajeAsignado: number;
 }
 
-export default function RubricaPage() {
+function RubricaContent() {
     const router = useRouter();
     const searchParams = useSearchParams();
     const projectId = searchParams.get('projectId') ?? undefined;
@@ -327,5 +327,13 @@ export default function RubricaPage() {
                 )}
             </main>
         </div>
+    );
+}
+
+export default function RubricaPage() {
+    return (
+        <Suspense fallback={<div className="min-h-screen flex items-center justify-center"><p>Cargando rúbrica...</p></div>}>
+            <RubricaContent />
+        </Suspense>
     );
 }
