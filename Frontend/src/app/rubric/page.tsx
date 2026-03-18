@@ -1,7 +1,7 @@
 'use client';
 
 import { useState } from 'react';
-import { useRouter } from 'next/navigation';
+import { useRouter, useSearchParams } from 'next/navigation';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { Slider } from '@/components/ui/slider';
@@ -28,15 +28,10 @@ interface Criterio {
     puntajeAsignado: number;
 }
 
-interface PageProps {
-    searchParams: {
-        projectId?: string;
-    };
-}
-
-export default function RubricaPage({ searchParams }: PageProps) {
+export default function RubricaPage() {
     const router = useRouter();
-    const projectId = searchParams.projectId;
+    const searchParams = useSearchParams();
+    const projectId = searchParams.get('projectId') ?? undefined;
     const [project, setProject] = useState<any>(null);
 
     const [guardando, setGuardando] = useState(false);
