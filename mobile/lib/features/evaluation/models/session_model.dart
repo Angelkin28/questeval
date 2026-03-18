@@ -85,11 +85,18 @@ class CriteriaInfo {
   });
 
   factory CriteriaInfo.fromJson(Map<String, dynamic> json) {
+    int parsedMax = (json['maxScore'] as num?)?.toInt() ?? 10;
+    // Si la base de datos tenía criterios antiguos con 100 de máximo,
+    // se reajustan a 10 automáticamente para no rebasar el límite.
+    if (parsedMax > 10) {
+      parsedMax = 10;
+    }
+
     return CriteriaInfo(
       id: json['id'] as String,
       name: json['name'] as String,
       description: json['description'] as String? ?? '',
-      maxScore: (json['maxScore'] as num).toInt(),
+      maxScore: parsedMax,
     );
   }
 }
