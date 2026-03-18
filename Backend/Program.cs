@@ -236,8 +236,11 @@ app.UseExceptionHandler();
 app.UseSwagger();       // Genera JSON de OpenAPI en /swagger/v1/swagger.json
 app.UseSwaggerUI();     // Proporciona UI en /swagger/index.html
 
-// 3. Redirección HTTPS - Redirigir solicitudes HTTP a HTTPS
-app.UseHttpsRedirection();
+// 3. Redirección HTTPS - Solo en desarrollo (Render/producción termina SSL en el proxy)
+if (app.Environment.IsDevelopment())
+{
+    app.UseHttpsRedirection();
+}
 
 // 4. CORS - Habilitar solicitudes cross-origin desde el frontend
 //    Debe estar antes de UseAuthorization
