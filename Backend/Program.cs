@@ -73,26 +73,11 @@ builder.Services.AddCors(options =>
 {
     options.AddPolicy("AllowFrontend", policy =>
     {
-        // En desarrollo, permitimos cualquier origen para facilitar las pruebas móviles/web
-        if (builder.Environment.IsDevelopment())
-        {
-            policy.AllowAnyOrigin()
-                  .AllowAnyMethod()
-                  .AllowAnyHeader();
-        }
-        else
-        {
-            // Leer orígenes permitidos desde variable de entorno (separados por coma)
-            // o usar los valores por defecto si no está definida
-            var allowedOriginsEnv = builder.Configuration["CORS_ALLOWED_ORIGINS"];
-            var allowedOrigins = string.IsNullOrWhiteSpace(allowedOriginsEnv)
-                ? new[] { "https://questeval.vercel.app" }
-                : allowedOriginsEnv.Split(',', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries);
-
-            policy.WithOrigins(allowedOrigins)
-                  .AllowAnyMethod()
-                  .AllowAnyHeader();
-        }
+        // Permitimos cualquier origen temporalmente para que la app móvil y web local no tengan bloqueos CORS
+        // al apuntar al entorno productivo (Render).
+        policy.AllowAnyOrigin()
+              .AllowAnyMethod()
+              .AllowAnyHeader();
     });
 });
 
