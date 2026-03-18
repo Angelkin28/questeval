@@ -103,7 +103,10 @@ public class GroupsController : ControllerBase
         
         foreach (var membership in memberships)
         {
-            var user = await _usersService.GetByUserIdAsync(membership.UserId);
+            // membership.UserId stores the MongoDB ObjectId (from JWT "userId" claim = user.Id)
+            // Fall back to incremental UserId search for legacy records
+            var user = await _usersService.GetByIdAsync(membership.UserId)
+                    ?? await _usersService.GetByUserIdAsync(membership.UserId);
             if (user != null)
             {
                 members.Add(new UserResponse
