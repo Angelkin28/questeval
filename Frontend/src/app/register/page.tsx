@@ -6,13 +6,12 @@ import { api } from '@/lib/api';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Card, CardContent } from '@/components/ui/card';
-import { Shield, Loader2, ArrowLeft, Landmark } from 'lucide-react';
+import { Shield, Loader2, ArrowLeft, Landmark, Eye, EyeOff } from 'lucide-react';
 
 export default function RegisterPage() {
     const router = useRouter();
     const [formData, setFormData] = useState({
         fullName: '',
-        enrollment: '',
         email: '',
         password: '',
         confirmPassword: '',
@@ -20,6 +19,8 @@ export default function RegisterPage() {
     });
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState('');
+    const [showPassword, setShowPassword] = useState(false);
+    const [showConfirmPassword, setShowConfirmPassword] = useState(false);
 
     const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
         setFormData({
@@ -62,9 +63,13 @@ export default function RegisterPage() {
         }
 
         try {
+            const derivedEnrollment = formData.role === 'Alumno'
+                ? formData.email.split('@')[0]
+                : '';
+
             await api.auth.register({
                 email: formData.email,
-                enrollment: formData.enrollment,
+                enrollment: derivedEnrollment,
                 password: formData.password,
                 fullName: formData.fullName,
                 role: formData.role
@@ -168,65 +173,69 @@ export default function RegisterPage() {
                             />
                         </div>
 
-                        <div className="grid grid-cols-2 gap-3">
-                            <div className="space-y-1">
-                                <label className="text-[10px] font-bold uppercase tracking-widest text-foreground/80 pl-1 block">
-                                    MATRÍCULA
-                                </label>
-                                <Input
-                                    name="enrollment"
-                                    type="text"
-                                    placeholder="ID Académico"
-                                    value={formData.enrollment}
-                                    onChange={handleChange}
-                                    required
-                                    className="h-10 bg-white border-muted-foreground/20 focus-visible:ring-foreground rounded-lg px-4 text-sm placeholder:text-muted-foreground/50"
-                                />
-                            </div>
-                            <div className="space-y-1">
-                                <label className="text-[10px] font-bold uppercase tracking-widest text-foreground/80 pl-1 block">
-                                    CORREO INSTITUCIONAL
-                                </label>
-                                <Input
-                                    name="email"
-                                    type="email"
-                                    placeholder="Correo institucional"
-                                    value={formData.email}
-                                    onChange={handleChange}
-                                    required
-                                    className="h-10 bg-white border-muted-foreground/20 focus-visible:ring-foreground rounded-lg px-4 text-sm placeholder:text-muted-foreground/50"
-                                />
-                            </div>
+                        <div className="space-y-1">
+                            <label className="text-[10px] font-bold uppercase tracking-widest text-foreground/80 pl-1 block">
+                                CORREO INSTITUCIONAL
+                            </label>
+                            <Input
+                                name="email"
+                                type="email"
+                                placeholder="Correo institucional"
+                                value={formData.email}
+                                onChange={handleChange}
+                                required
+                                className="h-10 bg-white border-muted-foreground/20 focus-visible:ring-foreground rounded-lg px-4 text-sm placeholder:text-muted-foreground/50"
+                            />
                         </div>
 
                         <div className="space-y-2">
                             <label className="text-[10px] font-bold uppercase tracking-widest text-foreground/80 pl-1 block">
                                 CONTRASEÑA
                             </label>
-                            <Input
-                                name="password"
-                                type="password"
-                                placeholder="Ex. ••••••••"
-                                value={formData.password}
-                                onChange={handleChange}
-                                required
-                                className="h-12 bg-white border-muted-foreground/20 focus-visible:ring-foreground rounded-lg px-4 text-base tracking-widest"
-                            />
+                            <div className="relative">
+                                <Input
+                                    name="password"
+                                    type={showPassword ? 'text' : 'password'}
+                                    placeholder="Ex. ••••••••"
+                                    value={formData.password}
+                                    onChange={handleChange}
+                                    required
+                                    className="h-12 bg-white border-muted-foreground/20 focus-visible:ring-foreground rounded-lg px-4 pr-11 text-base tracking-widest"
+                                />
+                                <button
+                                    type="button"
+                                    onClick={() => setShowPassword(v => !v)}
+                                    className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors"
+                                    tabIndex={-1}
+                                >
+                                    {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                                </button>
+                            </div>
                         </div>
 
                         <div className="space-y-2">
                             <label className="text-[10px] font-bold uppercase tracking-widest text-foreground/80 pl-1 block">
                                 CONFIRMAR CONTRASEÑA
                             </label>
-                            <Input
-                                name="confirmPassword"
-                                type="password"
-                                placeholder="Ex. ••••••••"
-                                value={formData.confirmPassword}
-                                onChange={handleChange}
-                                required
-                                className="h-12 bg-white border-muted-foreground/20 focus-visible:ring-foreground rounded-lg px-4 text-base tracking-widest"
-                            />
+                            <div className="relative">
+                                <Input
+                                    name="confirmPassword"
+                                    type={showConfirmPassword ? 'text' : 'password'}
+                                    placeholder="Ex. ••••••••"
+                                    value={formData.confirmPassword}
+                                    onChange={handleChange}
+                                    required
+                                    className="h-12 bg-white border-muted-foreground/20 focus-visible:ring-foreground rounded-lg px-4 pr-11 text-base tracking-widest"
+                                />
+                                <button
+                                    type="button"
+                                    onClick={() => setShowConfirmPassword(v => !v)}
+                                    className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors"
+                                    tabIndex={-1}
+                                >
+                                    {showConfirmPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                                </button>
+                            </div>
                         </div>
 
                         {error && (
