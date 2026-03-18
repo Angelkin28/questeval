@@ -70,80 +70,92 @@ export default function ProjectDetailsPage() {
         <div className="min-h-screen bg-[#F8F7F2] pb-20">
             <Header title="Detalles del Proyecto" showBack />
 
-            {/* ── BANNER ── */}
-            <div className="relative w-full h-52 sm:h-72 md:h-80 bg-gradient-to-br from-secondary to-muted overflow-hidden">
+            {/* ── HERO BANNER ── */}
+            <div className="relative w-full h-72 sm:h-80 md:h-96 overflow-hidden bg-gradient-to-br from-gray-900 to-gray-800">
                 {project.thumbnailUrl ? (
                     <img
                         src={project.thumbnailUrl}
                         alt={project.name}
-                        className="w-full h-full object-cover"
+                        className="absolute inset-0 w-full h-full object-cover object-center"
                     />
                 ) : (
                     <div className="w-full h-full flex items-center justify-center">
-                        <LayoutGrid className="w-20 h-20 text-muted-foreground/20" />
+                        <LayoutGrid className="w-20 h-20 text-white/20" />
                     </div>
                 )}
-                {/* Gradient overlay */}
-                <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-black/10 to-transparent" />
 
-                {/* Category badge */}
+                {/* Strong gradient overlay for text legibility */}
+                <div className="absolute inset-0 bg-gradient-to-t from-black/85 via-black/30 to-black/10" />
+
+                {/* Category badge top-right */}
                 <div className="absolute top-4 right-4">
-                    <span className={`px-3 py-1.5 rounded-full text-[11px] font-bold uppercase tracking-wider shadow ${project.category === 'Integrador' ? 'bg-blue-500 text-white' : 'bg-purple-500 text-white'}`}>
+                    <span className={`px-3 py-1.5 rounded-full text-[11px] font-bold uppercase tracking-wider shadow-lg ${
+                        project.category === 'Integrador' ? 'bg-blue-500 text-white' : 'bg-purple-500 text-white'
+                    }`}>
                         {project.category}
                     </span>
                 </div>
 
-                {/* Status badge */}
-                <div className="absolute bottom-4 left-4">
-                    <span className={`px-3 py-1.5 rounded-full text-[11px] font-bold uppercase tracking-wider ${
-                        project.status === 'Evaluated' ? 'bg-blue-500/90 text-white' :
-                        project.status === 'Completed' ? 'bg-green-500/90 text-white' :
-                        'bg-yellow-500/90 text-black'
-                    }`}>
-                        {project.status === 'Evaluated' ? 'Evaluado' :
-                         project.status === 'Completed' ? 'Entregado' : 'En Progreso'}
-                    </span>
+                {/* Title + description + team over the banner */}
+                <div className="absolute bottom-0 left-0 right-0 px-4 sm:px-8 pb-5 pt-8">
+                    <div className="max-w-5xl mx-auto">
+                        <div className="flex items-end justify-between gap-4">
+                            <div className="flex-1 min-w-0">
+                                <h1 className="text-2xl sm:text-3xl font-bold text-white title-serif leading-tight mb-1 drop-shadow-lg">
+                                    {project.name}
+                                </h1>
+                                {project.description && (
+                                    <p className="text-white/80 text-sm leading-relaxed line-clamp-2 mb-2 max-w-xl">
+                                        {project.description}
+                                    </p>
+                                )}
+                                {project.teamMembers && project.teamMembers.length > 0 && (
+                                    <div className="flex flex-wrap items-center gap-1.5">
+                                        <Users className="w-3.5 h-3.5 text-white/60" />
+                                        {project.teamMembers.map((m, i) => (
+                                            <span key={i} className="bg-white/15 backdrop-blur-sm text-white text-xs px-2.5 py-1 rounded-full font-medium border border-white/20">
+                                                {m}
+                                            </span>
+                                        ))}
+                                    </div>
+                                )}
+                            </div>
+                            <div className="shrink-0">
+                                <span className={`px-3 py-1.5 rounded-full text-[11px] font-bold uppercase tracking-wider shadow ${
+                                    project.status === 'Evaluated' ? 'bg-blue-500/90 text-white' :
+                                    project.status === 'Completed' ? 'bg-green-500/90 text-white' :
+                                    'bg-yellow-400/90 text-black'
+                                }`}>
+                                    {project.status === 'Evaluated' ? 'Evaluado' :
+                                     project.status === 'Completed' ? 'Entregado' : 'En Progreso'}
+                                </span>
+                            </div>
+                        </div>
+                    </div>
                 </div>
             </div>
 
             <main className="container mx-auto px-4 py-6 max-w-5xl">
 
-                {/* ── TITLE + TEAM ── */}
-                <div className="mb-6">
-                    <h1 className="text-3xl font-bold mb-2 title-serif">{project.name}</h1>
-                    <p className="text-muted-foreground leading-relaxed mb-4">{project.description}</p>
-
-                    {project.teamMembers && project.teamMembers.length > 0 && (
-                        <div className="flex flex-wrap items-center gap-2">
-                            <Users className="w-4 h-4 text-muted-foreground" />
-                            {project.teamMembers.map((m, i) => (
-                                <span key={i} className="bg-secondary px-3 py-1 rounded-full text-sm font-medium">
-                                    {m}
-                                </span>
-                            ))}
-                        </div>
-                    )}
-                </div>
-
                 {/* ── VIDEO + GALLERY ── */}
                 {(hasVideo || gallery.length > 0) && (
-                    <div className={`grid gap-4 mb-6 ${hasVideo && gallery.length > 0 ? 'md:grid-cols-2' : 'grid-cols-1'}`}>
+                    <div className="space-y-6 mb-6">
 
-                        {/* Video */}
+                        {/* Video full-width */}
                         {hasVideo && (
                             <div>
-                                <div className="flex items-center gap-2 mb-2">
+                                <div className="flex items-center gap-2 mb-3">
                                     <Video className="w-4 h-4 text-primary" />
                                     <span className="text-sm font-semibold uppercase tracking-wider text-muted-foreground">Video Promocional</span>
                                 </div>
                                 {isDirectVideo ? (
-                                    <div className="rounded-xl overflow-hidden border border-border shadow-md bg-black">
+                                    <div className="rounded-2xl overflow-hidden border border-border shadow-md bg-black">
                                         <video
                                             src={project.videoUrl}
                                             controls
                                             playsInline
                                             preload="metadata"
-                                            className="w-full h-auto block"
+                                            className="w-full max-h-[420px] block"
                                         />
                                     </div>
                                 ) : (
@@ -155,61 +167,69 @@ export default function ProjectDetailsPage() {
                             </div>
                         )}
 
-                        {/* Gallery Carousel */}
+                        {/* Gallery Carousel full-width */}
                         {gallery.length > 0 && (
                             <div>
-                                <div className="flex items-center gap-2 mb-2">
+                                <div className="flex items-center gap-2 mb-3">
                                     <Images className="w-4 h-4 text-primary" />
                                     <span className="text-sm font-semibold uppercase tracking-wider text-muted-foreground">Galería</span>
-                                    <span className="text-xs text-muted-foreground ml-auto">{galleryIndex + 1} / {gallery.length}</span>
+                                    <span className="text-xs text-muted-foreground font-medium ml-1 bg-secondary px-2 py-0.5 rounded-full">
+                                        {galleryIndex + 1} / {gallery.length}
+                                    </span>
                                 </div>
-                                <div className="relative rounded-xl overflow-hidden border border-border shadow-md bg-black aspect-video">
+
+                                {/* Main carousel image */}
+                                <div className="relative rounded-2xl overflow-hidden border border-border shadow-md bg-black aspect-video w-full">
                                     <img
+                                        key={galleryIndex}
                                         src={gallery[galleryIndex]}
                                         alt={`Imagen ${galleryIndex + 1}`}
-                                        className="w-full h-full object-contain"
+                                        className="w-full h-full object-contain transition-opacity duration-300"
                                     />
                                     {gallery.length > 1 && (
                                         <>
                                             <button
                                                 onClick={() => setGalleryIndex(i => (i - 1 + gallery.length) % gallery.length)}
-                                                className="absolute left-2 top-1/2 -translate-y-1/2 bg-black/50 hover:bg-black/70 text-white rounded-full w-8 h-8 flex items-center justify-center transition-colors"
+                                                className="absolute left-3 top-1/2 -translate-y-1/2 bg-black/60 hover:bg-black/80 text-white rounded-full w-10 h-10 flex items-center justify-center transition-colors shadow-lg"
                                             >
-                                                <ChevronLeft className="w-4 h-4" />
+                                                <ChevronLeft className="w-5 h-5" />
                                             </button>
                                             <button
                                                 onClick={() => setGalleryIndex(i => (i + 1) % gallery.length)}
-                                                className="absolute right-2 top-1/2 -translate-y-1/2 bg-black/50 hover:bg-black/70 text-white rounded-full w-8 h-8 flex items-center justify-center transition-colors"
+                                                className="absolute right-3 top-1/2 -translate-y-1/2 bg-black/60 hover:bg-black/80 text-white rounded-full w-10 h-10 flex items-center justify-center transition-colors shadow-lg"
                                             >
-                                                <ChevronRight className="w-4 h-4" />
+                                                <ChevronRight className="w-5 h-5" />
                                             </button>
                                             {/* Dots */}
-                                            <div className="absolute bottom-2 left-1/2 -translate-x-1/2 flex gap-1.5">
+                                            <div className="absolute bottom-3 left-1/2 -translate-x-1/2 flex gap-2">
                                                 {gallery.map((_, i) => (
                                                     <button
                                                         key={i}
                                                         onClick={() => setGalleryIndex(i)}
-                                                        className={`w-2 h-2 rounded-full transition-all ${i === galleryIndex ? 'bg-white scale-125' : 'bg-white/50'}`}
+                                                        className={`rounded-full transition-all duration-200 ${i === galleryIndex ? 'bg-white w-5 h-2' : 'bg-white/50 w-2 h-2 hover:bg-white/80'}`}
                                                     />
                                                 ))}
                                             </div>
                                         </>
                                     )}
                                 </div>
-                                {/* Thumbnails */}
-                                {gallery.length > 1 && (
-                                    <div className="flex gap-2 mt-2">
-                                        {gallery.map((src, i) => (
-                                            <button
-                                                key={i}
-                                                onClick={() => setGalleryIndex(i)}
-                                                className={`w-14 h-10 rounded-md overflow-hidden border-2 transition-all ${i === galleryIndex ? 'border-primary' : 'border-transparent opacity-60 hover:opacity-100'}`}
-                                            >
-                                                <img src={src} alt="" className="w-full h-full object-cover" />
-                                            </button>
-                                        ))}
-                                    </div>
-                                )}
+
+                                {/* Thumbnails strip */}
+                                <div className="flex gap-2 mt-3">
+                                    {gallery.map((src, i) => (
+                                        <button
+                                            key={i}
+                                            onClick={() => setGalleryIndex(i)}
+                                            className={`flex-1 h-16 rounded-xl overflow-hidden border-2 transition-all duration-200 ${
+                                                i === galleryIndex
+                                                    ? 'border-primary shadow-md scale-[1.03]'
+                                                    : 'border-transparent opacity-55 hover:opacity-90 hover:scale-[1.02]'
+                                            }`}
+                                        >
+                                            <img src={src} alt="" className="w-full h-full object-cover" />
+                                        </button>
+                                    ))}
+                                </div>
                             </div>
                         )}
                     </div>
