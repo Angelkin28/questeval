@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:carousel_slider/carousel_slider.dart';
+// import 'package:carousel_slider/carousel_slider.dart';
 import '../../core/providers.dart';
 import '../../data/models.dart';
 import '../../data/mock_data.dart';
@@ -18,6 +18,7 @@ class _ProjectDetailScreenState extends ConsumerState<ProjectDetailScreen> {
   final Map<String, double> _scores = {};
   final List<int?> _quizAnswers = List.filled(4, null);
   final TextEditingController _obsController = TextEditingController();
+  int _galleryIndex = 0;
 
   @override
   void initState() {
@@ -64,8 +65,44 @@ class _ProjectDetailScreenState extends ConsumerState<ProjectDetailScreen> {
           children: [
             _buildGallery(project),
             const SizedBox(height: 20),
-            Text(project.description, style: const TextStyle(fontSize: 16)),
-            const SizedBox(height: 30),
+            const Text('DESCRIPCIÓN', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 13, color: Colors.grey, letterSpacing: 1.2)),
+            const SizedBox(height: 8),
+            Text(project.description, style: const TextStyle(fontSize: 15, height: 1.5)),
+            const SizedBox(height: 24),
+            if (project.objectives.isNotEmpty) ...[
+              const Text('OBJETIVOS', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 13, color: Colors.grey, letterSpacing: 1.2)),
+              const SizedBox(height: 12),
+              ...project.objectives.map((obj) => Padding(
+                padding: const EdgeInsets.only(bottom: 8.0),
+                child: Row(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    const Padding(
+                      padding: EdgeInsets.only(top: 6.0, right: 10.0),
+                      child: Icon(Icons.circle, size: 8, color: AppColors.gold),
+                    ),
+                    Expanded(child: Text(obj, style: const TextStyle(fontSize: 14))),
+                  ],
+                ),
+              )),
+              const SizedBox(height: 24),
+            ],
+            if (project.technologies.isNotEmpty) ...[
+              const Text('HERRAMIENTAS & TECNOLOGÍAS', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 13, color: Colors.grey, letterSpacing: 1.2)),
+              const SizedBox(height: 12),
+              Wrap(
+                spacing: 8,
+                runSpacing: 8,
+                children: project.technologies.map((tech) => Chip(
+                  label: Text(tech, style: const TextStyle(fontSize: 12, fontWeight: FontWeight.bold)),
+                  backgroundColor: Colors.grey[200],
+                  side: BorderSide.none,
+                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 0),
+                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+                )).toList(),
+              ),
+              const SizedBox(height: 30),
+            ],
             _buildVideoPlaceholder(),
             const SizedBox(height: 40),
             const Text('QUIZ DEL PROYECTO', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 18, fontFamily: 'Georgia')),
@@ -106,18 +143,145 @@ class _ProjectDetailScreenState extends ConsumerState<ProjectDetailScreen> {
   }
 
   Widget _buildGallery(Project project) {
-    return CarouselSlider(
-      options: CarouselOptions(height: 200, enlargeCenterPage: true, autoPlay: true),
-      items: [project.thumbnail, project.thumbnail, project.thumbnail].map((url) {
-        return Container(
+    final images = project.galleryImages.isNotEmpty
+        ? project.galleryImages
+        : [project.thumbnail, project.thumbnail, project.thumbnail];
+
+    if (images.isEmpty) return const SizedBox.shrink();
+
+    return Column(
+      children: [
+        // Main Image Area
+        Container(
           width: double.infinity,
-          margin: const EdgeInsets.symmetric(horizontal: 5),
+          height: 200,
           decoration: BoxDecoration(
-            borderRadius: BorderRadius.circular(20),
-            image: DecorationImage(image: NetworkImage(url), fit: BoxFit.cover),
+            color: Colors.black,
+            borderRadius: BorderRadius.circular(16),
+            border: Border.all(color: Colors.grey.withOpacity(0.2)),
+            boxShadow: const [BoxShadow(color: Colors.black12, blurRadius: 4)],
           ),
-        );
-      }).toList(),
+          child: Stack(
+            children: [
+              Center(
+                child: ClipRRect(
+                  borderRadius: BorderRadius.circular(16),
+                  child: AnimatedSwitcher(
+                    duration: const Duration(milliseconds: 300),
+                    child: Image.network(
+                      images[_galleryIndex],
+                      key: ValueKey<int>(_galleryIndex),
+                      fit: BoxFit.contain,
+                      width: double.infinity,
+                      height: double.infinity,
+                    ),
+                  ),
+                ),
+              ),
+              if (images.length > 1) ...[
+                Align(
+                  alignment: Alignment.centerLeft,
+                  child: Padding(
+                    padding: const EdgeInsets.only(left: 8.0),
+                    child: CircleAvatar(
+                      backgroundColor: Colors.black.withOpacity(0.5),
+                      radius: 16,
+                      child: IconButton(
+                        padding: EdgeInsets.zero,
+                        icon: const Icon(Icons.chevron_left, color: Colors.white, size: 20),
+                        onPressed: () {
+                          setState(() {
+                            _galleryIndex = (_galleryIndex - 1 + images.length) % images.length;
+                          });
+                        },
+                      ),
+                    ),
+                  ),
+                ),
+                Align(
+                  alignment: Alignment.centerRight,
+                  child: Padding(
+                    padding: const EdgeInsets.only(right: 8.0),
+                    child: CircleAvatar(
+                      backgroundColor: Colors.black.withOpacity(0.5),
+                      radius: 16,
+                      child: IconButton(
+                        padding: EdgeInsets.zero,
+                        icon: const Icon(Icons.chevron_right, color: Colors.white, size: 20),
+                        onPressed: () {
+                          setState(() {
+                            _galleryIndex = (_galleryIndex + 1) % images.length;
+                          });
+                        },
+                      ),
+                    ),
+                  ),
+                ),
+                Align(
+                  alignment: Alignment.bottomCenter,
+                  child: Padding(
+                    padding: const EdgeInsets.only(bottom: 8.0),
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: images.asMap().entries.map((entry) {
+                        return GestureDetector(
+                          onTap: () => setState(() => _galleryIndex = entry.key),
+                          child: Container(
+                            width: _galleryIndex == entry.key ? 16.0 : 6.0,
+                            height: 6.0,
+                            margin: const EdgeInsets.symmetric(horizontal: 2.0),
+                            decoration: BoxDecoration(
+                              borderRadius: BorderRadius.circular(4),
+                              color: Colors.white.withOpacity(_galleryIndex == entry.key ? 1.0 : 0.5),
+                            ),
+                          ),
+                        );
+                      }).toList(),
+                    ),
+                  ),
+                ),
+              ],
+            ],
+          ),
+        ),
+        // Thumbnails Strip
+        if (images.length > 1)
+          Padding(
+            padding: const EdgeInsets.only(top: 8.0),
+            child: Row(
+              children: images.asMap().entries.map((entry) {
+                final isSelected = _galleryIndex == entry.key;
+                return Expanded(
+                  child: GestureDetector(
+                    onTap: () => setState(() => _galleryIndex = entry.key),
+                    child: Container(
+                      height: 50,
+                      margin: EdgeInsets.only(right: entry.key == images.length - 1 ? 0 : 4.0),
+                      decoration: BoxDecoration(
+                        borderRadius: BorderRadius.circular(8),
+                        border: Border.all(
+                          color: isSelected ? AppColors.gold : Colors.transparent,
+                          width: 2,
+                        ),
+                      ),
+                      child: ClipRRect(
+                        borderRadius: BorderRadius.circular(6),
+                        child: AnimatedOpacity(
+                          duration: const Duration(milliseconds: 200),
+                          opacity: isSelected ? 1.0 : 0.5,
+                          child: Image.network(
+                            entry.value,
+                            fit: BoxFit.cover,
+                          ),
+                        ),
+                      ),
+                    ),
+                  ),
+                );
+              }).toList(),
+            ),
+          ),
+      ],
     );
   }
 

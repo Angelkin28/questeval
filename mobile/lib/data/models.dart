@@ -7,6 +7,9 @@ class Project {
   final DateTime date;
   final List<String> competencies;
   final List<QuizQuestion> quiz;
+  final List<String> galleryImages;
+  final List<String> objectives;
+  final List<String> technologies;
 
   Project({
     required this.id,
@@ -17,6 +20,9 @@ class Project {
     required this.date,
     required this.competencies,
     required this.quiz,
+    this.galleryImages = const [],
+    this.objectives = const [],
+    this.technologies = const [],
   });
 }
 

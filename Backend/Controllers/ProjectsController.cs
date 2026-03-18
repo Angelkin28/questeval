@@ -336,7 +336,10 @@ public class ProjectsController : ControllerBase
         // Alumnos solo pueden editar sus propios proyectos
         var userRole = User.FindFirst(System.Security.Claims.ClaimTypes.Role)?.Value;
         var userId = User.FindFirst("userId")?.Value;
-        if (userRole == "Alumno" && project.UserId != userId)
+
+        // BUGFIX: Si el proyecto perdió su UserId (es null), le permitimos al usuario actual "reclamarlo"
+        // para sanar la base de datos de la edición anterior corrupta.
+        if (userRole == "Alumno" && project.UserId != userId && project.UserId != null)
         {
             return Forbid();
         }
@@ -345,6 +348,8 @@ public class ProjectsController : ControllerBase
         {
             Id = id,
             ProjectId = project.ProjectId, // Preservar - no editable
+            UserId = project.UserId ?? userId, // BUGFIX: Conserva el dueño, o reasígnaselo al usuario actual si se había borrado
+
             Name = request.Name,
             Description = request.Description,
             GroupId = request.GroupId,

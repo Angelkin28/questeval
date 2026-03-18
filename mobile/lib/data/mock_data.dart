@@ -18,6 +18,17 @@ final List<Project> mockProjects = [
     date: DateTime(2025, 5, 20),
     competencies: ['IoT', 'Machine Learning', 'Sustentabilidad'],
     quiz: _generateQuiz('Smart Eco System'),
+    galleryImages: [
+      'https://images.unsplash.com/photo-1532996122724-e3c354a0b15b?q=80&w=800',
+      'https://images.unsplash.com/photo-1518770660439-4636190af475?q=80&w=800',
+      'https://images.unsplash.com/photo-1550751827-4bd374c3f58b?q=80&w=800'
+    ],
+    objectives: [
+      'Optimizar tiempos de recolección',
+      'Reducir emisiones de CO2',
+      'Integrar sensores IoT de bajo coste'
+    ],
+    technologies: ['React', 'Node.js', 'PostgreSQL', 'TensorFlow', 'Flutter'],
   ),
   Project(
     id: '2',
@@ -28,6 +39,15 @@ final List<Project> mockProjects = [
     date: DateTime(2025, 6, 12),
     competencies: ['Unity', 'C#', 'Animación 2D'],
     quiz: _generateQuiz('Cyber Samurai'),
+    galleryImages: [
+      'https://images.unsplash.com/photo-1542751371-adc38448a05e?q=80&w=800',
+      'https://images.unsplash.com/photo-1614294148960-9aa740632a87?q=80&w=800'
+    ],
+    objectives: [
+      'Desarrollar un sistema de combate fluido',
+      'Crear un ambiente visualmente inmersivo'
+    ],
+    technologies: ['Unity', 'C#', 'Photoshop', 'FMOD'],
   ),
   Project(
     id: '3',

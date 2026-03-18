@@ -8,8 +8,12 @@ class Project {
   final String? observations;
   final Map<String, double>? criteriaScores;
   final List<String> competencies;
+  final String description;
   final String? videoUrl;
   final String? thumbnailUrl;
+  final List<String> galleryImages;
+  final List<String> objectives;
+  final List<String> technologies;
   final bool isEvaluatedByUser;
 
   final List<ComprehensionQuestion> questions;
@@ -24,8 +28,12 @@ class Project {
     this.observations,
     this.criteriaScores,
     this.competencies = const [],
+    this.description = '',
     this.videoUrl,
     this.thumbnailUrl,
+    this.galleryImages = const [],
+    this.objectives = const [],
+    this.technologies = const [],
     this.questions = const [],
     this.isEvaluatedByUser = false,
   });
@@ -42,8 +50,12 @@ class Project {
           ? Map<String, double>.from(json['criteriaScores'].map((k, v) => MapEntry(k, v.toDouble())))
           : null,
       competencies: json['teamMembers'] != null ? List<String>.from(json['teamMembers']) : [],
+      description: json['description'] ?? '',
       videoUrl: json['videoUrl'],
       thumbnailUrl: json['thumbnailUrl'],
+      galleryImages: json['galleryImages'] != null ? List<String>.from(json['galleryImages']) : [],
+      objectives: json['objectives'] != null ? List<String>.from(json['objectives']) : [],
+      technologies: json['technologies'] != null ? List<String>.from(json['technologies']) : [],
       questions: json['comprehensionQuestions'] != null 
           ? (json['comprehensionQuestions'] as List).map((q) => ComprehensionQuestion.fromJson(q)).toList()
           : [],
@@ -67,8 +79,12 @@ class Project {
       observations: observations ?? this.observations,
       criteriaScores: criteriaScores ?? this.criteriaScores,
       competencies: competencies,
+      description: description,
       videoUrl: videoUrl,
       thumbnailUrl: thumbnailUrl,
+      galleryImages: galleryImages,
+      objectives: objectives,
+      technologies: technologies,
       questions: questions,
     );
   }
