@@ -209,6 +209,8 @@ public class CreateProjectRequest
     public string? ThumbnailUrl { get; set; }
     public List<string> GalleryImages { get; set; } = new();
     public List<string> TeamMembers { get; set; } = new List<string>();
+    public List<string> Objectives { get; set; } = new();
+    public List<string> Technologies { get; set; } = new();
     public List<QuestionAnswerDto> ComprehensionQuestions { get; set; } = new();
 }
 
@@ -252,6 +254,8 @@ public class ProjectResponse
     public string? ThumbnailUrl { get; set; }
     public List<string> GalleryImages { get; set; } = new();
     public List<string> TeamMembers { get; set; } = new List<string>();
+    public List<string> Objectives { get; set; } = new();
+    public List<string> Technologies { get; set; } = new();
 
     /// <summary>
     /// Estado actual

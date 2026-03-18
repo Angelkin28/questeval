@@ -16,6 +16,9 @@ import {
     ChevronLeft,
     ChevronRight,
     Images,
+    Target,
+    Wrench,
+    FileText,
 } from 'lucide-react';
 
 export default function ProjectDetailsPage() {
@@ -137,84 +140,152 @@ export default function ProjectDetailsPage() {
 
             <main className="container mx-auto px-4 py-6 max-w-5xl">
 
-                {/* ── VIDEO + GALLERY ── */}
-                {(hasVideo || gallery.length > 0) && (
-                    <div className="space-y-6 mb-6">
+                {/* ── DESCRIPTION (below banner) ── */}
+                <Card className="mb-6 shadow-sm border-border/50">
+                    <CardContent className="p-5">
+                        <div className="flex items-center gap-2 mb-2">
+                            <FileText className="w-4 h-4 text-primary" />
+                            <h2 className="text-sm font-semibold uppercase tracking-wider text-muted-foreground">Descripción</h2>
+                        </div>
+                        {project.description ? (
+                            <p className="text-foreground leading-relaxed text-sm">{project.description}</p>
+                        ) : (
+                            <p className="text-muted-foreground italic text-sm">Por el momento no hay descripción.</p>
+                        )}
+                    </CardContent>
+                </Card>
 
-                        {/* Video full-width */}
-                        {hasVideo && (
-                            <div>
-                                <div className="flex items-center gap-2 mb-3">
+                {/* ── OBJECTIVES + TECHNOLOGIES ── */}
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
+                    <Card className="shadow-sm border-border/50">
+                        <CardContent className="p-5">
+                            <div className="flex items-center gap-2 mb-3">
+                                <Target className="w-4 h-4 text-primary" />
+                                <h2 className="text-sm font-semibold uppercase tracking-wider text-muted-foreground">Objetivos</h2>
+                            </div>
+                            {project.objectives && project.objectives.length > 0 ? (
+                                <ul className="space-y-1.5">
+                                    {project.objectives.map((obj, i) => (
+                                        <li key={i} className="flex items-start gap-2 text-sm">
+                                            <span className="w-1.5 h-1.5 rounded-full bg-primary mt-2 shrink-0" />
+                                            <span>{obj}</span>
+                                        </li>
+                                    ))}
+                                </ul>
+                            ) : (
+                                <p className="text-muted-foreground italic text-sm">Por el momento no hay objetivos.</p>
+                            )}
+                        </CardContent>
+                    </Card>
+
+                    <Card className="shadow-sm border-border/50">
+                        <CardContent className="p-5">
+                            <div className="flex items-center gap-2 mb-3">
+                                <Wrench className="w-4 h-4 text-primary" />
+                                <h2 className="text-sm font-semibold uppercase tracking-wider text-muted-foreground">Herramientas &amp; Tecnologías</h2>
+                            </div>
+                            {project.technologies && project.technologies.length > 0 ? (
+                                <div className="flex flex-wrap gap-1.5">
+                                    {project.technologies.map((tech, i) => (
+                                        <span key={i} className="bg-secondary text-secondary-foreground text-xs px-2.5 py-1 rounded-full font-medium">
+                                            {tech}
+                                        </span>
+                                    ))}
+                                </div>
+                            ) : (
+                                <p className="text-muted-foreground italic text-sm">Por el momento no hay herramientas registradas.</p>
+                            )}
+                        </CardContent>
+                    </Card>
+                </div>
+
+                {/* ── VIDEO + GALLERY ── */}
+                <div className="space-y-6 mb-6">
+                    {/* Video full-width */}
+                    {hasVideo ? (
+                        <div>
+                            <div className="flex items-center gap-2 mb-3">
+                                <Video className="w-4 h-4 text-primary" />
+                                <span className="text-sm font-semibold uppercase tracking-wider text-muted-foreground">Video Promocional</span>
+                            </div>
+                            {isDirectVideo ? (
+                                <div className="rounded-2xl overflow-hidden border border-border shadow-md bg-black">
+                                    <video
+                                        src={project.videoUrl}
+                                        controls
+                                        playsInline
+                                        preload="metadata"
+                                        className="w-full max-h-[420px] block"
+                                    />
+                                </div>
+                            ) : (
+                                <Button variant="outline" className="gap-2 w-full" onClick={() => window.open(project.videoUrl, '_blank')}>
+                                    <Video className="w-4 h-4 text-red-500" />
+                                    Ver Video Demo
+                                </Button>
+                            )}
+                        </div>
+                    ) : (
+                        <Card className="shadow-sm border-border/50">
+                            <CardContent className="p-5">
+                                <div className="flex items-center gap-2 mb-2">
                                     <Video className="w-4 h-4 text-primary" />
                                     <span className="text-sm font-semibold uppercase tracking-wider text-muted-foreground">Video Promocional</span>
                                 </div>
-                                {isDirectVideo ? (
-                                    <div className="rounded-2xl overflow-hidden border border-border shadow-md bg-black">
-                                        <video
-                                            src={project.videoUrl}
-                                            controls
-                                            playsInline
-                                            preload="metadata"
-                                            className="w-full max-h-[420px] block"
-                                        />
-                                    </div>
-                                ) : (
-                                    <Button variant="outline" className="gap-2 w-full" onClick={() => window.open(project.videoUrl, '_blank')}>
-                                        <Video className="w-4 h-4 text-red-500" />
-                                        Ver Video Demo
-                                    </Button>
+                                <p className="text-muted-foreground italic text-sm">Por el momento no hay video.</p>
+                            </CardContent>
+                        </Card>
+                    )}
+
+                    {/* Gallery Carousel full-width */}
+                    {gallery.length > 0 ? (
+                        <div>
+                            <div className="flex items-center gap-2 mb-3">
+                                <Images className="w-4 h-4 text-primary" />
+                                <span className="text-sm font-semibold uppercase tracking-wider text-muted-foreground">Galería</span>
+                                <span className="text-xs text-muted-foreground font-medium ml-1 bg-secondary px-2 py-0.5 rounded-full">
+                                    {galleryIndex + 1} / {gallery.length}
+                                </span>
+                            </div>
+
+                            {/* Main carousel image */}
+                            <div className="relative rounded-2xl overflow-hidden border border-border shadow-md bg-black aspect-video w-full">
+                                <img
+                                    key={galleryIndex}
+                                    src={gallery[galleryIndex]}
+                                    alt={`Imagen ${galleryIndex + 1}`}
+                                    className="w-full h-full object-contain transition-opacity duration-300"
+                                />
+                                {gallery.length > 1 && (
+                                    <>
+                                        <button
+                                            onClick={() => setGalleryIndex(i => (i - 1 + gallery.length) % gallery.length)}
+                                            className="absolute left-3 top-1/2 -translate-y-1/2 bg-black/60 hover:bg-black/80 text-white rounded-full w-10 h-10 flex items-center justify-center transition-colors shadow-lg"
+                                        >
+                                            <ChevronLeft className="w-5 h-5" />
+                                        </button>
+                                        <button
+                                            onClick={() => setGalleryIndex(i => (i + 1) % gallery.length)}
+                                            className="absolute right-3 top-1/2 -translate-y-1/2 bg-black/60 hover:bg-black/80 text-white rounded-full w-10 h-10 flex items-center justify-center transition-colors shadow-lg"
+                                        >
+                                            <ChevronRight className="w-5 h-5" />
+                                        </button>
+                                        {/* Dots */}
+                                        <div className="absolute bottom-3 left-1/2 -translate-x-1/2 flex gap-2">
+                                            {gallery.map((_, i) => (
+                                                <button
+                                                    key={i}
+                                                    onClick={() => setGalleryIndex(i)}
+                                                    className={`rounded-full transition-all duration-200 ${i === galleryIndex ? 'bg-white w-5 h-2' : 'bg-white/50 w-2 h-2 hover:bg-white/80'}`}
+                                                />
+                                            ))}
+                                        </div>
+                                    </>
                                 )}
                             </div>
-                        )}
 
-                        {/* Gallery Carousel full-width */}
-                        {gallery.length > 0 && (
-                            <div>
-                                <div className="flex items-center gap-2 mb-3">
-                                    <Images className="w-4 h-4 text-primary" />
-                                    <span className="text-sm font-semibold uppercase tracking-wider text-muted-foreground">Galería</span>
-                                    <span className="text-xs text-muted-foreground font-medium ml-1 bg-secondary px-2 py-0.5 rounded-full">
-                                        {galleryIndex + 1} / {gallery.length}
-                                    </span>
-                                </div>
-
-                                {/* Main carousel image */}
-                                <div className="relative rounded-2xl overflow-hidden border border-border shadow-md bg-black aspect-video w-full">
-                                    <img
-                                        key={galleryIndex}
-                                        src={gallery[galleryIndex]}
-                                        alt={`Imagen ${galleryIndex + 1}`}
-                                        className="w-full h-full object-contain transition-opacity duration-300"
-                                    />
-                                    {gallery.length > 1 && (
-                                        <>
-                                            <button
-                                                onClick={() => setGalleryIndex(i => (i - 1 + gallery.length) % gallery.length)}
-                                                className="absolute left-3 top-1/2 -translate-y-1/2 bg-black/60 hover:bg-black/80 text-white rounded-full w-10 h-10 flex items-center justify-center transition-colors shadow-lg"
-                                            >
-                                                <ChevronLeft className="w-5 h-5" />
-                                            </button>
-                                            <button
-                                                onClick={() => setGalleryIndex(i => (i + 1) % gallery.length)}
-                                                className="absolute right-3 top-1/2 -translate-y-1/2 bg-black/60 hover:bg-black/80 text-white rounded-full w-10 h-10 flex items-center justify-center transition-colors shadow-lg"
-                                            >
-                                                <ChevronRight className="w-5 h-5" />
-                                            </button>
-                                            {/* Dots */}
-                                            <div className="absolute bottom-3 left-1/2 -translate-x-1/2 flex gap-2">
-                                                {gallery.map((_, i) => (
-                                                    <button
-                                                        key={i}
-                                                        onClick={() => setGalleryIndex(i)}
-                                                        className={`rounded-full transition-all duration-200 ${i === galleryIndex ? 'bg-white w-5 h-2' : 'bg-white/50 w-2 h-2 hover:bg-white/80'}`}
-                                                    />
-                                                ))}
-                                            </div>
-                                        </>
-                                    )}
-                                </div>
-
-                                {/* Thumbnails strip */}
+                            {/* Thumbnails strip */}
+                            {gallery.length > 1 && (
                                 <div className="flex gap-2 mt-3">
                                     {gallery.map((src, i) => (
                                         <button
@@ -230,19 +301,29 @@ export default function ProjectDetailsPage() {
                                         </button>
                                     ))}
                                 </div>
-                            </div>
-                        )}
-                    </div>
-                )}
+                            )}
+                        </div>
+                    ) : (
+                        <Card className="shadow-sm border-border/50">
+                            <CardContent className="p-5">
+                                <div className="flex items-center gap-2 mb-2">
+                                    <Images className="w-4 h-4 text-primary" />
+                                    <span className="text-sm font-semibold uppercase tracking-wider text-muted-foreground">Galería</span>
+                                </div>
+                                <p className="text-muted-foreground italic text-sm">Por el momento no hay imágenes.</p>
+                            </CardContent>
+                        </Card>
+                    )}
+                </div>
 
                 {/* ── COMPREHENSION QUESTIONS ── */}
-                {project.comprehensionQuestions && project.comprehensionQuestions.length > 0 && (
-                    <Card className="mb-6 shadow-sm border-border/50">
-                        <CardContent className="p-6">
-                            <div className="flex items-center gap-2 mb-4">
-                                <MessageSquare className="w-5 h-5 text-primary" />
-                                <h2 className="text-lg font-bold">Preguntas de Comprensión</h2>
-                            </div>
+                <Card className="mb-6 shadow-sm border-border/50">
+                    <CardContent className="p-6">
+                        <div className="flex items-center gap-2 mb-4">
+                            <MessageSquare className="w-5 h-5 text-primary" />
+                            <h2 className="text-lg font-bold">Preguntas de Comprensión</h2>
+                        </div>
+                        {project.comprehensionQuestions && project.comprehensionQuestions.length > 0 ? (
                             <div className="space-y-3">
                                 {project.comprehensionQuestions.map((q, idx) => (
                                     <div key={idx} className="p-4 bg-secondary/20 rounded-lg border border-border">
@@ -251,9 +332,11 @@ export default function ProjectDetailsPage() {
                                     </div>
                                 ))}
                             </div>
-                        </CardContent>
-                    </Card>
-                )}
+                        ) : (
+                            <p className="text-muted-foreground italic text-sm">Por el momento no hay preguntas.</p>
+                        )}
+                    </CardContent>
+                </Card>
 
                 {/* ── EVALUATION RESULTS ── */}
                 {evaluation ? (

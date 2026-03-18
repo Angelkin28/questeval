@@ -202,18 +202,32 @@ export default function GuestProjectPage() {
                             </p>
                         )}
 
-                        {project.videoUrl && (
-                            <div className="mb-6 rounded-sm overflow-hidden bg-black/5">
-                                <iframe
-                                    width="100%"
-                                    height="400"
-                                    src={project.videoUrl}
-                                    title="Project Video"
-                                    className="border-0 rounded-sm"
-                                    allowFullScreen
-                                />
-                            </div>
-                        )}
+                        {project.videoUrl && (() => {
+                            const isDirectVideo = project.videoUrl.includes('.supabase.co/storage') ||
+                                /\.(mp4|webm|mov|avi)(\?|$)/i.test(project.videoUrl);
+                            return isDirectVideo ? (
+                                <div className="mb-6 rounded-sm overflow-hidden bg-black">
+                                    <video
+                                        src={project.videoUrl}
+                                        controls
+                                        playsInline
+                                        preload="metadata"
+                                        className="w-full max-h-[420px] block"
+                                    />
+                                </div>
+                            ) : (
+                                <div className="mb-6 rounded-sm overflow-hidden bg-black/5">
+                                    <iframe
+                                        width="100%"
+                                        height="400"
+                                        src={project.videoUrl}
+                                        title="Project Video"
+                                        className="border-0 rounded-sm"
+                                        allowFullScreen
+                                    />
+                                </div>
+                            );
+                        })()}
 
                         {project.teamMembers && project.teamMembers.length > 0 && (
                             <div className="border-t border-black/5 pt-6">

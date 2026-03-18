@@ -40,9 +40,14 @@ export default function NewProjectPage() {
         coverImage: null as File | null,
         coverVideo: null as File | null,
         galleryImages: [] as File[],
+        objectives: [] as string[],
+        technologies: [] as string[],
         teamMembers: [] as string[],
         comprehensionQuestions: [] as { question: string, answer: string }[]
     });
+
+    const [objectiveInput, setObjectiveInput] = useState('');
+    const [technologyInput, setTechnologyInput] = useState('');
 
 
 
@@ -220,6 +225,8 @@ export default function NewProjectPage() {
                 videoUrl: videoUrl,
                 thumbnailUrl: coverImageUrl,
                 galleryImages: galleryUrls,
+                objectives: formData.objectives,
+                technologies: formData.technologies,
                 groupId: selectedGroupId,
                 teamMembers: formData.teamMembers,
                 comprehensionQuestions: formData.comprehensionQuestions
@@ -239,8 +246,77 @@ export default function NewProjectPage() {
     const nextStep = () => setStep(s => Math.min(s + 1, 4));
     const prevStep = () => setStep(s => Math.max(s - 1, 1));
 
+    // Calcular progreso total de la creación para el overlay
+    const creationSteps = [
+        formData.coverImage ? 'Subiendo portada...' : null,
+        formData.coverVideo ? 'Subiendo video...' : null,
+        formData.galleryImages.length > 0 ? 'Subiendo galería...' : null,
+        'Guardando proyecto...',
+    ].filter(Boolean) as string[];
+
+    const totalCreationSteps = creationSteps.length;
+    // Progress: video upload uses real progress (uploadProgress), rest is simulated
+    const overallProgress = isUploading
+        ? Math.round((uploadProgress / 100) * (100 / totalCreationSteps) + ((creationSteps.indexOf('Subiendo video...') / totalCreationSteps) * 100))
+        : isLoading
+        ? Math.min(100, Math.round(((totalCreationSteps - 1) / totalCreationSteps) * 100))
+        : 0;
+
     return (
         <div className="min-h-screen bg-background pb-20">
+            {/* ── LOADING OVERLAY ── */}
+            {isLoading && (
+                <div className="fixed inset-0 z-50 flex flex-col items-center justify-center bg-background/95 backdrop-blur-sm">
+                    <div className="w-full max-w-sm px-8 text-center">
+                        <div className="mb-6">
+                            <div className="w-16 h-16 rounded-full bg-primary/10 flex items-center justify-center mx-auto mb-4">
+                                <Loader2 className="w-8 h-8 text-primary animate-spin" />
+                            </div>
+                            <h2 className="text-xl font-bold title-serif mb-1">Creando tu proyecto</h2>
+                            <p className="text-sm text-muted-foreground">
+                                {isUploading ? `Subiendo video... ${uploadProgress}%` : 'Procesando archivos y guardando...'}
+                            </p>
+                        </div>
+
+                        {/* Barra de progreso */}
+                        <div className="w-full bg-secondary rounded-full h-2 mb-3 overflow-hidden">
+                            <div
+                                className="bg-primary h-2 rounded-full transition-all duration-500 ease-out"
+                                style={{ width: `${isUploading ? uploadProgress : 85}%` }}
+                            />
+                        </div>
+                        <p className="text-xs text-muted-foreground">
+                            {isUploading ? `${uploadProgress}%` : 'Casi listo...'}
+                        </p>
+
+                        {/* Steps list */}
+                        <div className="mt-6 space-y-2 text-left">
+                            {formData.coverImage && (
+                                <div className="flex items-center gap-2 text-xs text-muted-foreground">
+                                    <CheckCircle2 className="w-3.5 h-3.5 text-green-500 shrink-0" />
+                                    <span>Portada procesada</span>
+                                </div>
+                            )}
+                            {formData.coverVideo && (
+                                <div className="flex items-center gap-2 text-xs text-muted-foreground">
+                                    {isUploading
+                                        ? <Loader2 className="w-3.5 h-3.5 text-primary animate-spin shrink-0" />
+                                        : <CheckCircle2 className="w-3.5 h-3.5 text-green-500 shrink-0" />
+                                    }
+                                    <span>{isUploading ? 'Subiendo video...' : 'Video subido'}</span>
+                                </div>
+                            )}
+                            {formData.galleryImages.length > 0 && (
+                                <div className="flex items-center gap-2 text-xs text-muted-foreground">
+                                    <Loader2 className="w-3.5 h-3.5 text-primary animate-spin shrink-0" />
+                                    <span>Subiendo {formData.galleryImages.length} imagen(es) de galería...</span>
+                                </div>
+                            )}
+                        </div>
+                    </div>
+                </div>
+            )}
+
             {/* Header */}
             <Header title="Nuevo Proyecto" showBack />
 
@@ -331,6 +407,84 @@ export default function NewProjectPage() {
                                             value={formData.description}
                                             onChange={handleInputChange}
                                         />
+                                    </div>
+
+                                    {/* Objectives */}
+                                    <div>
+                                        <label className="text-sm font-medium mb-1 block">Objetivos del Proyecto</label>
+                                        <div className="flex gap-2 mb-2">
+                                            <Input
+                                                placeholder="ej. Reducir tiempos de espera en un 30%"
+                                                value={objectiveInput}
+                                                onChange={(e) => setObjectiveInput(e.target.value)}
+                                                onKeyDown={(e) => {
+                                                    if (e.key === 'Enter') {
+                                                        e.preventDefault();
+                                                        const val = objectiveInput.trim();
+                                                        if (val && !formData.objectives.includes(val)) {
+                                                            setFormData(p => ({ ...p, objectives: [...p.objectives, val] }));
+                                                            setObjectiveInput('');
+                                                        }
+                                                    }
+                                                }}
+                                            />
+                                            <Button type="button" size="sm" variant="outline" onClick={() => {
+                                                const val = objectiveInput.trim();
+                                                if (val && !formData.objectives.includes(val)) {
+                                                    setFormData(p => ({ ...p, objectives: [...p.objectives, val] }));
+                                                    setObjectiveInput('');
+                                                }
+                                            }}>+</Button>
+                                        </div>
+                                        {formData.objectives.length > 0 && (
+                                            <div className="flex flex-wrap gap-1.5">
+                                                {formData.objectives.map((obj, i) => (
+                                                    <span key={i} className="bg-primary/10 text-primary text-xs px-2.5 py-1 rounded-full flex items-center gap-1">
+                                                        {obj}
+                                                        <button type="button" onClick={() => setFormData(p => ({ ...p, objectives: p.objectives.filter((_, idx) => idx !== i) }))} className="hover:text-destructive ml-0.5">×</button>
+                                                    </span>
+                                                ))}
+                                            </div>
+                                        )}
+                                    </div>
+
+                                    {/* Technologies */}
+                                    <div>
+                                        <label className="text-sm font-medium mb-1 block">Tecnologías / Herramientas</label>
+                                        <div className="flex gap-2 mb-2">
+                                            <Input
+                                                placeholder="ej. React, Unity, Python, Arduino..."
+                                                value={technologyInput}
+                                                onChange={(e) => setTechnologyInput(e.target.value)}
+                                                onKeyDown={(e) => {
+                                                    if (e.key === 'Enter') {
+                                                        e.preventDefault();
+                                                        const val = technologyInput.trim();
+                                                        if (val && !formData.technologies.includes(val)) {
+                                                            setFormData(p => ({ ...p, technologies: [...p.technologies, val] }));
+                                                            setTechnologyInput('');
+                                                        }
+                                                    }
+                                                }}
+                                            />
+                                            <Button type="button" size="sm" variant="outline" onClick={() => {
+                                                const val = technologyInput.trim();
+                                                if (val && !formData.technologies.includes(val)) {
+                                                    setFormData(p => ({ ...p, technologies: [...p.technologies, val] }));
+                                                    setTechnologyInput('');
+                                                }
+                                            }}>+</Button>
+                                        </div>
+                                        {formData.technologies.length > 0 && (
+                                            <div className="flex flex-wrap gap-1.5">
+                                                {formData.technologies.map((tech, i) => (
+                                                    <span key={i} className="bg-secondary text-secondary-foreground text-xs px-2.5 py-1 rounded-full flex items-center gap-1 font-medium">
+                                                        {tech}
+                                                        <button type="button" onClick={() => setFormData(p => ({ ...p, technologies: p.technologies.filter((_, idx) => idx !== i) }))} className="hover:text-destructive ml-0.5">×</button>
+                                                    </span>
+                                                ))}
+                                            </div>
+                                        )}
                                     </div>
                                 </div>
                             </CardContent>

@@ -1,0 +1,38 @@
+﻿commit 519958f48ed08e0906427448352a49090ab05ad6
+Author: Angelkin28 <angel.rosado.kin@gmail.com>
+Date:   Tue Mar 17 09:34:20 2026 -0600
+
+    feat: Agregar Dockerfile para deploy en Render y merge de cambios-jorge
+
+commit 73d1635cdf34f420494c929e33d78dc67fb912af
+Merge: cec1fc8 30206d8
+Author: Angelkin28 <angel.rosado.kin@gmail.com>
+Date:   Tue Mar 17 08:22:00 2026 -0600
+
+    Merge branch 'cambios-jorge' without touching Frontend
+
+commit cec1fc8066895975d7be86f8152a1b40b4d36735
+Author: Angelkin28 <angel.rosado.kin@gmail.com>
+Date:   Wed Mar 11 11:29:40 2026 -0600
+
+    feat: cascada proyectos huerfanos, fix rubrica evaluatorId, guard roles, boton Rubrica en TeacherDashboard
+    
+    - UsersService: al eliminar usuario, proyectos sin miembros se borran; con integrantes solo se limpia UserId
+    - AdminController: eliminado endpoint destructivo DELETE /api/Admin/projects/all
+    - IProjectsService + ProjectsService: removido DeleteAllAsync
+    - rubric/page.tsx: corregido evaluatorId (era hardcoded 'current_user', ahora lee userId real de localStorage)
+    - rubric/edit/page.tsx: guard de rol - solo Profesor/Admin pueden acceder
+    - TeacherDashboard.tsx: boton Rubrica junto a Nuevo Grupo
+    - docs/CAMBIOS_11_03_2026.md: documentacion del dia
+
+commit d0cc84635ec4b13fdf1a54d2bf24b59b9d70e888
+Author: Angelkin28 <angel.rosado.kin@gmail.com>
+Date:   Fri Mar 6 08:14:13 2026 -0600
+
+    feat: correcciones backend y panel admin (grupos, counters, auth swagger)
+
+commit 30206d8907796c07d70113e67b10129e581b4663
+Author: PoolKaris Security <seguridad@poolkaris.local>
+Date:   Sun Mar 1 13:04:20 2026 -0600
+
+    Implementaci├│n de mejoras avanzadas: BCrypt, capacidad de grupos e integridad referencial

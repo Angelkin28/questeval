@@ -129,6 +129,8 @@ public class Project
     public string? ThumbnailUrl { get; set; }
     public List<string> GalleryImages { get; set; } = new();
     public List<string> TeamMembers { get; set; } = new List<string>();
+    public List<string> Objectives { get; set; } = new();
+    public List<string> Technologies { get; set; } = new();
 
     public string? GroupId { get; set; } // Antes GroupCodice
     public string? UserId { get; set; } // Propietario del proyecto

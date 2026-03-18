@@ -66,6 +66,8 @@ public class ProjectsController : ControllerBase
             ThumbnailUrl = p.ThumbnailUrl,
             GalleryImages = p.GalleryImages,
             TeamMembers = p.TeamMembers,
+            Objectives = p.Objectives,
+            Technologies = p.Technologies,
             ComprehensionQuestions = p.ComprehensionQuestions.Select(q => new QuestionAnswerDto
             {
                 Question = q.Question,
@@ -108,6 +110,8 @@ public class ProjectsController : ControllerBase
             ThumbnailUrl = p.ThumbnailUrl,
             GalleryImages = p.GalleryImages,
             TeamMembers = p.TeamMembers,
+            Objectives = p.Objectives,
+            Technologies = p.Technologies,
             ComprehensionQuestions = p.ComprehensionQuestions.Select(q => new QuestionAnswerDto
             {
                 Question = q.Question,
@@ -180,6 +184,8 @@ public class ProjectsController : ControllerBase
             ThumbnailUrl = p.ThumbnailUrl,
             GalleryImages = p.GalleryImages,
             TeamMembers = p.TeamMembers,
+            Objectives = p.Objectives,
+            Technologies = p.Technologies,
             ComprehensionQuestions = p.ComprehensionQuestions.Select(q => new QuestionAnswerDto
             {
                 Question = q.Question,
@@ -231,6 +237,8 @@ public class ProjectsController : ControllerBase
             ThumbnailUrl = project.ThumbnailUrl,
             GalleryImages = project.GalleryImages,
             TeamMembers = project.TeamMembers,
+            Objectives = project.Objectives,
+            Technologies = project.Technologies,
             ComprehensionQuestions = project.ComprehensionQuestions.Select(q => new QuestionAnswerDto
             {
                 Question = q.Question,
@@ -270,6 +278,8 @@ public class ProjectsController : ControllerBase
             ThumbnailUrl = request.ThumbnailUrl,
             GalleryImages = request.GalleryImages,
             TeamMembers = request.TeamMembers,
+            Objectives = request.Objectives,
+            Technologies = request.Technologies,
             ComprehensionQuestions = request.ComprehensionQuestions.Select(q => new QuestionAnswer
             {
                 Question = q.Question,
@@ -293,7 +303,9 @@ public class ProjectsController : ControllerBase
             VideoUrl = newProject.VideoUrl,
             ThumbnailUrl = newProject.ThumbnailUrl,
             GalleryImages = newProject.GalleryImages,
-            TeamMembers = newProject.TeamMembers
+            TeamMembers = newProject.TeamMembers,
+            Objectives = newProject.Objectives,
+            Technologies = newProject.Technologies
         };
 
         return CreatedAtAction(nameof(Get), new { id = newProject.Id }, response);
@@ -335,6 +347,8 @@ public class ProjectsController : ControllerBase
             ThumbnailUrl = request.ThumbnailUrl,
             GalleryImages = request.GalleryImages,
             TeamMembers = request.TeamMembers,
+            Objectives = request.Objectives,
+            Technologies = request.Technologies,
             ComprehensionQuestions = request.ComprehensionQuestions.Select(q => new QuestionAnswer
             {
                 Question = q.Question,

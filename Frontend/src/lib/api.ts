@@ -59,6 +59,8 @@ export interface Project {
     thumbnailUrl?: string;
     videoUrl?: string;
     galleryImages?: string[];
+    objectives?: string[];
+    technologies?: string[];
     createdAt?: string;
     groupId?: string;
     comprehensionQuestions?: QuestionAnswer[];
@@ -80,6 +82,8 @@ export interface CreateProjectRequest {
     videoUrl?: string;
     thumbnailUrl?: string;
     galleryImages?: string[];
+    objectives?: string[];
+    technologies?: string[];
     teamMembers: string[];
     comprehensionQuestions: QuestionAnswer[];
 }
