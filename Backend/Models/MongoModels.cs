@@ -127,6 +127,7 @@ public class Project
     public string Category { get; set; } = "Integrador"; // New field
     public string? VideoUrl { get; set; }
     public string? ThumbnailUrl { get; set; }
+    public List<string> GalleryImages { get; set; } = new();
     public List<string> TeamMembers { get; set; } = new List<string>();
 
     public string? GroupId { get; set; } // Antes GroupCodice

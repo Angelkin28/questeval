@@ -16,7 +16,9 @@ import {
     Image as ImageIcon,
     Save,
     ChevronRight,
-    Loader2
+    Loader2,
+    X,
+    Images
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { api, Group, UserResponse } from '@/lib/api';
@@ -37,6 +39,7 @@ export default function NewProjectPage() {
         videoUrl: '',
         coverImage: null as File | null,
         coverVideo: null as File | null,
+        galleryImages: [] as File[],
         teamMembers: [] as string[],
         comprehensionQuestions: [] as { question: string, answer: string }[]
     });
@@ -163,7 +166,7 @@ export default function NewProjectPage() {
             let coverImageUrl = '';
             let videoUrl = formData.videoUrl;
 
-            // Subir imagen si existe
+            // Subir imagen de portada si existe
             if (formData.coverImage) {
                 try {
                     const uploadResult = await api.storage.upload(formData.coverImage);
@@ -191,6 +194,17 @@ export default function NewProjectPage() {
                 }
             }
 
+            // Subir imágenes de galería
+            const galleryUrls: string[] = [];
+            for (const img of formData.galleryImages) {
+                try {
+                    const result = await api.storage.upload(img);
+                    galleryUrls.push(result.url);
+                } catch (err) {
+                    console.error('Error al subir imagen de galería:', err);
+                }
+            }
+
             // Llamada real a la API
             if (!selectedGroupId) {
                 alert('Debes seleccionar un grupo para este proyecto.');
@@ -205,6 +219,7 @@ export default function NewProjectPage() {
                 status: 'In Progress',
                 videoUrl: videoUrl,
                 thumbnailUrl: coverImageUrl,
+                galleryImages: galleryUrls,
                 groupId: selectedGroupId,
                 teamMembers: formData.teamMembers,
                 comprehensionQuestions: formData.comprehensionQuestions
@@ -446,6 +461,70 @@ export default function NewProjectPage() {
                                             </label>
                                         )}
                                     </div>
+
+                                    {/* Gallery Images */}
+                                    <div>
+                                        <label className="text-sm font-medium mb-3 flex items-center gap-2">
+                                            <Images className="w-4 h-4" />
+                                            Galería de Imágenes
+                                            <span className="text-xs text-muted-foreground font-normal">({formData.galleryImages.length}/4)</span>
+                                        </label>
+
+                                        {formData.galleryImages.length > 0 && (
+                                            <div className="grid grid-cols-2 gap-2 mb-3">
+                                                {formData.galleryImages.map((img, idx) => (
+                                                    <div key={idx} className="relative rounded-lg overflow-hidden border border-muted-foreground/25 aspect-video">
+                                                        <img
+                                                            src={URL.createObjectURL(img)}
+                                                            alt={`Galería ${idx + 1}`}
+                                                            className="w-full h-full object-cover"
+                                                        />
+                                                        <button
+                                                            type="button"
+                                                            onClick={() => setFormData(p => ({
+                                                                ...p,
+                                                                galleryImages: p.galleryImages.filter((_, i) => i !== idx)
+                                                            }))}
+                                                            className="absolute top-1 right-1 bg-black/60 text-white rounded-full w-6 h-6 flex items-center justify-center hover:bg-black/80 transition-colors"
+                                                        >
+                                                            <X className="w-3 h-3" />
+                                                        </button>
+                                                    </div>
+                                                ))}
+                                            </div>
+                                        )}
+
+                                        {formData.galleryImages.length < 4 && (
+                                            <label
+                                                htmlFor="project-gallery"
+                                                className="border-2 border-dashed border-muted-foreground/25 rounded-lg p-6 text-center hover:bg-secondary/20 transition-colors cursor-pointer block"
+                                            >
+                                                <Upload className="w-6 h-6 mx-auto mb-2 text-muted-foreground" />
+                                                <p className="text-sm font-medium">Agregar imagen a galería</p>
+                                                <p className="text-xs text-muted-foreground">PNG, JPG — máx. 5MB · hasta 4 imágenes</p>
+                                                <input
+                                                    id="project-gallery"
+                                                    type="file"
+                                                    accept="image/*"
+                                                    multiple
+                                                    className="hidden"
+                                                    onChange={(e) => {
+                                                        const files = Array.from(e.target.files || []);
+                                                        setFormData(p => {
+                                                            const remaining = 4 - p.galleryImages.length;
+                                                            const toAdd = files.slice(0, remaining);
+                                                            return { ...p, galleryImages: [...p.galleryImages, ...toAdd] };
+                                                        });
+                                                        e.target.value = '';
+                                                    }}
+                                                />
+                                            </label>
+                                        )}
+                                        {formData.galleryImages.length >= 4 && (
+                                            <p className="text-xs text-muted-foreground italic text-center py-2">Máximo de 4 imágenes alcanzado.</p>
+                                        )}
+                                    </div>
+
                                 </div>
                             </CardContent>
                         </Card>

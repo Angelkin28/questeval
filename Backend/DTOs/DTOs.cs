@@ -207,6 +207,7 @@ public class CreateProjectRequest
     public string Category { get; set; } = "Integrador";
     public string? VideoUrl { get; set; }
     public string? ThumbnailUrl { get; set; }
+    public List<string> GalleryImages { get; set; } = new();
     public List<string> TeamMembers { get; set; } = new List<string>();
     public List<QuestionAnswerDto> ComprehensionQuestions { get; set; } = new();
 }
@@ -249,6 +250,7 @@ public class ProjectResponse
     public string Category { get; set; } = null!;
     public string? VideoUrl { get; set; }
     public string? ThumbnailUrl { get; set; }
+    public List<string> GalleryImages { get; set; } = new();
     public List<string> TeamMembers { get; set; } = new List<string>();
 
     /// <summary>

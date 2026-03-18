@@ -64,6 +64,7 @@ public class ProjectsController : ControllerBase
             Category = p.Category,
             VideoUrl = p.VideoUrl,
             ThumbnailUrl = p.ThumbnailUrl,
+            GalleryImages = p.GalleryImages,
             TeamMembers = p.TeamMembers,
             ComprehensionQuestions = p.ComprehensionQuestions.Select(q => new QuestionAnswerDto
             {
@@ -105,6 +106,7 @@ public class ProjectsController : ControllerBase
             Category = p.Category,
             VideoUrl = p.VideoUrl,
             ThumbnailUrl = p.ThumbnailUrl,
+            GalleryImages = p.GalleryImages,
             TeamMembers = p.TeamMembers,
             ComprehensionQuestions = p.ComprehensionQuestions.Select(q => new QuestionAnswerDto
             {
@@ -176,6 +178,7 @@ public class ProjectsController : ControllerBase
             Category = p.Category,
             VideoUrl = p.VideoUrl,
             ThumbnailUrl = p.ThumbnailUrl,
+            GalleryImages = p.GalleryImages,
             TeamMembers = p.TeamMembers,
             ComprehensionQuestions = p.ComprehensionQuestions.Select(q => new QuestionAnswerDto
             {
@@ -226,6 +229,7 @@ public class ProjectsController : ControllerBase
             Category = project.Category,
             VideoUrl = project.VideoUrl,
             ThumbnailUrl = project.ThumbnailUrl,
+            GalleryImages = project.GalleryImages,
             TeamMembers = project.TeamMembers,
             ComprehensionQuestions = project.ComprehensionQuestions.Select(q => new QuestionAnswerDto
             {
@@ -264,6 +268,7 @@ public class ProjectsController : ControllerBase
             Category = request.Category,
             VideoUrl = request.VideoUrl,
             ThumbnailUrl = request.ThumbnailUrl,
+            GalleryImages = request.GalleryImages,
             TeamMembers = request.TeamMembers,
             ComprehensionQuestions = request.ComprehensionQuestions.Select(q => new QuestionAnswer
             {
@@ -287,6 +292,7 @@ public class ProjectsController : ControllerBase
             Category = newProject.Category,
             VideoUrl = newProject.VideoUrl,
             ThumbnailUrl = newProject.ThumbnailUrl,
+            GalleryImages = newProject.GalleryImages,
             TeamMembers = newProject.TeamMembers
         };
 
@@ -327,6 +333,7 @@ public class ProjectsController : ControllerBase
             Category = request.Category,
             VideoUrl = request.VideoUrl,
             ThumbnailUrl = request.ThumbnailUrl,
+            GalleryImages = request.GalleryImages,
             TeamMembers = request.TeamMembers,
             ComprehensionQuestions = request.ComprehensionQuestions.Select(q => new QuestionAnswer
             {
