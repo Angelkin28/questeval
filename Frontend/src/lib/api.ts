@@ -336,6 +336,53 @@ export const api = {
                 throw new Error('Error al generar Token QR del proyecto');
             }
             return response.json();
+        },
+
+        update: async (id: string, project: CreateProjectRequest): Promise<void> => {
+            const token = localStorage.getItem('token');
+            const headers: HeadersInit = {
+                'Content-Type': 'application/json'
+            };
+
+            if (token) {
+                headers['Authorization'] = `Bearer ${token}`;
+            }
+
+            const response = await fetch(`${API_URL}/Projects/${id}`, {
+                method: 'PUT',
+                headers,
+                body: JSON.stringify(project)
+            });
+
+            if (response.status === 403) {
+                throw new Error('No tienes permiso para editar este proyecto');
+            }
+            if (!response.ok) {
+                throw new Error('Error al actualizar proyecto');
+            }
+        },
+
+        delete: async (id: string): Promise<void> => {
+            const token = localStorage.getItem('token');
+            const headers: HeadersInit = {
+                'Content-Type': 'application/json'
+            };
+
+            if (token) {
+                headers['Authorization'] = `Bearer ${token}`;
+            }
+
+            const response = await fetch(`${API_URL}/Projects/${id}`, {
+                method: 'DELETE',
+                headers
+            });
+
+            if (response.status === 403) {
+                throw new Error('No tienes permiso para eliminar este proyecto');
+            }
+            if (!response.ok) {
+                throw new Error('Error al eliminar proyecto');
+            }
         }
     },
 

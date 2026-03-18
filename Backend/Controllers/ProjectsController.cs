@@ -320,9 +320,10 @@ public class ProjectsController : ControllerBase
     /// <response code="204">Si se completó exitosamente</response>
     /// <response code="404">Si el recurso no se encuentra</response>
     [HttpPut("{id}")]
-    [Authorize(Roles = "Profesor,Admin")]
+    [Authorize(Roles = "Alumno,Profesor,Admin")]
     [ProducesResponseType(StatusCodes.Status204NoContent)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
+    [ProducesResponseType(StatusCodes.Status403Forbidden)]
     public async Task<IActionResult> Update(string id, CreateProjectRequest request)
     {
         var project = await _service.GetByIdAsync(id);
@@ -330,6 +331,14 @@ public class ProjectsController : ControllerBase
         if (project is null)
         {
             return NotFound();
+        }
+
+        // Alumnos solo pueden editar sus propios proyectos
+        var userRole = User.FindFirst(System.Security.Claims.ClaimTypes.Role)?.Value;
+        var userId = User.FindFirst("userId")?.Value;
+        if (userRole == "Alumno" && project.UserId != userId)
+        {
+            return Forbid();
         }
 
         var updatedProject = new Backend.Models.Project
@@ -369,9 +378,10 @@ public class ProjectsController : ControllerBase
     /// <response code="204">Si se completó exitosamente</response>
     /// <response code="404">Si el recurso no se encuentra</response>
     [HttpDelete("{id}")]
-    [Authorize(Roles = "Profesor,Admin")]
+    [Authorize(Roles = "Alumno,Profesor,Admin")]
     [ProducesResponseType(StatusCodes.Status204NoContent)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
+    [ProducesResponseType(StatusCodes.Status403Forbidden)]
     public async Task<IActionResult> Delete(string id)
     {
         var project = await _service.GetByIdAsync(id);
@@ -379,6 +389,14 @@ public class ProjectsController : ControllerBase
         if (project is null)
         {
             return NotFound();
+        }
+
+        // Alumnos solo pueden eliminar sus propios proyectos
+        var userRole = User.FindFirst(System.Security.Claims.ClaimTypes.Role)?.Value;
+        var userId = User.FindFirst("userId")?.Value;
+        if (userRole == "Alumno" && project.UserId != userId)
+        {
+            return Forbid();
         }
 
         await _service.DeleteAsync(id);

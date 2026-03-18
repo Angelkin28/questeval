@@ -19,6 +19,8 @@ import {
     Target,
     Wrench,
     FileText,
+    Pencil,
+    Trash2,
 } from 'lucide-react';
 
 export default function ProjectDetailsPage() {
@@ -28,6 +30,8 @@ export default function ProjectDetailsPage() {
 
     const [project, setProject] = useState<Project | null>(null);
     const [evaluation, setEvaluation] = useState<EvaluationResponse | null>(null);
+    const [isOwner, setIsOwner] = useState(false);
+    const [deleting, setDeleting] = useState(false);
     const [loading, setLoading] = useState(true);
     const [galleryIndex, setGalleryIndex] = useState(0);
 
@@ -37,6 +41,21 @@ export default function ProjectDetailsPage() {
             try {
                 const projectData = await api.projects.getById(id);
                 setProject(projectData);
+
+                // Check ownership
+                const userJson = localStorage.getItem('user');
+                if (userJson) {
+                    const user = JSON.parse(userJson);
+                    const role = user.role?.toLowerCase();
+                    if (role === 'profesor' || role === 'maestro' || role === 'admin') {
+                        setIsOwner(true);
+                    } else if (user.fullName && projectData.teamMembers?.some(
+                        (m: string) => m.toLowerCase() === user.fullName.toLowerCase()
+                    )) {
+                        setIsOwner(true);
+                    }
+                }
+
                 if (projectData.status === 'Evaluated' || projectData.status === 'Completed') {
                     try {
                         const evaluations = await api.evaluations.getByProject(id);
@@ -139,6 +158,39 @@ export default function ProjectDetailsPage() {
             </div>
 
             <main className="container mx-auto px-4 py-6 max-w-5xl">
+
+                {/* ── OWNER ACTIONS ── */}
+                {isOwner && (
+                    <div className="flex items-center justify-end gap-3 mb-6 animate-fade-in">
+                        <Button
+                            variant="outline"
+                            className="gap-2"
+                            onClick={() => router.push(`/project/${id}/edit`)}
+                        >
+                            <Pencil className="w-4 h-4" />
+                            Editar Proyecto
+                        </Button>
+                        <Button
+                            variant="destructive"
+                            className="gap-2"
+                            disabled={deleting}
+                            onClick={async () => {
+                                if (!confirm('¿Estás seguro de que quieres eliminar este proyecto? Esta acción no se puede deshacer.')) return;
+                                setDeleting(true);
+                                try {
+                                    await api.projects.delete(id);
+                                    router.push('/dashboard');
+                                } catch (err: any) {
+                                    alert(err.message || 'Error al eliminar');
+                                    setDeleting(false);
+                                }
+                            }}
+                        >
+                            <Trash2 className="w-4 h-4" />
+                            {deleting ? 'Eliminando...' : 'Eliminar'}
+                        </Button>
+                    </div>
+                )}
 
                 {/* ── DESCRIPTION (below banner) ── */}
                 <Card className="mb-6 shadow-sm border-border/50">
