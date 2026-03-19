@@ -108,6 +108,20 @@ public class UserResponse
 }
 
 /// <summary>
+/// Solicitud para actualizar el perfil del usuario (solo nombre y avatar)
+/// </summary>
+public class UpdateProfileRequest
+{
+    /// <summary>Nombre completo del usuario</summary>
+    [Required(ErrorMessage = "El nombre completo es requerido.")]
+    [StringLength(100, MinimumLength = 2, ErrorMessage = "El nombre debe tener entre 2 y 100 caracteres.")]
+    public string FullName { get; set; } = null!;
+
+    /// <summary>URL del avatar del usuario (opcional)</summary>
+    public string? AvatarUrl { get; set; }
+}
+
+/// <summary>
 /// Solicitud para enviar código OTP
 /// </summary>
 public class SendOtpRequest

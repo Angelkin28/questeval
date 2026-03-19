@@ -23,11 +23,9 @@ export default function PerfilPage() {
     const router = useRouter();
     const [user, setUser] = useState<UserResponse | null>(null);
     const [editando, setEditando] = useState(false);
-    const [formData, setFormData] = useState({
-        fullName: '',
-        email: '',
-    });
-    const [stats, setStats] = useState({ proyectos: 0, grupos: 0, promedio: 89 });
+    const [formData, setFormData] = useState({ fullName: '' });
+    const [stats, setStats] = useState({ proyectos: 0, grupos: 0 });
+    const [saveError, setSaveError] = useState('');
 
     const [avatar, setAvatar] = useState<string | null>(null);
 
@@ -37,21 +35,19 @@ export default function PerfilPage() {
             const userData = JSON.parse(storedUser);
             setUser(userData);
             setAvatar(userData.avatarUrl || null);
-            setFormData({
-                fullName: userData.fullName || '',
-                email: userData.email || '',
-            });
-            // ... (fetchStats existing code)
+            setFormData({ fullName: userData.fullName || '' });
             const fetchStats = async () => {
                 try {
-                    const dashboardStats = await api.dashboard.getStats();
+                    const [myProjects, myGroups] = await Promise.all([
+                        api.projects.getMyProjects().catch(() => []),
+                        api.groups.getMyGroups().catch(() => []),
+                    ]);
                     setStats({
-                        proyectos: dashboardStats.proyectos || 0,
-                        grupos: dashboardStats.grupos || 0,
-                        promedio: 89 // This one might still be static if not in API
+                        proyectos: myProjects.length,
+                        grupos: myGroups.length,
                     });
                 } catch (e) {
-                    console.error("Error fetching profile stats", e);
+                    console.error('Error fetching profile stats', e);
                 }
             };
             fetchStats();
@@ -72,15 +68,17 @@ export default function PerfilPage() {
                 const uploadResult = await api.storage.upload(file);
                 const serverUrl = uploadResult.url;
 
-                setAvatar(serverUrl); // Actualizar con URL real
+                setAvatar(serverUrl);
 
                 if (user) {
-                    const updatedUser = { ...user, avatarUrl: serverUrl };
+                    // Persistir en el backend
+                    const updated = await api.users.updateProfile(user.id, {
+                        fullName: user.fullName,
+                        avatarUrl: serverUrl,
+                    });
+                    const updatedUser = { ...user, ...updated };
                     localStorage.setItem('user', JSON.stringify(updatedUser));
-
-                    // Aquí se debería llamar a la API para actualizar el usuario en el backend
-                    // await api.users.update(user.id, { avatarUrl: serverUrl });
-                    console.log('Avatar actualizado en servidor:', serverUrl);
+                    setUser(updatedUser);
                 }
             } catch (error) {
                 console.error('Error al subir avatar:', error);
@@ -91,24 +89,29 @@ export default function PerfilPage() {
         }
     };
 
-    const handleGuardar = () => {
-        // ... (handleGuardar existing code)
-        if (user) {
-            const updatedUser = { ...user, ...formData, avatarUrl: avatar || undefined };
+    const handleGuardar = async () => {
+        if (!user) return;
+        setSaveError('');
+        try {
+            const updated = await api.users.updateProfile(user.id, {
+                fullName: formData.fullName.trim(),
+                avatarUrl: avatar ?? undefined,
+            });
+            const updatedUser = { ...user, ...updated };
             localStorage.setItem('user', JSON.stringify(updatedUser));
             setUser(updatedUser);
+            setEditando(false);
+        } catch (e: unknown) {
+            setSaveError(e instanceof Error ? e.message : 'Error al guardar cambios.');
         }
-        setEditando(false);
     };
 
     const handleCancelar = () => {
         if (user) {
-            setFormData({
-                fullName: user.fullName || '',
-                email: user.email || '',
-            });
+            setFormData({ fullName: user.fullName || '' });
             setAvatar(user.avatarUrl || null);
         }
+        setSaveError('');
         setEditando(false);
     };
 
@@ -213,22 +216,13 @@ export default function PerfilPage() {
                                 )}
                             </div>
 
-                            {/* Email */}
+                            {/* Email — solo lectura */}
                             <div>
                                 <label className="text-xs font-semibold uppercase tracking-wide text-muted-foreground flex items-center gap-2 mb-2">
                                     <Mail className="w-3 h-3" />
                                     Correo Electrónico
                                 </label>
-                                {editando ? (
-                                    <Input
-                                        value={formData.email}
-                                        onChange={(e) => setFormData({ ...formData, email: e.target.value })}
-                                        className="h-10"
-                                        type="email"
-                                    />
-                                ) : (
-                                    <p className="text-sm font-medium">{user.email}</p>
-                                )}
+                                <p className="text-sm font-medium">{user.email}</p>
                             </div>
 
                             {/* Rol */}
@@ -254,22 +248,27 @@ export default function PerfilPage() {
 
                         {/* Botones de Edición */}
                         {editando && (
-                            <div className="flex gap-2 mt-6">
-                                <Button
-                                    onClick={handleGuardar}
-                                    className="flex-1 bg-primary text-primary-foreground hover:bg-primary/90"
-                                >
-                                    <Save className="w-4 h-4 mr-2" />
-                                    Guardar Cambios
-                                </Button>
-                                <Button
-                                    onClick={handleCancelar}
-                                    variant="outline"
-                                    className="flex-1"
-                                >
-                                    <X className="w-4 h-4 mr-2" />
-                                    Cancelar
-                                </Button>
+                            <div className="flex flex-col gap-2 mt-6">
+                                {saveError && (
+                                    <p className="text-sm text-destructive">{saveError}</p>
+                                )}
+                                <div className="flex gap-2">
+                                    <Button
+                                        onClick={handleGuardar}
+                                        className="flex-1 bg-primary text-primary-foreground hover:bg-primary/90"
+                                    >
+                                        <Save className="w-4 h-4 mr-2" />
+                                        Guardar Cambios
+                                    </Button>
+                                    <Button
+                                        onClick={handleCancelar}
+                                        variant="outline"
+                                        className="flex-1"
+                                    >
+                                        <X className="w-4 h-4 mr-2" />
+                                        Cancelar
+                                    </Button>
+                                </div>
                             </div>
                         )}
                     </CardContent>
@@ -282,7 +281,7 @@ export default function PerfilPage() {
                             <Award className="w-5 h-5 text-primary" />
                             Estadísticas
                         </h2>
-                        <div className="grid grid-cols-3 gap-4">
+                        <div className="grid grid-cols-2 gap-4">
                             <div className="text-center">
                                 <div className="text-2xl font-bold text-primary title-serif">{stats.proyectos}</div>
                                 <p className="text-xs text-muted-foreground mt-1">Proyectos</p>
@@ -290,10 +289,6 @@ export default function PerfilPage() {
                             <div className="text-center">
                                 <div className="text-2xl font-bold text-primary title-serif">{stats.grupos}</div>
                                 <p className="text-xs text-muted-foreground mt-1">Grupos</p>
-                            </div>
-                            <div className="text-center">
-                                <div className="text-2xl font-bold text-primary title-serif">{stats.promedio}</div>
-                                <p className="text-xs text-muted-foreground mt-1">Promedio</p>
                             </div>
                         </div>
                     </CardContent>

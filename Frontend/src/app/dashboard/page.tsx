@@ -55,8 +55,15 @@ export default function DashboardPage() {
 
                 const userData = JSON.parse(userJson);
                 setUserName(userData.fullName || 'Usuario');
-                // userId es la matrícula incremental devuelta por el backend
-                setUserEnrollment(userData.userId || userData.enrollment || '');
+                // Extraer matrícula del correo universitario (ej: 24090665@alumno.utmetropolitana.edu.mx → 24090665)
+                // Para cuentas de test (no universitarias), mostrar el userId incremental
+                const email: string = userData.email || '';
+                const universityMatch = email.match(/^(\d+)@alumno\./);
+                if (universityMatch) {
+                    setUserEnrollment(universityMatch[1]);
+                } else {
+                    setUserEnrollment(userData.userId || userData.enrollment || '');
+                }
                 const roleLower = userData.role?.toLowerCase();
                 const isTeacher = roleLower === 'maestro' || roleLower === 'profesor';
                 setUserRole(isTeacher ? 'teacher' : 'student');

@@ -35,6 +35,8 @@ interface ProjectDetail {
     description?: string;
     videoUrl?: string;
     teamMembers?: string[];
+    objectives?: string[];
+    technologies?: string[];
 }
 
 export default function GuestProjectPage() {
@@ -228,6 +230,37 @@ export default function GuestProjectPage() {
                                 </div>
                             );
                         })()}
+
+                        {project.objectives && project.objectives.length > 0 && (
+                            <div className="border-t border-black/5 pt-6 mb-6">
+                                <p className="text-xs font-bold uppercase tracking-widest text-[#1A1A1A]/50 mb-3">
+                                    Objetivos
+                                </p>
+                                <ul className="list-disc list-inside space-y-1">
+                                    {project.objectives.map((obj, idx) => (
+                                        <li key={idx} className="text-sm text-[#1A1A1A]/70">{obj}</li>
+                                    ))}
+                                </ul>
+                            </div>
+                        )}
+
+                        {project.technologies && project.technologies.length > 0 && (
+                            <div className="border-t border-black/5 pt-6 mb-6">
+                                <p className="text-xs font-bold uppercase tracking-widest text-[#1A1A1A]/50 mb-3">
+                                    Tecnologías
+                                </p>
+                                <div className="flex flex-wrap gap-2">
+                                    {project.technologies.map((tech, idx) => (
+                                        <span
+                                            key={idx}
+                                            className="bg-black/5 text-[#1A1A1A]/70 px-3 py-1 rounded-sm text-xs font-bold"
+                                        >
+                                            {tech}
+                                        </span>
+                                    ))}
+                                </div>
+                            </div>
+                        )}
 
                         {project.teamMembers && project.teamMembers.length > 0 && (
                             <div className="border-t border-black/5 pt-6">

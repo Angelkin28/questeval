@@ -238,6 +238,23 @@ export const api = {
                 headers,
             });
             if (!response.ok) throw new Error('Error al eliminar usuario');
+        },
+
+        updateProfile: async (id: string, data: { fullName: string; avatarUrl?: string }): Promise<UserResponse> => {
+            const token = localStorage.getItem('token');
+            const headers: HeadersInit = { 'Content-Type': 'application/json' };
+            if (token) headers['Authorization'] = `Bearer ${token}`;
+
+            const response = await fetch(`${API_URL}/Users/${id}/profile`, {
+                method: 'PUT',
+                headers,
+                body: JSON.stringify({ fullName: data.fullName, avatarUrl: data.avatarUrl ?? null }),
+            });
+            if (!response.ok) {
+                const err = await response.json().catch(() => ({}));
+                throw new Error(err.detail || err.title || 'Error al actualizar perfil');
+            }
+            return response.json();
         }
     },
 

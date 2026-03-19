@@ -345,6 +345,43 @@ public class UsersController : ControllerBase
         return Ok(new { message = "Email verificado exitosamente.", verified = true });
     }
 
+    /// <summary>
+    /// Actualiza el nombre y avatar del perfil del usuario autenticado
+    /// </summary>
+    [HttpPut("{id}/profile")]
+    [Authorize]
+    public async Task<IActionResult> UpdateProfile(string id, [FromBody] UpdateProfileRequest request)
+    {
+        if (!ModelState.IsValid) return BadRequest(ModelState);
+
+        // Solo el propio usuario puede editar su perfil
+        var callerMongoId = User.FindFirst("userId")?.Value;
+        if (callerMongoId != id)
+            return Forbid();
+
+        var user = await _service.GetByIdAsync(id);
+        if (user == null) return NotFound();
+
+        user.FullName = request.FullName.Trim();
+        user.AvatarUrl = request.AvatarUrl;
+        user.UpdatedAt = DateTime.UtcNow;
+
+        await _service.UpdateAsync(id, user);
+
+        return Ok(new UserResponse
+        {
+            Id = user.Id!,
+            UserId = user.UserId,
+            Email = user.Email,
+            FullName = user.FullName,
+            Role = user.Role,
+            AvatarUrl = user.AvatarUrl,
+            CreatedAt = user.CreatedAt,
+            EmailVerified = user.EmailVerified,
+            VerificationStatus = user.VerificationStatus
+        });
+    }
+
     [HttpDelete("{id}")]
     [Authorize(Roles = "Admin")]
     public async Task<IActionResult> Delete(string id)
