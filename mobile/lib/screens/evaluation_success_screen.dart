@@ -46,10 +46,7 @@ class _EvaluationSuccessScreenState
       parent: _scaleController,
       curve: Curves.elasticOut,
     );
-    _fadeAnim = CurvedAnimation(
-      parent: _fadeController,
-      curve: Curves.easeIn,
-    );
+    _fadeAnim = CurvedAnimation(parent: _fadeController, curve: Curves.easeIn);
     _particleAnim = _particleController;
 
     // Arrancar animaciones en cadena
@@ -178,25 +175,35 @@ class _EvaluationSuccessScreenState
                       Container(
                         margin: const EdgeInsets.symmetric(vertical: 24),
                         padding: const EdgeInsets.symmetric(
-                            horizontal: 20, vertical: 12),
+                          horizontal: 20,
+                          vertical: 12,
+                        ),
                         decoration: BoxDecoration(
                           color: accentColor.withOpacity(0.1),
                           borderRadius: BorderRadius.circular(14),
                           border: Border.all(
-                              color: accentColor.withOpacity(0.3)),
+                            color: accentColor.withOpacity(0.3),
+                          ),
                         ),
                         child: Row(
                           mainAxisSize: MainAxisSize.min,
                           children: [
-                            Icon(Icons.verified_outlined,
-                                color: accentColor, size: 20),
+                            Icon(
+                              Icons.verified_outlined,
+                              color: accentColor,
+                              size: 20,
+                            ),
                             const SizedBox(width: 8),
-                            Text(
-                              'Registrado · Solo 1 voto por dispositivo',
-                              style: TextStyle(
-                                color: accentColor,
-                                fontSize: 13,
-                                fontWeight: FontWeight.w600,
+                            Flexible(
+                              child: Text(
+                                'Registrado · Solo 1 voto por dispositivo',
+                                style: TextStyle(
+                                  color: accentColor,
+                                  fontSize: 13,
+                                  fontWeight: FontWeight.w600,
+                                ),
+                                textAlign: TextAlign.center,
+                                overflow: TextOverflow.visible,
                               ),
                             ),
                           ],
@@ -215,7 +222,9 @@ class _EvaluationSuccessScreenState
                           label: const Text(
                             'Evaluar otro proyecto',
                             style: TextStyle(
-                                fontWeight: FontWeight.bold, fontSize: 16),
+                              fontWeight: FontWeight.bold,
+                              fontSize: 16,
+                            ),
                           ),
                           style: ElevatedButton.styleFrom(
                             backgroundColor: accentColor,
@@ -234,8 +243,11 @@ class _EvaluationSuccessScreenState
                         height: 52,
                         child: OutlinedButton.icon(
                           onPressed: _goToProjects,
-                          icon: Icon(Icons.grid_view_rounded,
-                              size: 20, color: accentColor),
+                          icon: Icon(
+                            Icons.grid_view_rounded,
+                            size: 20,
+                            color: accentColor,
+                          ),
                           label: Text(
                             'Ver todos los proyectos',
                             style: TextStyle(
@@ -246,8 +258,9 @@ class _EvaluationSuccessScreenState
                           ),
                           style: OutlinedButton.styleFrom(
                             side: BorderSide(
-                                color: accentColor.withOpacity(0.5),
-                                width: 1.5),
+                              color: accentColor.withOpacity(0.5),
+                              width: 1.5,
+                            ),
                             shape: RoundedRectangleBorder(
                               borderRadius: BorderRadius.circular(16),
                             ),
@@ -280,9 +293,16 @@ class _ParticlePainter extends CustomPainter {
 
   // Posiciones fijas de partículas (pseudo-aleatorias)
   static const _positions = [
-    [0.12, 0.15], [0.85, 0.08], [0.25, 0.82], [0.75, 0.75],
-    [0.45, 0.12], [0.60, 0.90], [0.08, 0.55], [0.92, 0.50],
-    [0.35, 0.40], [0.68, 0.30],
+    [0.12, 0.15],
+    [0.85, 0.08],
+    [0.25, 0.82],
+    [0.75, 0.75],
+    [0.45, 0.12],
+    [0.60, 0.90],
+    [0.08, 0.55],
+    [0.92, 0.50],
+    [0.35, 0.40],
+    [0.68, 0.30],
   ];
 
   @override

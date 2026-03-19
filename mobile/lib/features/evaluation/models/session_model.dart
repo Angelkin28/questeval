@@ -117,8 +117,8 @@ class EvaluationDetailRequest {
   });
 
   Map<String, dynamic> toJson() => {
-        'criteriaId': criteriaId,
-        'criterionName': criterionName,
-        'score': score,
-      };
+    'criteriaId': criteriaId,
+    'criterionName': criterionName,
+    'score': score,
+  };
 }

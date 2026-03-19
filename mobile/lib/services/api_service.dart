@@ -45,8 +45,7 @@ class ApiService {
     try {
       final h = headers ?? await _getHeaders();
       return await http
-          .post(Uri.parse('$baseUrl/$path'),
-              headers: h, body: jsonEncode(body))
+          .post(Uri.parse('$baseUrl/$path'), headers: h, body: jsonEncode(body))
           .timeout(AppConstants.httpTimeout);
     } on SocketException {
       throw const NetworkException();
@@ -60,17 +59,19 @@ class ApiService {
   // ─────────────────────────────────────────────────────────────────
 
   Future<LoginResponse> login(String email, String password) async {
-    final response = await _post('users/login', {
-      'email': email,
-      'password': password,
-    }, headers: {'Content-Type': 'application/json'});
+    final response = await _post(
+      'users/login',
+      {'email': email, 'password': password},
+      headers: {'Content-Type': 'application/json'},
+    );
 
     if (response.statusCode == 200) {
       return LoginResponse.fromJson(jsonDecode(response.body));
     }
     final errorData = jsonDecode(response.body);
     throw Exception(
-        errorData['error'] ?? 'Error al iniciar sesión (${response.statusCode})');
+      errorData['error'] ?? 'Error al iniciar sesión (${response.statusCode})',
+    );
   }
 
   Future<List<Project>> getProjects() async {
@@ -169,7 +170,9 @@ class ApiService {
 
       default:
         throw ApiException(
-            'Error del servidor: ${response.statusCode}', response.statusCode);
+          'Error del servidor: ${response.statusCode}',
+          response.statusCode,
+        );
     }
   }
 
@@ -215,8 +218,9 @@ class ApiService {
 
       default:
         throw ApiException(
-            'Error al enviar evaluación: ${response.statusCode}',
-            response.statusCode);
+          'Error al enviar evaluación: ${response.statusCode}',
+          response.statusCode,
+        );
     }
   }
 
@@ -224,11 +228,22 @@ class ApiService {
   String _extractDetail(String body) {
     try {
       final json = jsonDecode(body);
+
+      // Intentar extraer errores de validación de ModelState (ASP.NET)
+      if (json['errors'] != null && json['errors'] is Map) {
+        final errors = json['errors'] as Map;
+        final firstErrorList = errors.values.first as List;
+        return firstErrorList.first.toString();
+      }
+
       return json['detail'] as String? ??
           json['error'] as String? ??
-          'Error desconocido';
+          json['title'] as String? ??
+          body; // Muestra el body completo si no encuentra nada
     } catch (_) {
-      return 'Error desconocido';
+      return body.isNotEmpty
+          ? body
+          : 'Error de conexión con el servidor (sin respuesta)';
     }
   }
 }
