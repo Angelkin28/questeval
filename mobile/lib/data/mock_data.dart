@@ -29,6 +29,7 @@ final List<Project> mockProjects = [
       'Integrar sensores IoT de bajo coste'
     ],
     technologies: ['React', 'Node.js', 'PostgreSQL', 'TensorFlow', 'Flutter'],
+    teamMembers: ['Ana Silva', 'Carlos Gómez', 'Elena Ruiz'],
   ),
   Project(
     id: '2',

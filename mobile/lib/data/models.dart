@@ -10,6 +10,7 @@ class Project {
   final List<String> galleryImages;
   final List<String> objectives;
   final List<String> technologies;
+  final List<String> teamMembers;
 
   Project({
     required this.id,
@@ -23,6 +24,7 @@ class Project {
     this.galleryImages = const [],
     this.objectives = const [],
     this.technologies = const [],
+    this.teamMembers = const [],
   });
 }
 

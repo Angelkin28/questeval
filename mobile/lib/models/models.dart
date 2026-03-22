@@ -7,13 +7,14 @@ class Project {
   final double? score;
   final String? observations;
   final Map<String, double>? criteriaScores;
-  final List<String> competencies;
   final String description;
   final String? videoUrl;
   final String? thumbnailUrl;
   final List<String> galleryImages;
   final List<String> objectives;
   final List<String> technologies;
+  final List<String> teamMembers;
+  final List<String> competencies; // Restored to avoid hot reload crash
   final bool isEvaluatedByUser;
 
   final List<ComprehensionQuestion> questions;
@@ -27,13 +28,14 @@ class Project {
     this.score,
     this.observations,
     this.criteriaScores,
-    this.competencies = const [],
     this.description = '',
     this.videoUrl,
     this.thumbnailUrl,
     this.galleryImages = const [],
     this.objectives = const [],
     this.technologies = const [],
+    this.teamMembers = const [],
+    this.competencies = const [],
     this.questions = const [],
     this.isEvaluatedByUser = false,
   });
@@ -49,7 +51,8 @@ class Project {
       criteriaScores: json['criteriaScores'] != null
           ? Map<String, double>.from(json['criteriaScores'].map((k, v) => MapEntry(k, v.toDouble())))
           : null,
-      competencies: json['teamMembers'] != null ? List<String>.from(json['teamMembers']) : [],
+      teamMembers: json['teamMembers'] != null ? List<String>.from(json['teamMembers']) : [],
+      competencies: [],
       description: json['description'] ?? '',
       videoUrl: json['videoUrl'],
       thumbnailUrl: json['thumbnailUrl'],
@@ -78,13 +81,14 @@ class Project {
       score: score ?? this.score,
       observations: observations ?? this.observations,
       criteriaScores: criteriaScores ?? this.criteriaScores,
-      competencies: competencies,
       description: description,
       videoUrl: videoUrl,
       thumbnailUrl: thumbnailUrl,
       galleryImages: galleryImages,
       objectives: objectives,
       technologies: technologies,
+      teamMembers: teamMembers,
+      competencies: competencies,
       questions: questions,
     );
   }
