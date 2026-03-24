@@ -47,6 +47,12 @@ export default function EditProjectPage() {
     const [newQuestion, setNewQuestion] = useState({ question: '', answer: '' });
     const [groupMembers, setGroupMembers] = useState<UserResponse[]>([]);
 
+    const [coverImage, setCoverImage] = useState<File | null>(null);
+    const [coverVideo, setCoverVideo] = useState<File | null>(null);
+    const [newGalleryImages, setNewGalleryImages] = useState<File[]>([]);
+    const [uploadProgress, setUploadProgress] = useState(0);
+    const [isUploading, setIsUploading] = useState(false);
+
     useEffect(() => {
         const load = async () => {
             try {
@@ -89,14 +95,36 @@ export default function EditProjectPage() {
         setSaving(true);
         setError('');
         try {
+            let finalVideoUrl = formData.videoUrl;
+            let finalThumbnailUrl = formData.thumbnailUrl;
+            let finalGalleryImages = [...formData.galleryImages];
+
+            if (coverImage) {
+                const uploadResult = await api.storage.upload(coverImage);
+                finalThumbnailUrl = uploadResult.url;
+            }
+
+            if (coverVideo) {
+                setIsUploading(true);
+                setUploadProgress(0);
+                const videoResult = await api.storage.uploadVideo(coverVideo, setUploadProgress);
+                finalVideoUrl = videoResult.url;
+                setIsUploading(false);
+            }
+
+            for (const img of newGalleryImages) {
+                const result = await api.storage.upload(img);
+                finalGalleryImages.push(result.url);
+            }
+
             await api.projects.update(id, {
                 name: formData.name,
                 description: formData.description,
                 category: formData.category,
                 status: formData.status,
-                videoUrl: formData.videoUrl || undefined,
-                thumbnailUrl: formData.thumbnailUrl || undefined,
-                galleryImages: formData.galleryImages,
+                videoUrl: finalVideoUrl || undefined,
+                thumbnailUrl: finalThumbnailUrl || undefined,
+                galleryImages: finalGalleryImages,
                 objectives: formData.objectives,
                 technologies: formData.technologies,
                 groupId: formData.groupId,
@@ -191,11 +219,65 @@ export default function EditProjectPage() {
                         </div>
 
                         <div>
-                            <label className="text-sm font-medium mb-1 block">URL del Video</label>
+                            <label className="text-sm font-medium mb-1 block">Foto de Portada</label>
+                            {formData.thumbnailUrl && !coverImage && (
+                                <img src={formData.thumbnailUrl} alt="Portada actual" className="h-20 rounded mb-2" />
+                            )}
+                            <Input
+                                type="file"
+                                accept="image/*"
+                                onChange={(e) => {
+                                    if (e.target.files?.[0]) setCoverImage(e.target.files[0]);
+                                }}
+                            />
+                        </div>
+
+                        <div>
+                            <label className="text-sm font-medium mb-1 block">URL del Video (o sube archivo)</label>
                             <Input
                                 value={formData.videoUrl}
                                 onChange={(e) => setFormData(p => ({ ...p, videoUrl: e.target.value }))}
                                 placeholder="https://..."
+                                className="mb-2"
+                            />
+                            <Input
+                                type="file"
+                                accept="video/*"
+                                onChange={(e) => {
+                                    if (e.target.files?.[0]) setCoverVideo(e.target.files[0]);
+                                }}
+                            />
+                            {isUploading && (
+                                <p className="text-xs text-primary mt-1 font-medium text-center">
+                                    Subiendo video... {uploadProgress}%
+                                </p>
+                            )}
+                        </div>
+
+                        <div>
+                            <label className="text-sm font-medium mb-1 block">Imágenes de Galería Nuevas</label>
+                            {formData.galleryImages.length > 0 && (
+                                <div className="flex gap-2 mb-2 overflow-auto">
+                                    {formData.galleryImages.map((src, i) => (
+                                        <div key={i} className="relative">
+                                            <img src={src} className="h-16 rounded opacity-80" />
+                                            <button 
+                                                onClick={() => setFormData(p => ({...p, galleryImages: p.galleryImages.filter((_, idx)=>idx!==i)}))} 
+                                                className="absolute top-0 right-0 bg-red-500 text-white w-4 h-4 rounded-full flex items-center justify-center text-[10px]"
+                                            >×</button>
+                                        </div>
+                                    ))}
+                                </div>
+                            )}
+                            <Input
+                                type="file"
+                                accept="image/*"
+                                multiple
+                                onChange={(e) => {
+                                    if (e.target.files) {
+                                        setNewGalleryImages(Array.from(e.target.files));
+                                    }
+                                }}
                             />
                         </div>
                     </CardContent>

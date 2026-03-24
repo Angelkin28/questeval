@@ -19,7 +19,8 @@ import {
     X,
     BookOpen,
     Star,
-    ClipboardList
+    ClipboardList,
+    Pencil
 } from 'lucide-react';
 import { api, Project, Group, EvaluationResponse } from '@/lib/api';
 import { useEffect } from 'react';
@@ -320,11 +321,20 @@ export default function DashboardPage() {
                                 </div>
                             </div>
                             <CardContent className="p-5">
-                                <div className="flex justify-between items-start mb-2">
-                                    <h3 className="font-bold text-lg group-hover:text-primary transition-colors">{project.name}</h3>
-                                    <button className="text-muted-foreground hover:text-foreground">
-                                        <MoreHorizontal className="w-5 h-5" />
-                                    </button>
+                                <div className="flex justify-between items-start mb-2 relative z-10">
+                                    <h3 className="font-bold text-lg group-hover:text-primary transition-colors pr-2">{project.name}</h3>
+                                    <div className="flex items-center gap-1 shrink-0">
+                                        <button 
+                                            className="text-muted-foreground hover:text-primary bg-secondary/50 p-1.5 rounded-md backdrop-blur-sm transition-colors"
+                                            onClick={(e) => {
+                                                e.stopPropagation();
+                                                router.push(`/project/${project.id}/edit`);
+                                            }}
+                                            title="Editar Proyecto"
+                                        >
+                                            <Pencil className="w-4 h-4" />
+                                        </button>
+                                    </div>
                                 </div>
                                 <p className="text-sm text-muted-foreground line-clamp-2 mb-4 h-10">
                                     {project.description}
