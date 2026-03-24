@@ -1,0 +1,358 @@
+﻿{
+    "value":  [
+                  {
+                      "id":  "69badedaa718f04f9157e2a8",
+                      "projectId":  "5",
+                      "name":  "Witness.me",
+                      "description":  "Witness.me es un thriller psicológico indie donde tu dispositivo se transforma en \"WitnessOS\", un sistema operativo neuronal corrupto. En este entorno inmersivo, juegas como un intruso dentro de tu propia mente hackeada y debes enfrentarte a tus propios pecados representados en la interfaz para poder sobrevivir.",
+                      "groupId":  "698a45e37047eb0678143dba",
+                      "category":  "Videojuegos",
+                      "videoUrl":  "https://joqsmjiqfazocypviwck.supabase.co/storage/v1/object/public/videos/Videojuego.mp4",
+                      "thumbnailUrl":  null,
+                      "galleryImages":  [
+
+                                        ],
+                      "teamMembers":  [
+                                          "Yeng Lee Salas Jimenez"
+                                      ],
+                      "objectives":  [
+
+                                     ],
+                      "technologies":  [
+
+                                       ],
+                      "status":  "In Progress",
+                      "createdAt":  "2026-03-18T17:20:00Z",
+                      "updatedAt":  "2026-03-18T17:20:00Z",
+                      "comprehensionQuestions":  [
+
+                                                 ],
+                      "isEvaluatedByUser":  false
+                  },
+                  {
+                      "id":  "69badedaa718f04f9157e2a9",
+                      "projectId":  "6",
+                      "name":  "Óolale",
+                      "description":  "Óolale es una red social y plataforma diseñada especialmente para artistas y talentos creativos. La aplicación móvil es el espacio donde los usuarios pueden crear sus perfiles, subir fotos y videos para mostrar su trabajo, ganar reconocimiento mediante calificaciones, buscar a otros talentos y comprar suscripciones para destacar aún más.",
+                      "groupId":  "698a45e37047eb0678143dba",
+                      "category":  "Integrador",
+                      "videoUrl":  "https://joqsmjiqfazocypviwck.supabase.co/storage/v1/object/public/videos/ProyectoIntegrador_SistemaH.mp4",
+                      "thumbnailUrl":  null,
+                      "galleryImages":  [
+
+                                        ],
+                      "teamMembers":  [
+                                          "Juan Duarte",
+                                          "Joel Pool",
+                                          "Yeng Lee Salas"
+                                      ],
+                      "objectives":  [
+
+                                     ],
+                      "technologies":  [
+
+                                       ],
+                      "status":  "In Progress",
+                      "createdAt":  "2026-03-18T17:20:00Z",
+                      "updatedAt":  "2026-03-18T17:20:00Z",
+                      "comprehensionQuestions":  [
+
+                                                 ],
+                      "isEvaluatedByUser":  false
+                  },
+                  {
+                      "id":  "69bae74c85365fd9551369a6",
+                      "projectId":  "5",
+                      "name":  "the last cleric",
+                      "description":  "The Last Cleric es un videojuego móvil de acción y aventura con elementos arcade y narrativos. Combina combate dinámico, esquivas, disparos de precisión y habilidades sagradas en un mundo oscuro de estilo western gótico donde la fe se volvió fuego. El jugador asume el papel de El Clérigo, un sacerdote devoto marcado por la culpa, que recorre un desierto cazando criaturas demoníacas (yokai) originadas por un milagro fallido, buscando redención en la catedral donde todo comenzó.",
+                      "groupId":  "698a45e37047eb0678143dba",
+                      "category":  "Videojuegos",
+                      "videoUrl":  "https://joqsmjiqfazocypviwck.supabase.co/storage/v1/object/public/videos/uploads/ff30eae8-1d71-4112-b381-a23cce493940.mp4",
+                      "thumbnailUrl":  "https://joqsmjiqfazocypviwck.supabase.co/storage/v1/object/public/images/uploads/94ab5958-9858-4abb-bbc3-c3c56b9bb10c.png",
+                      "galleryImages":  [
+
+                                        ],
+                      "teamMembers":  [
+                                          "Abarham Rosado",
+                                          "Erick Leonardo Lopez hernandez",
+                                          "Jorge Emiliano Andrade Homa"
+                                      ],
+                      "objectives":  [
+
+                                     ],
+                      "technologies":  [
+                                           "Flutter, Dart, Supabase, Next.js, React, TypeScript, Riverpod"
+                                       ],
+                      "status":  "Completed",
+                      "createdAt":  "2026-03-18T17:56:28.736Z",
+                      "updatedAt":  "2026-03-18T23:23:40.782Z",
+                      "comprehensionQuestions":  [
+                                                     {
+                                                         "question":  "disfrutaste del juego",
+                                                         "options":  [
+
+                                                                     ],
+                                                         "correctAnswerIndex":  0,
+                                                         "answer":  "sipi"
+                                                     }
+                                                 ],
+                      "isEvaluatedByUser":  false
+                  },
+                  {
+                      "id":  "69bae87385365fd9551369a7",
+                      "projectId":  "6",
+                      "name":  "Outsystem",
+                      "description":  "Outsystem es una plataforma logística web de alta disponibilidad diseñada a la medida para la operativa de Apycar. Construida con tecnologías modernas, la aplicación actúa como un puente digital entre la bodega, la flotilla de reparto y los clientes de las sucursales. Su funcionalidad principal radica en digitalizar el flujo de trabajo operativo: permite cargar grandes volúmenes de productos rápidamente, asignar mercancía a choferes específicos y establecer un sistema estricto de seguridad donde un paquete solo puede marcarse como \"Entregado\" si el chofer introduce en su dispositivo el código criptográfico único que el cliente ve en su propia pantalla. Esto garantiza la trazabilidad total de la mercancía, elimina el error humano y optimiza los tiempos de respuesta de la empresa.",
+                      "groupId":  "698a45e37047eb0678143dba",
+                      "category":  "Integrador",
+                      "videoUrl":  "https://joqsmjiqfazocypviwck.supabase.co/storage/v1/object/public/videos/uploads/b90c5b6e-b78d-4211-acdf-6fe362b97c96.mp4",
+                      "thumbnailUrl":  "https://joqsmjiqfazocypviwck.supabase.co/storage/v1/object/public/images/uploads/f0dd3d46-7ee6-4472-8f14-62aa1164de52.jpeg",
+                      "galleryImages":  [
+                                            "https://joqsmjiqfazocypviwck.supabase.co/storage/v1/object/public/images/uploads/9550c2f2-5f4b-46af-9948-c9236f9f9378.jpeg",
+                                            "https://joqsmjiqfazocypviwck.supabase.co/storage/v1/object/public/images/uploads/dcc7c67d-48a5-484b-a8b3-530def329ca4.jpeg",
+                                            "https://joqsmjiqfazocypviwck.supabase.co/storage/v1/object/public/images/uploads/3519a8b5-71ee-449b-bc8e-877e13f37c25.jpeg",
+                                            "https://joqsmjiqfazocypviwck.supabase.co/storage/v1/object/public/images/uploads/59e9dfd6-7356-463c-a497-e67741ca3cba.jpeg"
+                                        ],
+                      "teamMembers":  [
+                                          "Abarham Rosado",
+                                          "Jorge Emiliano Andrade Homa",
+                                          "Erick Leonardo Lopez Hernandez"
+                                      ],
+                      "objectives":  [
+                                         "Digitalizar la gestión de última milla: Sustituir los procesos manuales y reportes vía mensajería instantánea por un sistema de monitoreo de estados en tiempo real (Pendiente, En Ruta, Entregado). Garantizar la integridad de las entregas: Establecer un protocolo de verificación mediante códigos de seguridad únicos compartidos entre cliente y chofer para mitigar pérdidas y reclamaciones. Optimizar la administración de inventarios: Desarrollar herramientas de importación masiva que permitan la sincronización inmediata de existencias desde fuentes externas (CSV/Excel), reduciendo errores de captura manual. Segmentar la visibilidad operativa: Proveer interfaces personalizadas para administradores, repartidores y clientes finales, asegurando que cada actor tenga acceso únicamente a la información relevante para su función. Reducir tiempos administrativos: Automatizar la generación de reportes de entrega y la asignación de pedidos para disminuir en al menos un 50% la carga de trabajo operativa en bodega. Fomentar la transparencia con el cliente: Permitir que las sucursales visualicen el estatus de sus pedidos y gestionen sus propios códigos de recepción, mejorando la experiencia de servicio."
+                                     ],
+                      "technologies":  [
+                                           "Next.js, React, Typescript, Tailwind CSS, Supabase, PapaParse"
+                                       ],
+                      "status":  "Completed",
+                      "createdAt":  "2026-03-18T18:01:23.016Z",
+                      "updatedAt":  "2026-03-18T23:25:46.42Z",
+                      "comprehensionQuestions":  [
+
+                                                 ],
+                      "isEvaluatedByUser":  false
+                  },
+                  {
+                      "id":  "69baeafe85365fd9551369ad",
+                      "projectId":  "7",
+                      "name":  "Playmatch",
+                      "description":  "Playmatch es una *plataforma web integral* orientada a la gestión de torneos de deportes electrónicos (e-sports) y competencias digitales. Su objetivo principal es *automatizar y centralizar el ciclo de vida completo de un torneo*, desde el momento en que un equipo se inscribe, hasta la generación y actualización del árbol de enfrentamientos (brackets) y la declaración del campeón.",
+                      "groupId":  "698a45e37047eb0678143dba",
+                      "category":  "Integrador",
+                      "videoUrl":  "https://joqsmjiqfazocypviwck.supabase.co/storage/v1/object/public/videos/uploads/7b7e1cdc-f6ad-4ee1-90e1-0854a7d346b2.mp4",
+                      "thumbnailUrl":  "",
+                      "galleryImages":  [
+
+                                        ],
+                      "teamMembers":  [
+                                          "Abarham Rosado"
+                                      ],
+                      "objectives":  [
+
+                                     ],
+                      "technologies":  [
+
+                                       ],
+                      "status":  "Completed",
+                      "createdAt":  "2026-03-18T18:12:14.817Z",
+                      "updatedAt":  "2026-03-18T18:12:14.817Z",
+                      "comprehensionQuestions":  [
+                                                     {
+                                                         "question":  "play",
+                                                         "options":  [
+
+                                                                     ],
+                                                         "correctAnswerIndex":  0,
+                                                         "answer":  "mach"
+                                                     }
+                                                 ],
+                      "isEvaluatedByUser":  false
+                  },
+                  {
+                      "id":  "69baeca885365fd9551369ae",
+                      "projectId":  "8",
+                      "name":  "Óolale",
+                      "description":  "Óolale es una red social y plataforma diseñada especialmente para artistas y talentos creativos. La aplicación móvil es el espacio donde los usuarios pueden crear sus perfiles, subir fotos y videos para mostrar su trabajo, ganar reconocimiento mediante calificaciones, buscar a otros talentos y comprar suscripciones para destacar aún más.",
+                      "groupId":  "698a45e37047eb0678143dba",
+                      "category":  "Integrador",
+                      "videoUrl":  "https://joqsmjiqfazocypviwck.supabase.co/storage/v1/object/public/videos/uploads/747e411b-4521-4bcd-bab9-f4cab8daef26.mp4",
+                      "thumbnailUrl":  "https://joqsmjiqfazocypviwck.supabase.co/storage/v1/object/public/images/uploads/59603da8-0a78-4a72-9ec4-32bc702618e7.png",
+                      "galleryImages":  [
+                                            "https://joqsmjiqfazocypviwck.supabase.co/storage/v1/object/public/images/uploads/cd91e72b-db48-4741-8dd8-724d119e2c1c.jpg",
+                                            "https://joqsmjiqfazocypviwck.supabase.co/storage/v1/object/public/images/uploads/f3cb73ab-88b1-45f3-80cb-6c415cdac1e9.jpg",
+                                            "https://joqsmjiqfazocypviwck.supabase.co/storage/v1/object/public/images/uploads/5075b51a-0583-4737-8354-e257a557adc0.jpg",
+                                            "https://joqsmjiqfazocypviwck.supabase.co/storage/v1/object/public/images/uploads/cea8ddf3-c1a0-4873-8660-3161512111dc.jpg"
+                                        ],
+                      "teamMembers":  [
+                                          "Abarham Rosado",
+                                          "YENG LEE SALAS JIMENEZ",
+                                          "JUAN MANUEL DUARTE TAH",
+                                          "JOEL ANTONIO POOL MARTINEZ"
+                                      ],
+                      "objectives":  [
+
+                                     ],
+                      "technologies":  [
+
+                                       ],
+                      "status":  "Completed",
+                      "createdAt":  "2026-03-18T18:19:20.139Z",
+                      "updatedAt":  "2026-03-18T18:19:20.139Z",
+                      "comprehensionQuestions":  [
+                                                     {
+                                                         "question":  "¿Cuál es el problema principal que Óolale busca resolver en la industria musical de Yucatán/México?",
+                                                         "options":  [
+
+                                                                     ],
+                                                         "correctAnswerIndex":  0,
+                                                         "answer":  "Resuelve la falta de profesionalismo y estructura en la industria musical, donde los músicos dependían de grupos de Facebook llenos de spam o cadenas de WhatsApp sin garantía, sufriendo cancelaciones, \"ghosting\" y pérdida de tiempo y dinero."
+                                                     }
+                                                 ],
+                      "isEvaluatedByUser":  false
+                  },
+                  {
+                      "id":  "69baed2285365fd9551369af",
+                      "projectId":  "9",
+                      "name":  "SistemaH",
+                      "description":  "Sistema de Gestión Hospitalaria (ERP/CRM) diseñado para modernizar y optimizar el control de equipos médicos. Reemplaza flujos de trabajo manuales en Excel por una plataforma digital centralizada que facilita el seguimiento en tiempo real del inventario y los estados de mantenimiento.",
+                      "groupId":  "698a45e37047eb0678143dba",
+                      "category":  "Integrador",
+                      "videoUrl":  "https://joqsmjiqfazocypviwck.supabase.co/storage/v1/object/public/videos/uploads/9fe08db4-e476-45bd-b0cc-c0f141aeed2f.mp4",
+                      "thumbnailUrl":  "https://joqsmjiqfazocypviwck.supabase.co/storage/v1/object/public/images/uploads/84724a0e-2e4c-4ba2-9e74-f659c1733f9a.png",
+                      "galleryImages":  [
+
+                                        ],
+                      "teamMembers":  [
+                                          "Abarham Rosado"
+                                      ],
+                      "objectives":  [
+                                         "Centralizar la gestión de inventario de equipos médicos para eliminar la dispersión de datos.",
+                                         "Automatizar la programación y seguimiento de mantenimientos preventivos y correctivos.",
+                                         "Mejorar la trazabilidad de los servicios técnicos y la asignación de tareas.",
+                                         "Optimizar la toma de decisiones operativa mediante paneles de control y métricas de rendimiento."
+                                     ],
+                      "technologies":  [
+                                           "Next.js 15",
+                                           "React 19",
+                                           "Node.js",
+                                           "Express",
+                                           "Supabase",
+                                           "Tailwind CSS",
+                                           "GSAP",
+                                           "Framer Motion",
+                                           "Recharts",
+                                           "Zustand"
+                                       ],
+                      "status":  "Completed",
+                      "createdAt":  "2026-03-18T18:21:22.317Z",
+                      "updatedAt":  "2026-03-18T18:21:22.317Z",
+                      "comprehensionQuestions":  [
+
+                                                 ],
+                      "isEvaluatedByUser":  false
+                  },
+                  {
+                      "id":  "69baed6685365fd9551369b0",
+                      "projectId":  "10",
+                      "name":  "Local Space",
+                      "description":  "Local Space es una plataforma tipo marketplace que conecta proveedores de servicios para eventos (banquetes, locales, DJ, fotografía, decoración, etc.) con consumidores que buscan contratar estos servicios. El sistema cuenta con tres roles principales: consumidor, proveedor y administrador. Los proveedores publican sus servicios y gestionan reservaciones, los consumidores buscan, filtran y reservan servicios, y los administradores aprueban registros y mantienen la calidad de la plataforma. Incluye procesamiento de pagos integrado con Stripe, sistema de reseñas/calificaciones, notificaciones por correo electrónico y un panel de control para cada rol.",
+                      "groupId":  "698a45e37047eb0678143dba",
+                      "category":  "Integrador",
+                      "videoUrl":  "https://joqsmjiqfazocypviwck.supabase.co/storage/v1/object/public/videos/uploads/0efec8bb-12f1-481a-905c-84e06f162400.mp4",
+                      "thumbnailUrl":  "https://joqsmjiqfazocypviwck.supabase.co/storage/v1/object/public/images/uploads/f2f2afbb-a318-4ae3-bfa7-ad33c5aac340.png",
+                      "galleryImages":  [
+
+                                        ],
+                      "teamMembers":  [
+                                          "Abarham Rosado"
+                                      ],
+                      "objectives":  [
+
+                                     ],
+                      "technologies":  [
+
+                                       ],
+                      "status":  "Completed",
+                      "createdAt":  "2026-03-18T18:22:30.921Z",
+                      "updatedAt":  "2026-03-18T18:22:30.921Z",
+                      "comprehensionQuestions":  [
+
+                                                 ],
+                      "isEvaluatedByUser":  false
+                  },
+                  {
+                      "id":  "69baef22744ab584c28aa21f",
+                      "projectId":  "11",
+                      "name":  "Jump Day",
+                      "description":  "Jump Day es un videojuego de plataformas de desplazamiento vertical automático (vertical auto-runner) diseñado específicamente para plataformas móviles. El juego ofrece una experiencia adictiva y desafiante donde el jugador debe ascender a través de niveles llenos de obstáculos, utilizando mecánicas de salto y rebote de alta precisión. Con una estética retro de pixel art y una filosofía de diseño \"una mano\" (one-handed gameplay), Jump Day combina la simplicidad de controles con una jugabilidad profunda y satisfactoria, ideal para sesiones de juego rápidas pero significativas.",
+                      "groupId":  "698a45e37047eb0678143dba",
+                      "category":  "Videojuegos",
+                      "videoUrl":  "https://joqsmjiqfazocypviwck.supabase.co/storage/v1/object/public/videos/uploads/1ec8dcde-26cc-4632-85ae-d72a1a29f7f4.mp4",
+                      "thumbnailUrl":  "https://joqsmjiqfazocypviwck.supabase.co/storage/v1/object/public/images/uploads/702189fd-c4c0-44b0-91ae-55bafcfa1864.png",
+                      "galleryImages":  [
+
+                                        ],
+                      "teamMembers":  [
+                                          "Abarham Rosado"
+                                      ],
+                      "objectives":  [
+                                         "Maximizar la Rejugabilidad: Implementar un sistema de calificación por estrellas (1 a 3) que motive al jugador a perfeccionar su técnica en cada nivel.",
+                                         "Rendimiento Premium: Garantizar una experiencia fluida de 60 FPS en una amplia gama de dispositivos móviles (gama media/baja).",
+                                         "Game Feel Preciso: Lograr un control táctil extremadamente responsivo, donde la física del salto y la gravedad se sientan justas y satisfactorias para el usuario."
+                                     ],
+                      "technologies":  [
+                                           "Flutter",
+                                           "Dart",
+                                           "Flame Engine",
+                                           "Shared Preferences",
+                                           "Google Fonts",
+                                           "Activos Pixel Art"
+                                       ],
+                      "status":  "Completed",
+                      "createdAt":  "2026-03-18T18:29:54.344Z",
+                      "updatedAt":  "2026-03-18T18:29:54.344Z",
+                      "comprehensionQuestions":  [
+
+                                                 ],
+                      "isEvaluatedByUser":  false
+                  },
+                  {
+                      "id":  "69bd4b1e8a0a7312ddbf6472",
+                      "projectId":  "12",
+                      "name":  "Squishy Dash",
+                      "description":  "Un juego de plataformas 2D donde el jugador controla a Squishy, un héroe elástico con habilidades únicas (doble salto, Dash invulnerable y ataque de aplastamiento). El objetivo de la aventura es explorar 3 mundos distintos y superar 10 desafiantes niveles para recuperar el \"Núcleo de la Elasticidad\" que fue robado por el malvado Dr. Angulus. El juego cuenta con batallas contra jefes finales, coleccionables ocultos (páginas de diario y fragmentos), inicio de sesión, progreso en la nube y tienda integrada.",
+                      "groupId":  "698a45e37047eb0678143dba",
+                      "category":  "Videojuegos",
+                      "videoUrl":  "https://joqsmjiqfazocypviwck.supabase.co/storage/v1/object/public/videos/uploads/a7dcf337-3c15-4e93-baba-38ea43246c33.mp4",
+                      "thumbnailUrl":  "https://joqsmjiqfazocypviwck.supabase.co/storage/v1/object/public/images/uploads/a9745225-92af-4991-93fc-1da6dc19cbfb.jpeg",
+                      "galleryImages":  [
+                                            "https://joqsmjiqfazocypviwck.supabase.co/storage/v1/object/public/images/uploads/954ca1b3-6fd9-42ad-be87-e390f8a20c36.png",
+                                            "https://joqsmjiqfazocypviwck.supabase.co/storage/v1/object/public/images/uploads/1585298b-e88b-4ad5-8000-01dd1ba621cd.png",
+                                            "https://joqsmjiqfazocypviwck.supabase.co/storage/v1/object/public/images/uploads/dd1122aa-8168-46b9-9bbc-88a84b4a1692.png"
+                                        ],
+                      "teamMembers":  [
+                                          "Abarham Rosado"
+                                      ],
+                      "objectives":  [
+                                         "Brindar una experiencia de juego de plataformas fluida y desafiante utilizando el motor gráfico Flame",
+                                         "Contar una historia interactiva a través de la recolección de coleccionables (notas y fragmentos) dispersos en 10 niveles",
+                                         "Ofrecer un sistema competitivo y de guardado en la nube mediante autenticación y tablas de posiciones multiplataforma",
+                                         "Integrar un sistema de economía interna y pagos reales para adquirir cosméticos o ventajas."
+                                     ],
+                      "technologies":  [
+                                           "Flutter",
+                                           "Dart",
+                                           "Flame",
+                                           "Supabase"
+                                       ],
+                      "status":  "Completed",
+                      "createdAt":  "2026-03-20T13:26:54.563Z",
+                      "updatedAt":  "2026-03-20T13:28:54.908Z",
+                      "comprehensionQuestions":  [
+
+                                                 ],
+                      "isEvaluatedByUser":  false
+                  }
+              ],
+    "Count":  10
+}

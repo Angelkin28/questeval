@@ -68,10 +68,14 @@ class _EvaluationScreenState extends ConsumerState<EvaluationScreen>
     final state = ref.read(evaluationProvider);
 
     if (state is EvaluationSuccess) {
-      // Invalidar providers para forzar recarga de los datos en ProjectsScreen
+      // Invalidar TODOS los providers para forzar recarga reactiva inmediata
       ref.invalidate(projectsProvider);
       ref.invalidate(rankingProvider);
       ref.invalidate(statsProvider);
+      // Invalidar el detalle del proyecto evaluado específicamente
+      if (_session != null) {
+        ref.invalidate(projectDetailProvider(_session!.project.id));
+      }
       
       context.pushReplacement('/evaluation/success');
     } else if (state is EvaluationError) {

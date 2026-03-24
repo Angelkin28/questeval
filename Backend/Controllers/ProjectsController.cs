@@ -371,6 +371,7 @@ public class ProjectsController : ControllerBase
             Id = id,
             ProjectId = project.ProjectId, // Preservar - no editable
             UserId = project.UserId ?? userId, // BUGFIX: Conserva el dueño, o reasígnaselo al usuario actual si se había borrado
+            Score = project.Score, // Conservar el score calculado por las evaluaciones
 
             Name = request.Name,
             Description = request.Description,
