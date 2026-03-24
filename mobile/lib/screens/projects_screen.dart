@@ -51,14 +51,24 @@ class ProjectsScreen extends ConsumerWidget {
         children: [
           _buildCategorySelector(ref, theme.category),
           Expanded(
-            child: projectsAsync.when(
-              data: (_) => ListView.builder(
-                padding: const EdgeInsets.all(16),
-                itemCount: projects.length,
-                itemBuilder: (context, index) => _ProjectCard(project: projects[index]),
-              ),
-              loading: () => _ProjectsShimmer(accentColor: isNeon ? AppColors.neonCyan : AppColors.gold),
-              error: (err, _) => ErrorBanner(
+            child: RefreshIndicator(
+              onRefresh: () async {
+                ref.invalidate(projectsProvider);
+                // Esperamos a que la nueva petición termine o de error
+                try {
+                  await ref.read(projectsProvider.future);
+                } catch (_) {}
+              },
+              color: isNeon ? AppColors.neonCyan : AppColors.gold,
+              child: projectsAsync.when(
+                data: (_) => ListView.builder(
+                  physics: const AlwaysScrollableScrollPhysics(),
+                  padding: const EdgeInsets.all(16),
+                  itemCount: projects.length,
+                  itemBuilder: (context, index) => _ProjectCard(project: projects[index]),
+                ),
+                loading: () => _ProjectsShimmer(accentColor: isNeon ? AppColors.neonCyan : AppColors.gold),
+                error: (err, _) => ErrorBanner(
                 message: err.toString().contains('SocketException') || err.toString().contains('Network')
                     ? 'Sin conexión a internet.\nVerifica tu red e intenta de nuevo.'
                     : 'Error al cargar los proyectos.\n${err.toString()}',
@@ -70,9 +80,10 @@ class ProjectsScreen extends ConsumerWidget {
               ),
             ),
           ),
-        ],
-      ),
-    );
+        ),
+      ],
+    ),
+  );
   }
 
   Widget _buildCategorySelector(WidgetRef ref, AppCategory selected) {

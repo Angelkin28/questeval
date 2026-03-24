@@ -95,7 +95,25 @@ public class ProjectsController : ControllerBase
     public async Task<ActionResult<List<ProjectResponse>>> Get()
     {
         var projects = await _service.GetAllAsync();
-        var response = projects.Select(p => new ProjectResponse
+        var allGroups = await _groupsService.GetAllAsync();
+        
+        // HashSet para validación rápida de grupos activos
+        var activeGroupIds = new HashSet<string>();
+        foreach(var g in allGroups)
+        {
+            if (!string.IsNullOrEmpty(g.Id)) activeGroupIds.Add(g.Id);
+            if (!string.IsNullOrEmpty(g.GroupId)) activeGroupIds.Add(g.GroupId);
+        }
+
+        // Filtramos para la app móvil: ocultar huérfanos o proyectos de grupos eliminados
+        var filteredProjects = projects.Where(p => 
+            !string.IsNullOrEmpty(p.GroupId) && 
+            activeGroupIds.Contains(p.GroupId) &&
+            p.Status != "Archived" && 
+            p.Status != "Deleted"
+        ).ToList();
+
+        var response = filteredProjects.Select(p => new ProjectResponse
         {
             Id = p.Id!,
             ProjectId = p.ProjectId,

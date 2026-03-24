@@ -138,6 +138,22 @@ class _ProjectDetailScreenState extends ConsumerState<ProjectDetailScreen> {
                       )),
                   const SizedBox(height: 30),
                 ],
+                if (project.teamMembers.isNotEmpty) ...[
+                  const Text('Integrantes del Equipo', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 18)),
+                  const SizedBox(height: 10),
+                  Wrap(
+                    spacing: 8,
+                    runSpacing: 8,
+                    children: project.teamMembers.map((member) => Chip(
+                          avatar: Icon(Icons.person, size: 16, color: theme.isDark ? Colors.white : Colors.black87),
+                          label: Text(member, style: const TextStyle(fontSize: 13)),
+                          backgroundColor: theme.isDark ? Colors.grey[850] : Colors.grey[100],
+                          side: BorderSide(color: Colors.grey.withOpacity(0.3)),
+                          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+                        )).toList(),
+                  ),
+                  const SizedBox(height: 30),
+                ],
                 if (project.technologies.isNotEmpty) ...[
                   const Text('Tecnologías Usadas', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 18)),
                   const SizedBox(height: 10),

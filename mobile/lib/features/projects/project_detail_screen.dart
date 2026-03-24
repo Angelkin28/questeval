@@ -56,8 +56,9 @@ class _ProjectDetailScreenState extends ConsumerState<ProjectDetailScreen> {
   Widget build(BuildContext context) {
     final project = mockProjects.firstWhere((p) => p.id == widget.projectId);
 
+    final isNeon = project.type == 'Videojuegos';
     return Scaffold(
-      appBar: AppBar(title: Text(project.name)),
+      appBar: AppBar(title: Text(project.title)),
       body: SingleChildScrollView(
         padding: const EdgeInsets.all(20),
         child: Column(
@@ -99,6 +100,35 @@ class _ProjectDetailScreenState extends ConsumerState<ProjectDetailScreen> {
                   side: BorderSide.none,
                   padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 0),
                   shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+                )).toList(),
+              ),
+              const SizedBox(height: 30),
+            ],
+            if (project.teamMembers.isNotEmpty) ...[
+              const Text('INTEGRANTES DEL EQUIPO', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 13, color: Colors.grey, letterSpacing: 1.2)),
+              const SizedBox(height: 12),
+              Wrap(
+                spacing: 12,
+                runSpacing: 12,
+                children: project.teamMembers.map((member) => Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                  decoration: BoxDecoration(
+                    color: Colors.white,
+                    borderRadius: BorderRadius.circular(20),
+                    border: Border.all(color: Colors.grey.withOpacity(0.3)),
+                  ),
+                  child: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      const CircleAvatar(
+                        radius: 12,
+                        backgroundColor: AppColors.gold,
+                        child: Icon(Icons.person, size: 16, color: Colors.white),
+                      ),
+                      const SizedBox(width: 8),
+                      Text(member, style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w500)),
+                    ],
+                  ),
                 )).toList(),
               ),
               const SizedBox(height: 30),

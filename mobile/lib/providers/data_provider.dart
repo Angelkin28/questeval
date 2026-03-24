@@ -20,7 +20,34 @@ final filteredProjectsProvider = Provider<List<Project>>((ref) {
   final category = ref.watch(categoryFilterProvider);
   
   return projectsAsync.when(
-    data: (projects) => projects.where((p) => p.type == category).toList(),
+    data: (projects) {
+      final categoryProjects = projects.where((p) => p.type == category).toList();
+      
+      // Deduplicar proyectos por título
+      final uniqueProjects = <String, Project>{};
+      for (final p in categoryProjects) {
+        final normalizedTitle = p.title.trim().toLowerCase();
+        if (!uniqueProjects.containsKey(normalizedTitle)) {
+          uniqueProjects[normalizedTitle] = p;
+        } else {
+          // Si hay duplicado, priorizamos el que esté evaluado, o en su defecto, el de creación más reciente
+          final current = uniqueProjects[normalizedTitle]!;
+          final isP_Evaluated = p.isEvaluated || p.isEvaluatedByUser || p.score != null;
+          final isCurrent_Evaluated = current.isEvaluated || current.isEvaluatedByUser || current.score != null;
+          
+          if (isP_Evaluated && !isCurrent_Evaluated) {
+             uniqueProjects[normalizedTitle] = p;
+          } else if (isP_Evaluated == isCurrent_Evaluated) {
+             // Si ambos tienen igual nivel de evaluación, quedarse con el más reciente
+             if (p.date.isAfter(current.date)) {
+               uniqueProjects[normalizedTitle] = p;
+             }
+          }
+        }
+      }
+      
+      return uniqueProjects.values.toList();
+    },
     loading: () => [],
     error: (_, __) => [],
   );
