@@ -8,6 +8,7 @@ import '../../theme/colors.dart';
 import '../../theme/app_theme.dart';
 import '../../providers/theme_provider.dart';
 import '../../providers/auth_provider.dart';
+import '../../providers/data_provider.dart';
 import '../../shared/widgets/project_video_player.dart';
 
 class EvaluationScreen extends ConsumerStatefulWidget {
@@ -67,6 +68,11 @@ class _EvaluationScreenState extends ConsumerState<EvaluationScreen>
     final state = ref.read(evaluationProvider);
 
     if (state is EvaluationSuccess) {
+      // Invalidar providers para forzar recarga de los datos en ProjectsScreen
+      ref.invalidate(projectsProvider);
+      ref.invalidate(rankingProvider);
+      ref.invalidate(statsProvider);
+      
       context.pushReplacement('/evaluation/success');
     } else if (state is EvaluationError) {
       _showErrorSnackbar(state.message);

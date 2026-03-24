@@ -136,6 +136,7 @@ public class Project
     public string? UserId { get; set; } // Propietario del proyecto
 
     public string Status { get; set; } = "Active"; // Active, Finalized, Archived
+    public double? Score { get; set; }
 
     public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
     public DateTime UpdatedAt { get; set; } = DateTime.UtcNow;

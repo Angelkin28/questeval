@@ -263,6 +263,8 @@ public class ProjectResponse
     /// <example>Activo</example>
     public string Status { get; set; } = null!;
 
+    public double? Score { get; set; }
+
     /// <summary>
     /// Marca de tiempo de creación
     /// </summary>
