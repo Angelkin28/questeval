@@ -17,14 +17,11 @@ class AppConstants {
 
   static String get baseUrl {
     if (_apiHostOverride.isNotEmpty) return '$_apiHostOverride/api';
-<<<<<<< Updated upstream
-=======
 
     // URL productiva en Render (comentada para pruebas locales):
     // return 'https://questeval-api.onrender.com/api';
 
     // Para pruebas locales:
->>>>>>> Stashed changes
     if (kIsWeb) return 'http://localhost:5122/api';
     try {
       if (Platform.isAndroid) return 'http://10.0.2.2:5122/api';
