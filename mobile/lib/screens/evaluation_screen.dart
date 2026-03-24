@@ -60,7 +60,7 @@ class _EvaluationScreenState extends ConsumerState<EvaluationScreen>
 
     await ref.read(evaluationProvider.notifier).submit(
           scores: _scores,
-          guestName: guestName == 'Invitado' ? null : guestName,
+          guestName: (guestName != null && guestName.trim().isNotEmpty) ? guestName.trim() : null,
         );
 
     if (!mounted) return;
