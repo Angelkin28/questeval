@@ -22,6 +22,7 @@ import {
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { api, Group, UserResponse } from '@/lib/api';
+import { isVideoFile, isVideoUrl } from '@/lib/mediaUtils';
 import { useEffect } from 'react';
 
 export default function NewProjectPage() {
@@ -199,14 +200,19 @@ export default function NewProjectPage() {
                 }
             }
 
-            // Subir imágenes de galería
+            // Subir archivos de galería (imágenes y videos)
             const galleryUrls: string[] = [];
-            for (const img of formData.galleryImages) {
+            for (const file of formData.galleryImages) {
                 try {
-                    const result = await api.storage.upload(img);
-                    galleryUrls.push(result.url);
+                    if (isVideoFile(file)) {
+                        const result = await api.storage.uploadVideo(file, setUploadProgress);
+                        galleryUrls.push(result.url);
+                    } else {
+                        const result = await api.storage.upload(file);
+                        galleryUrls.push(result.url);
+                    }
                 } catch (err) {
-                    console.error('Error al subir imagen de galería:', err);
+                    console.error('Error al subir archivo de galería:', err);
                 }
             }
 
@@ -616,23 +622,39 @@ export default function NewProjectPage() {
                                         )}
                                     </div>
 
-                                    {/* Gallery Images */}
+                                    {/* Gallery — Images & Videos */}
                                     <div>
                                         <label className="text-sm font-medium mb-3 flex items-center gap-2">
                                             <Images className="w-4 h-4" />
-                                            Galería de Imágenes
+                                            Galería Multimedia
                                             <span className="text-xs text-muted-foreground font-normal">({formData.galleryImages.length}/4)</span>
                                         </label>
 
                                         {formData.galleryImages.length > 0 && (
                                             <div className="grid grid-cols-2 gap-2 mb-3">
-                                                {formData.galleryImages.map((img, idx) => (
-                                                    <div key={idx} className="relative rounded-lg overflow-hidden border border-muted-foreground/25 aspect-video">
-                                                        <img
-                                                            src={URL.createObjectURL(img)}
-                                                            alt={`Galería ${idx + 1}`}
-                                                            className="w-full h-full object-cover"
-                                                        />
+                                                {formData.galleryImages.map((file, idx) => (
+                                                    <div key={idx} className="relative rounded-lg overflow-hidden border border-muted-foreground/25 aspect-video bg-black">
+                                                        {isVideoFile(file) ? (
+                                                            <video
+                                                                src={URL.createObjectURL(file)}
+                                                                className="w-full h-full object-cover"
+                                                                muted
+                                                                playsInline
+                                                                preload="metadata"
+                                                            />
+                                                        ) : (
+                                                            <img
+                                                                src={URL.createObjectURL(file)}
+                                                                alt={`Galería ${idx + 1}`}
+                                                                className="w-full h-full object-cover"
+                                                            />
+                                                        )}
+                                                        {/* Type badge */}
+                                                        <span className={`absolute bottom-1 left-1 text-[9px] font-bold uppercase px-1.5 py-0.5 rounded ${
+                                                            isVideoFile(file) ? 'bg-red-500/80 text-white' : 'bg-blue-500/80 text-white'
+                                                        }`}>
+                                                            {isVideoFile(file) ? '▶ Video' : '🖼 Imagen'}
+                                                        </span>
                                                         <button
                                                             type="button"
                                                             onClick={() => setFormData(p => ({
@@ -654,12 +676,12 @@ export default function NewProjectPage() {
                                                 className="border-2 border-dashed border-muted-foreground/25 rounded-lg p-6 text-center hover:bg-secondary/20 transition-colors cursor-pointer block"
                                             >
                                                 <Upload className="w-6 h-6 mx-auto mb-2 text-muted-foreground" />
-                                                <p className="text-sm font-medium">Agregar imagen a galería</p>
-                                                <p className="text-xs text-muted-foreground">PNG, JPG — máx. 5MB · hasta 4 imágenes</p>
+                                                <p className="text-sm font-medium">Agregar imagen o video a galería</p>
+                                                <p className="text-xs text-muted-foreground">PNG, JPG, MP4, WebM — hasta 4 archivos</p>
                                                 <input
                                                     id="project-gallery"
                                                     type="file"
-                                                    accept="image/*"
+                                                    accept="image/*,video/mp4,video/webm,video/quicktime"
                                                     multiple
                                                     className="hidden"
                                                     onChange={(e) => {
@@ -675,7 +697,7 @@ export default function NewProjectPage() {
                                             </label>
                                         )}
                                         {formData.galleryImages.length >= 4 && (
-                                            <p className="text-xs text-muted-foreground italic text-center py-2">Máximo de 4 imágenes alcanzado.</p>
+                                            <p className="text-xs text-muted-foreground italic text-center py-2">Máximo de 4 archivos alcanzado.</p>
                                         )}
                                     </div>
 

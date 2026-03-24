@@ -8,9 +8,9 @@ import { Button } from '@/components/ui/button';
 import {
     Users, Trash2, Loader2, AlertCircle, ShieldCheck,
     GraduationCap, BookOpen, Search, RefreshCw, Activity,
-    LayoutGrid, ChevronDown
+    LayoutGrid, ChevronDown, ClipboardCheck
 } from 'lucide-react';
-import { api } from '@/lib/api';
+import { api, Project } from '@/lib/api';
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5122/api';
 
@@ -69,7 +69,7 @@ export default function AdminDashboard() {
     const [roleFilter, setRoleFilter] = useState<'Todos' | 'Alumno' | 'Profesor'>('Todos');
     const [deletingId, setDeletingId] = useState<string | null>(null);
     const [confirmDelete, setConfirmDelete] = useState<User | null>(null);
-    const [activeTab, setActiveTab] = useState<'usuarios' | 'grupos' | 'logs'>('usuarios');
+    const [activeTab, setActiveTab] = useState<'usuarios' | 'grupos' | 'proyectos' | 'logs'>('usuarios');
 
     const [error, setError] = useState('');
     const [successMsg, setSuccessMsg] = useState('');
@@ -79,6 +79,13 @@ export default function AdminDashboard() {
     const [savingTeacher, setSavingTeacher] = useState(false);
     const [confirmDeleteGroup, setConfirmDeleteGroup] = useState<AdminGroup | null>(null);
     const [deletingGroup, setDeletingGroup] = useState(false);
+
+    // Projects state
+    const [adminProjects, setAdminProjects] = useState<Project[]>([]);
+    const [loadingProjects, setLoadingProjects] = useState(false);
+    const [confirmDeleteProject, setConfirmDeleteProject] = useState<Project | null>(null);
+    const [deletingProject, setDeletingProject] = useState(false);
+    const [projectSearch, setProjectSearch] = useState('');
 
     useEffect(() => {
         const userData = localStorage.getItem('user');
@@ -135,10 +142,26 @@ export default function AdminDashboard() {
         }
     }, []);
 
+    const fetchAllProjects = useCallback(async () => {
+        setLoadingProjects(true);
+        try {
+            // Fetch ALL projects without group filtering (admin view)
+            const res = await fetch(`${API_URL}/Projects`, { headers: authHeaders() });
+            if (!res.ok) throw new Error(`Error al cargar proyectos (${res.status})`);
+            const data = await res.json();
+            setAdminProjects(Array.isArray(data) ? data : []);
+        } catch (e: any) {
+            setError(e.message);
+        } finally {
+            setLoadingProjects(false);
+        }
+    }, []);
+
     useEffect(() => {
         if (activeTab === 'grupos') fetchGroups();
         if (activeTab === 'logs') fetchLogs();
-    }, [activeTab, fetchGroups, fetchLogs]);
+        if (activeTab === 'proyectos') fetchAllProjects();
+    }, [activeTab, fetchGroups, fetchLogs, fetchAllProjects]);
 
     const handleDeleteConfirm = async () => {
         if (!confirmDelete) return;
@@ -206,10 +229,41 @@ export default function AdminDashboard() {
         }
     };
 
+    const handleDeleteProject = async () => {
+        if (!confirmDeleteProject) return;
+        setDeletingProject(true);
+        try {
+            const res = await fetch(`${API_URL}/Projects/${confirmDeleteProject.id}`, {
+                method: 'DELETE',
+                headers: authHeaders()
+            });
+            if (!res.ok) {
+                const errBody = await res.json().catch(() => ({}));
+                throw new Error(errBody.detail || `Error al eliminar proyecto (${res.status})`);
+            }
+            setConfirmDeleteProject(null);
+            setSuccessMsg(`Proyecto "${confirmDeleteProject.name}" eliminado de raíz.`);
+            await fetchAllProjects();
+            setTimeout(() => setSuccessMsg(''), 4000);
+        } catch (err: unknown) {
+            setError(err instanceof Error ? err.message : 'Error al eliminar el proyecto');
+            setTimeout(() => setError(''), 5000);
+        } finally {
+            setDeletingProject(false);
+        }
+    };
+
     const filteredUsers = users.filter(u => {
         const matchRole = roleFilter === 'Todos' || u.role === roleFilter;
         const term = searchTerm.toLowerCase();
         return matchRole && (u.fullName.toLowerCase().includes(term) || u.email.toLowerCase().includes(term));
+    });
+
+    const filteredProjects = adminProjects.filter(p => {
+        const term = projectSearch.toLowerCase();
+        return p.name.toLowerCase().includes(term) ||
+            (p.description?.toLowerCase().includes(term) ?? false) ||
+            (p.category?.toLowerCase().includes(term) ?? false);
     });
 
     const totalAlumnos = users.filter(u => u.role === 'Alumno').length;
@@ -301,6 +355,7 @@ export default function AdminDashboard() {
                     {([
                         { key: 'usuarios', label: 'Usuarios', icon: Users },
                         { key: 'grupos', label: 'Grupos', icon: LayoutGrid },
+                        { key: 'proyectos', label: 'Proyectos', icon: ClipboardCheck },
                         { key: 'logs', label: 'Actividad', icon: Activity },
                     ] as const).map(({ key, label, icon: Icon }) => (
                         <button
@@ -517,6 +572,142 @@ export default function AdminDashboard() {
                     </div>
                 )}
 
+                {/* ===================== TAB: PROYECTOS ===================== */}
+                {activeTab === 'proyectos' && (
+                    <div className="space-y-4">
+                        <div className="flex flex-col sm:flex-row gap-3">
+                            <div className="relative flex-1">
+                                <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+                                <input
+                                    type="text"
+                                    placeholder="Buscar por nombre, categoría o descripción..."
+                                    value={projectSearch}
+                                    onChange={e => setProjectSearch(e.target.value)}
+                                    className="w-full pl-9 pr-4 py-2 border border-border rounded-lg bg-background text-sm focus:outline-none focus:ring-2 focus:ring-primary/30"
+                                />
+                            </div>
+                            <Button variant="outline" size="sm" onClick={fetchAllProjects} disabled={loadingProjects} className="gap-2">
+                                <RefreshCw className={`w-4 h-4 ${loadingProjects ? 'animate-spin' : ''}`} />
+                                Actualizar
+                            </Button>
+                        </div>
+
+                        <Card>
+                            <CardContent className="p-0 overflow-hidden">
+                                {loadingProjects ? (
+                                    <div className="flex flex-col items-center justify-center py-16 gap-3 text-muted-foreground">
+                                        <Loader2 className="w-8 h-8 animate-spin text-primary" />
+                                        <p className="text-sm">Cargando proyectos...</p>
+                                    </div>
+                                ) : filteredProjects.length === 0 ? (
+                                    <div className="flex flex-col items-center justify-center py-16 gap-3 text-muted-foreground">
+                                        <ClipboardCheck className="w-12 h-12 opacity-20" />
+                                        <p className="text-sm">No se encontraron proyectos.</p>
+                                    </div>
+                                ) : (
+                                    <div className="overflow-x-auto">
+                                        <table className="w-full text-sm text-left">
+                                            <thead className="bg-muted/50 text-muted-foreground uppercase text-xs">
+                                                <tr>
+                                                    <th className="px-4 py-4 font-medium">#</th>
+                                                    <th className="px-6 py-4 font-medium">Proyecto</th>
+                                                    <th className="px-6 py-4 font-medium">Categoría</th>
+                                                    <th className="px-6 py-4 font-medium">Estado</th>
+                                                    <th className="px-6 py-4 font-medium">Equipo</th>
+                                                    <th className="px-6 py-4 font-medium">Fecha</th>
+                                                    <th className="px-6 py-4 font-medium text-center">Eliminar</th>
+                                                </tr>
+                                            </thead>
+                                            <tbody className="divide-y divide-border">
+                                                {filteredProjects.map((project, idx) => (
+                                                    <tr key={project.id} className="hover:bg-muted/30 transition-colors">
+                                                        <td className="px-4 py-4">
+                                                            <span className="inline-block font-mono text-xs bg-secondary px-2 py-1 rounded text-muted-foreground">
+                                                                {idx + 1}
+                                                            </span>
+                                                        </td>
+                                                        <td className="px-6 py-4">
+                                                            <div className="flex items-center gap-3">
+                                                                {project.thumbnailUrl ? (
+                                                                    <img src={project.thumbnailUrl} alt={project.name} className="w-10 h-10 rounded object-cover flex-shrink-0 border border-border" />
+                                                                ) : (
+                                                                    <div className="w-10 h-10 rounded bg-secondary flex items-center justify-center flex-shrink-0">
+                                                                        <ClipboardCheck className="w-4 h-4 text-muted-foreground/50" />
+                                                                    </div>
+                                                                )}
+                                                                <div className="min-w-0">
+                                                                    <p className="font-medium truncate max-w-[200px]">{project.name}</p>
+                                                                    <p className="text-xs text-muted-foreground truncate max-w-[200px]">{project.description || 'Sin descripción'}</p>
+                                                                </div>
+                                                            </div>
+                                                        </td>
+                                                        <td className="px-6 py-4">
+                                                            <span className={`inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium ${
+                                                                project.category === 'Integrador' ? 'bg-blue-100 text-blue-700' :
+                                                                project.category === 'Videojuegos' ? 'bg-purple-100 text-purple-700' :
+                                                                'bg-gray-100 text-gray-700'
+                                                            }`}>
+                                                                {project.category || 'N/A'}
+                                                            </span>
+                                                        </td>
+                                                        <td className="px-6 py-4">
+                                                            <span className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium ${
+                                                                project.status === 'Evaluated' ? 'bg-green-100 text-green-700' :
+                                                                project.status === 'Completed' ? 'bg-yellow-100 text-yellow-700' :
+                                                                project.status === 'In Progress' ? 'bg-blue-100 text-blue-700' :
+                                                                'bg-gray-100 text-gray-700'
+                                                            }`}>
+                                                                <span className={`w-1.5 h-1.5 rounded-full ${
+                                                                    project.status === 'Evaluated' ? 'bg-green-500' :
+                                                                    project.status === 'Completed' ? 'bg-yellow-500' :
+                                                                    project.status === 'In Progress' ? 'bg-blue-500' :
+                                                                    'bg-gray-400'
+                                                                }`} />
+                                                                {project.status === 'Evaluated' ? 'Evaluado' :
+                                                                 project.status === 'Completed' ? 'Completado' :
+                                                                 project.status === 'In Progress' ? 'En Progreso' : project.status}
+                                                            </span>
+                                                        </td>
+                                                        <td className="px-6 py-4">
+                                                            <div className="flex flex-wrap gap-1 max-w-[150px]">
+                                                                {project.teamMembers && project.teamMembers.length > 0 ? (
+                                                                    project.teamMembers.slice(0, 2).map((m, i) => (
+                                                                        <span key={i} className="text-xs bg-secondary px-1.5 py-0.5 rounded truncate max-w-[120px]">{m}</span>
+                                                                    ))
+                                                                ) : (
+                                                                    <span className="text-xs text-muted-foreground italic">Sin equipo</span>
+                                                                )}
+                                                                {project.teamMembers && project.teamMembers.length > 2 && (
+                                                                    <span className="text-xs text-muted-foreground">+{project.teamMembers.length - 2}</span>
+                                                                )}
+                                                            </div>
+                                                        </td>
+                                                        <td className="px-6 py-4 text-muted-foreground text-xs">
+                                                            {project.createdAt ? new Date(project.createdAt).toLocaleDateString('es-MX', { day: '2-digit', month: 'short', year: 'numeric' }) : 'N/A'}
+                                                        </td>
+                                                        <td className="px-6 py-4 text-center">
+                                                            <button
+                                                                onClick={() => setConfirmDeleteProject(project)}
+                                                                className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-red-50 text-red-600 hover:bg-red-100 font-medium text-xs transition-colors"
+                                                            >
+                                                                <Trash2 className="w-3.5 h-3.5" />
+                                                                Eliminar
+                                                            </button>
+                                                        </td>
+                                                    </tr>
+                                                ))}
+                                            </tbody>
+                                        </table>
+                                    </div>
+                                )}
+                            </CardContent>
+                        </Card>
+                        <p className="text-xs text-muted-foreground text-right">
+                            Mostrando {filteredProjects.length} de {adminProjects.length} proyectos
+                        </p>
+                    </div>
+                )}
+
                 {/* ===================== TAB: LOGS ===================== */}
                 {activeTab === 'logs' && (
                     <Card>
@@ -623,6 +814,43 @@ export default function AdminDashboard() {
                             >
                                 {deletingGroup ? <Loader2 className="w-4 h-4 animate-spin" /> : <Trash2 className="w-4 h-4" />}
                                 Eliminar
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            )}
+
+            {/* Modal: Confirmar Eliminar Proyecto */}
+            {confirmDeleteProject && (
+                <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm p-4">
+                    <div className="bg-background rounded-2xl shadow-2xl p-6 w-full max-w-md border border-border animate-fade-in">
+                        <div className="flex items-center gap-3 mb-4">
+                            <div className="w-10 h-10 rounded-full bg-red-100 flex items-center justify-center flex-shrink-0">
+                                <Trash2 className="w-5 h-5 text-red-600" />
+                            </div>
+                            <div>
+                                <h3 className="font-semibold text-base">Eliminar Proyecto de Raíz</h3>
+                                <p className="text-xs text-muted-foreground">Esta acción eliminará completamente el proyecto</p>
+                            </div>
+                        </div>
+                        <div className="bg-red-50 border border-red-200 rounded-lg px-4 py-3 mb-4 text-sm">
+                            <p className="font-medium text-red-800">{confirmDeleteProject.name}</p>
+                            <p className="text-red-600 text-xs mt-1">
+                                {confirmDeleteProject.category || 'Sin categoría'} · {confirmDeleteProject.status} · {confirmDeleteProject.teamMembers?.length || 0} miembro(s)
+                            </p>
+                        </div>
+                        <p className="text-sm text-muted-foreground mb-5">
+                            ⚠️ Se eliminarán <strong>permanentemente</strong> el proyecto y todos sus datos asociados (evaluaciones, archivos multimedia, etc.). Esta acción <strong>no se puede deshacer</strong>.
+                        </p>
+                        <div className="flex gap-3">
+                            <button onClick={() => setConfirmDeleteProject(null)} className="flex-1 py-2.5 rounded-lg border border-border text-sm font-medium hover:bg-muted transition-colors">Cancelar</button>
+                            <button
+                                onClick={handleDeleteProject}
+                                disabled={deletingProject}
+                                className="flex-1 py-2.5 rounded-lg bg-red-600 text-white text-sm font-medium hover:bg-red-700 transition-colors disabled:opacity-50 flex items-center justify-center gap-2"
+                            >
+                                {deletingProject ? <Loader2 className="w-4 h-4 animate-spin" /> : <Trash2 className="w-4 h-4" />}
+                                Sí, eliminar de raíz
                             </button>
                         </div>
                     </div>
