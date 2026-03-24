@@ -406,6 +406,12 @@ export default function ProjectDetailsPage() {
                                             {evaluation.finalScore}
                                             <span className="text-lg text-muted-foreground font-normal ml-1">/ 100</span>
                                         </div>
+                                        <div className="text-xs mt-3 flex items-center gap-1.5 font-medium">
+                                            <span className="text-[10px] uppercase font-bold tracking-wider px-1.5 py-0.5 rounded bg-primary/10 text-primary">
+                                                {evaluation.evaluatorRole || 'Invitado'}
+                                            </span>
+                                            <span className="text-muted-foreground">Por {evaluation.evaluatorName || 'Anónimo'}</span>
+                                        </div>
                                     </div>
                                     {evaluation.finalScore >= 70 ? (
                                         <div className="bg-green-100 p-4 rounded-full">

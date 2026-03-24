@@ -1,4 +1,4 @@
-﻿const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5122/api';
+const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5122/api';
 
 export interface RegisterRequest {
     email: string;
@@ -138,6 +138,8 @@ export interface EvaluationResponse {
     id: string;
     projectId: string;
     evaluatorId: string;
+    evaluatorName?: string;
+    evaluatorRole?: string;
     finalScore: number;
     details: EvaluationDetailResponse[];
     createdAt: string;

@@ -446,11 +446,19 @@ export default function DashboardPage() {
                                             <div className="border-t border-border/50 px-5 py-3 bg-secondary/10">
                                                 <div className="space-y-2">
                                                     {projectEvaluations[project.id].map((ev, idx) => (
-                                                        <div key={ev.id || idx} className="flex items-center justify-between text-sm">
-                                                            <span className="text-muted-foreground">
-                                                                Evaluación {idx + 1} — {new Date(ev.createdAt).toLocaleDateString('es-MX', { day: 'numeric', month: 'short', year: 'numeric' })}
-                                                            </span>
-                                                            <span className="font-semibold">{Number(ev.finalScore.toFixed(2))} pts</span>
+                                                        <div key={ev.id || idx} className="flex items-center justify-between text-sm py-1.5 border-b border-border/30 last:border-0">
+                                                            <div className="flex flex-col">
+                                                                <div className="flex items-center gap-2">
+                                                                    <span className="font-medium text-foreground">Evaluación {idx + 1}</span>
+                                                                    <span className="text-[10px] uppercase font-bold tracking-wider px-1.5 py-0.5 rounded bg-primary/10 text-primary">
+                                                                        {ev.evaluatorRole || 'Invitado'}
+                                                                    </span>
+                                                                </div>
+                                                                <span className="text-xs text-muted-foreground mt-0.5">
+                                                                    Por {ev.evaluatorName || 'Usuario Evaluador'} • {new Date(ev.createdAt).toLocaleDateString('es-MX', { day: 'numeric', month: 'short', year: 'numeric' })}
+                                                                </span>
+                                                            </div>
+                                                            <span className="font-semibold text-base">{Number(ev.finalScore.toFixed(2))}</span>
                                                         </div>
                                                     ))}
                                                 </div>
