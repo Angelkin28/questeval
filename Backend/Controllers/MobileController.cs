@@ -136,6 +136,18 @@ public class MobileController : ControllerBase
         // Guardado Base (Reutilizando lógica base)
         await _evaluationsService.CreateAsync(evaluationRecord);
 
+        // Actualizar el Score promedio del proyecto
+        var allEvals = await _evaluationsService.GetByProjectIdAsync(request.ProjectId);
+        if (allEvals.Any())
+        {
+            var project = await _projectsService.GetByIdAsync(request.ProjectId);
+            if (project != null)
+            {
+                project.Score = allEvals.Average(e => e.FinalScore);
+                await _projectsService.UpdateAsync(project.Id!, project);
+            }
+        }
+
         // Tras haber guardado la evaluación, "Quemamos" o registramos el DeviceId
         // En una base SQL se haría Transaccional. En Mongo, manejamos de este orden lógico. 
         await _mobileAuthService.RegisterDeviceEvaluationAsync(request.ProjectId, request.DeviceId, evaluationRecord.Id!);

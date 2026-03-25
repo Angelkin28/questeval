@@ -18,15 +18,15 @@ class AppConstants {
   static String get baseUrl {
     if (_apiHostOverride.isNotEmpty) return '$_apiHostOverride/api';
 
-    // URL productiva en Render:
-    return 'https://questeval-api.onrender.com/api';
+    // URL productiva en Render (descomenta para producción):
+    // return 'https://questeval-api.onrender.com/api';
 
-    // Si necesitas volver a pruebas locales, comenta la línea anterior y descomenta esto:
-    // if (kIsWeb) return 'http://localhost:5122/api';
-    // try {
-    //   if (Platform.isAndroid) return 'http://10.0.2.2:5122/api';
-    // } catch (_) {}
-    // return 'http://localhost:5122/api';
+    // Para pruebas locales:
+    if (kIsWeb) return 'http://localhost:5122/api';
+    try {
+      if (Platform.isAndroid) return 'http://10.0.2.2:5122/api';
+    } catch (_) {}
+    return 'http://localhost:5122/api';
   }
 
   // ── Timeouts ────────────────────────────────────────────────────

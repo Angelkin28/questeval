@@ -3,7 +3,8 @@ import '../models/models.dart';
 import '../services/api_service.dart';
 import '../providers/auth_provider.dart';
 
-final projectsProvider = FutureProvider<List<Project>>((ref) async {
+final projectsProvider = FutureProvider.autoDispose<List<Project>>((ref) async {
+  ref.keepAlive(); // Mantener en caché pero permitir invalidación manual
   final apiService = ref.watch(apiServiceProvider);
   return apiService.getProjects();
 });
@@ -38,8 +39,13 @@ final filteredProjectsProvider = Provider<List<Project>>((ref) {
           if (isP_Evaluated && !isCurrent_Evaluated) {
              uniqueProjects[normalizedTitle] = p;
           } else if (isP_Evaluated == isCurrent_Evaluated) {
-             // Si ambos tienen igual nivel de evaluación, quedarse con el más reciente
-             if (p.date.isAfter(current.date)) {
+             // Priorizar el que tenga score más alto (calificación más reciente)
+             final pScore = p.score ?? -1;
+             final currentScore = current.score ?? -1;
+             if (pScore > currentScore) {
+               uniqueProjects[normalizedTitle] = p;
+             } else if (pScore == currentScore && p.date.isAfter(current.date)) {
+               // Si el score es igual, quedarse con el más reciente
                uniqueProjects[normalizedTitle] = p;
              }
           }

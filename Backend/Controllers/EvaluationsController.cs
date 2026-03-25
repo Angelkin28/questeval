@@ -1,4 +1,4 @@
-﻿using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Mvc;
 using Backend.Models;
 using Backend.Services.Interfaces;
 
@@ -14,11 +14,13 @@ public class EvaluationsController : ControllerBase
 {
     private readonly IEvaluationsService _service;
     private readonly IUsersService _usersService;
+    private readonly IProjectsService _projectsService;
 
-    public EvaluationsController(IEvaluationsService service, IUsersService usersService)
+    public EvaluationsController(IEvaluationsService service, IUsersService usersService, IProjectsService projectsService)
     {
         _service = service;
         _usersService = usersService;
+        _projectsService = projectsService;
     }
 
     /// <summary>
@@ -162,6 +164,18 @@ public class EvaluationsController : ControllerBase
         };
 
         await _service.CreateAsync(newEvaluation);
+
+        // Actualizar el Score promedio del proyecto
+        var allEvals = await _service.GetByProjectIdAsync(request.ProjectId);
+        if (allEvals.Any())
+        {
+            var project = await _projectsService.GetByIdAsync(request.ProjectId);
+            if (project != null)
+            {
+                project.Score = allEvals.Average(e => e.FinalScore);
+                await _projectsService.UpdateAsync(project.Id!, project);
+            }
+        }
 
         var response = new EvaluationResponse
         {

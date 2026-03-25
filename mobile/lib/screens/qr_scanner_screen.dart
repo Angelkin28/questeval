@@ -33,6 +33,10 @@ class _QrScannerScreenState extends ConsumerState<QrScannerScreen>
   void initState() {
     super.initState();
     _setupAnimations();
+    // Resetear el estado de evaluación para que no quede atascado en uno anterior
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      ref.read(evaluationProvider.notifier).reset();
+    });
     _requestCameraPermission();
   }
 
@@ -55,16 +59,35 @@ class _QrScannerScreenState extends ConsumerState<QrScannerScreen>
     );
   }
 
+  MobileScannerController _buildCameraController() {
+    return MobileScannerController(
+      detectionSpeed: DetectionSpeed.noDuplicates,
+      facing: CameraFacing.back,
+      autoStart: true,
+    );
+  }
+
   Future<void> _requestCameraPermission() async {
+    // Si el permiso ya fue dado, crear el controller de inmediato (evita pantalla negra)
+    final current = await Permission.camera.status;
+    if (current.isGranted) {
+      if (mounted) {
+        setState(() {
+          _hasPermission = true;
+          _cameraController ??= _buildCameraController();
+        });
+      }
+      return;
+    }
+
+    // Pedir permiso por primera vez
     final status = await Permission.camera.request();
     if (mounted) {
-      setState(() => _hasPermission = status.isGranted);
-      if (status.isGranted) {
-        _cameraController = MobileScannerController(
-          detectionSpeed: DetectionSpeed.noDuplicates,
-          facing: CameraFacing.back,
-        );
+      final granted = status.isGranted;
+      if (granted) {
+        _cameraController ??= _buildCameraController();
       }
+      setState(() => _hasPermission = granted);
     }
   }
 
