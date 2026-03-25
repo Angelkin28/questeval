@@ -28,11 +28,11 @@ public class CreateCriterionRequest
     public string Description { get; set; } = null!;
 
     /// <summary>
-    /// Puntuación máxima posible para este criterio (máximo 10)
+    /// Puntuación máxima posible para este criterio (ej. 10 o 20)
     /// </summary>
     /// <example>10</example>
     [Required(ErrorMessage = "MaxScore es requerido.")]
-    [Range(1, 10, ErrorMessage = "MaxScore debe estar entre 1 y 10.")]
+    [Range(1, 100, ErrorMessage = "MaxScore debe estar entre 1 y 100.")]
     public int MaxScore { get; set; }
 
     /// <summary>

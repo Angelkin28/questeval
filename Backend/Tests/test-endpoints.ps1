@@ -328,26 +328,26 @@ Write-Host ""
 # ============================================
 Write-Host "--- 4. CRITERIOS ---" -ForegroundColor Yellow
 
-# 4.1 Crear criterio - Calidad de Codigo
+# 4.1 Crear criterio - Calidad de Código
 $criterio1 = @{
-    name = "Calidad de Codigo"
-    description = "Evalua la legibilidad, estructura, nombre de variables y buenas practicas de programacion"
+    name = "Calidad de Código"
+    description = "Evalúa la legibilidad, estructura, nombre de variables y buenas prácticas de programación"
     maxScore = 100
 }
-$criterio1Result = Test-Endpoint -Name "Crear Criterio (Calidad de Codigo)" -Method "POST" -Url "$BaseUrl/Criteria" -Body $criterio1 -ExpectedStatus 201 -ReturnBody
+$criterio1Result = Test-Endpoint -Name "Crear Criterio (Calidad de Código)" -Method "POST" -Url "$BaseUrl/Criteria" -Body $criterio1 -ExpectedStatus 201 -ReturnBody
 $Global:Criterio1Id = ""
 if ($criterio1Result.id) {
     $Global:Criterio1Id = $criterio1Result.id
     Write-Host "    -> criteriaId=$($criterio1Result.criteriaId), maxScore=$($criterio1Result.maxScore)" -ForegroundColor DarkGray
 }
 
-# 4.2 Crear criterio - Presentacion
+# 4.2 Crear criterio - Presentación
 $criterio2 = @{
-    name = "Presentacion del Proyecto"
-    description = "Evalua la calidad de la presentacion oral y visual del proyecto ante el grupo"
+    name = "Presentación del Proyecto"
+    description = "Evalúa la calidad de la presentación oral y visual del proyecto ante el grupo"
     maxScore = 100
 }
-$criterio2Result = Test-Endpoint -Name "Crear Criterio (Presentacion)" -Method "POST" -Url "$BaseUrl/Criteria" -Body $criterio2 -ExpectedStatus 201 -ReturnBody
+$criterio2Result = Test-Endpoint -Name "Crear Criterio (Presentación)" -Method "POST" -Url "$BaseUrl/Criteria" -Body $criterio2 -ExpectedStatus 201 -ReturnBody
 $Global:Criterio2Id = ""
 if ($criterio2Result.id) {
     $Global:Criterio2Id = $criterio2Result.id
@@ -357,7 +357,7 @@ if ($criterio2Result.id) {
 # 4.3 Crear criterio - Trabajo en Equipo
 $criterio3 = @{
     name = "Trabajo en Equipo"
-    description = "Evalua la colaboracion, comunicacion y distribucion de tareas entre los miembros"
+    description = "Evalúa la colaboración, comunicación y distribución de tareas entre los miembros"
     maxScore = 100
 }
 $criterio3Result = Test-Endpoint -Name "Crear Criterio (Trabajo en Equipo)" -Method "POST" -Url "$BaseUrl/Criteria" -Body $criterio3 -ExpectedStatus 201 -ReturnBody
@@ -424,8 +424,8 @@ if ($Global:ProyectoId -and $Global:ProfesorId -and $Global:Criterio1Id -and $Gl
         projectId = $Global:ProyectoId
         evaluatorId = $Global:ProfesorId
         details = @(
-            @{ criterionId = $Global:Criterio1Id; criterionName = "Calidad de Codigo"; score = 90 },
-            @{ criterionId = $Global:Criterio2Id; criterionName = "Presentacion del Proyecto"; score = 85 },
+            @{ criterionId = $Global:Criterio1Id; criterionName = "Calidad de Código"; score = 90 },
+            @{ criterionId = $Global:Criterio2Id; criterionName = "Presentación del Proyecto"; score = 85 },
             @{ criterionId = $Global:Criterio3Id; criterionName = "Trabajo en Equipo"; score = 95 }
         )
     }
