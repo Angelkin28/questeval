@@ -171,7 +171,7 @@ export default function EvaluationsPage() {
                             key={evaluacion.id}
                             className="shadow-md hover:shadow-lg transition-all cursor-pointer animate-fade-in"
                             style={{ animationDelay: `${150 + index * 50}ms` }}
-                            onClick={() => evaluacion.status === 'Completada' && router.push('/evaluation-details')}
+                            onClick={() => evaluación.status === 'Completada' && router.push('/evaluation-details')}
                         >
                             <CardContent className="p-5">
                                 {/* Header */}
@@ -217,7 +217,7 @@ export default function EvaluationsPage() {
                                 )}
 
                                 {/* Acción según estado */}
-                                {evaluacion.status === 'Pendiente' && (
+                                {evaluación.status === 'Pendiente' && (
                                     <Button
                                         className="w-full mt-3 bg-primary text-primary-foreground hover:bg-primary/90"
                                         onClick={(e) => {
@@ -229,7 +229,7 @@ export default function EvaluationsPage() {
                                     </Button>
                                 )}
 
-                                {evaluacion.status === 'En Revisión' && (
+                                {evaluación.status === 'En Revisión' && (
                                     <div className="mt-3 text-center text-sm text-muted-foreground">
                                         <TrendingUp className="w-4 h-4 inline mr-1" />
                                         En proceso de revisión por el evaluador

@@ -16,7 +16,7 @@ import {
 
 interface Notificacion {
     id: string;
-    tipo: 'evaluacion' | 'recordatorio' | 'mensaje' | 'sistema';
+    tipo: 'evaluación' | 'recordatorio' | 'mensaje' | 'sistema';
     titulo: string;
     mensaje: string;
     fecha: string;
@@ -30,7 +30,7 @@ export default function NotificacionesPage() {
     const [notificaciones, setNotificaciones] = useState<Notificacion[]>([
         {
             id: '1',
-            tipo: 'evaluacion',
+            tipo: 'evaluación',
             titulo: 'Proyecto Evaluado',
             mensaje: 'Tu proyecto "Óolale" ha sido calificado con 92 puntos.',
             fecha: 'Hace 2 horas',
@@ -74,7 +74,7 @@ export default function NotificacionesPage() {
 
     const getIcono = (tipo: string) => {
         switch (tipo) {
-            case 'evaluacion': return <CheckCircle2 className="w-5 h-5 text-green-500" />;
+            case 'evaluación': return <CheckCircle2 className="w-5 h-5 text-green-500" />;
             case 'recordatorio': return <Clock className="w-5 h-5 text-orange-500" />;
             case 'mensaje': return <MessageSquare className="w-5 h-5 text-blue-500" />;
             default: return <AlertCircle className="w-5 h-5 text-primary" />;
@@ -83,7 +83,7 @@ export default function NotificacionesPage() {
 
     const getBgColor = (tipo: string) => {
         switch (tipo) {
-            case 'evaluacion': return 'bg-green-500/10';
+            case 'evaluación': return 'bg-green-500/10';
             case 'recordatorio': return 'bg-orange-500/10';
             case 'mensaje': return 'bg-blue-500/10';
             default: return 'bg-primary/10';

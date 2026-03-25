@@ -527,7 +527,7 @@ export default function EditProjectPage() {
                         <h2 className="text-lg font-semibold">Tecnologías / Herramientas</h2>
                         <div className="flex gap-2">
                             <Input
-                                placeholder="ej. React, Unity, Python..."
+                                placeholder="Ej. React, Unity, Python..."
                                 value={technologyInput}
                                 onChange={(e) => setTechnologyInput(e.target.value)}
                                 onKeyDown={(e) => {

@@ -364,7 +364,7 @@ export default function NewProjectPage() {
                                         <label className="text-sm font-medium mb-1 block">Nombre del Proyecto</label>
                                         <Input
                                             name="name"
-                                            placeholder="ej. Sistema EcoTrack"
+                                            placeholder="Ej. Sistema EcoTrack"
                                             value={formData.name}
                                             onChange={handleInputChange}
                                         />
@@ -427,7 +427,7 @@ export default function NewProjectPage() {
                                         <label className="text-sm font-medium mb-1 block">Objetivos del Proyecto</label>
                                         <div className="flex gap-2 mb-2">
                                             <Input
-                                                placeholder="ej. Reducir tiempos de espera en un 30%"
+                                                placeholder="Ej. Reducir tiempos de espera en un 30%"
                                                 value={objectiveInput}
                                                 onChange={(e) => setObjectiveInput(e.target.value)}
                                                 onKeyDown={(e) => {
@@ -466,7 +466,7 @@ export default function NewProjectPage() {
                                         <label className="text-sm font-medium mb-1 block">Tecnologías / Herramientas</label>
                                         <div className="flex gap-2 mb-2">
                                             <Input
-                                                placeholder="ej. React, Unity, Python, Arduino..."
+                                                placeholder="Ej. React, Unity, Python, Arduino..."
                                                 value={technologyInput}
                                                 onChange={(e) => setTechnologyInput(e.target.value)}
                                                 onKeyDown={(e) => {
@@ -517,7 +517,7 @@ export default function NewProjectPage() {
                                     <div>
                                         <label className="text-sm font-medium mb-3 block flex items-center gap-2">
                                             <Video className="w-4 h-4" />
-                                            Video Demo
+                                            Video de Demostración
                                         </label>
 
                                         {formData.coverVideo ? (
@@ -613,7 +613,7 @@ export default function NewProjectPage() {
                                             >
                                                 <Upload className="w-8 h-8 mx-auto mb-2 text-muted-foreground" />
                                                 <p className="text-sm font-medium">Clic para subir imagen</p>
-                                                <p className="text-xs text-muted-foreground">PNG, JPG hasta 5MB</p>
+                                                <p className="text-xs text-muted-foreground">PNG, JPG hasta 5 MB</p>
                                                 <input
                                                     id="project-image"
                                                     type="file"

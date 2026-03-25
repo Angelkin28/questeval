@@ -56,7 +56,7 @@ export default function AnalisisDetalladoPage() {
         },
     ]);
 
-    const getCalificacionColor = (calificacion: number) => {
+    const getCalificacionColor = (calificación: number) => {
         if (calificacion >= 9.5) return 'text-green-500';
         if (calificacion >= 8.5) return 'text-primary';
         if (calificacion >= 7.0) return 'text-yellow-500';
@@ -184,7 +184,7 @@ export default function AnalisisDetalladoPage() {
                                 key={proyecto.id}
                                 className="shadow-sm hover:shadow-md transition-all cursor-pointer animate-fade-in"
                                 style={{ animationDelay: `${100 + index * 50}ms` }}
-                                onClick={() => router.push('/evaluacion-detalle')}
+                                onClick={() => router.push('/evaluación-detalle')}
                             >
                                 <CardContent className="p-4">
                                     <div className="flex items-center gap-3">
