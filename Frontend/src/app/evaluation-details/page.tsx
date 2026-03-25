@@ -60,11 +60,11 @@ export default function EvaluacionDetallePage() {
         },
     ]);
 
-    const getBarWidth = (calificación: number, max: number) => {
+    const getBarWidth = (calificacion: number, max: number) => {
         return `${(calificacion / max) * 100}%`;
     };
 
-    const getCalificacionColor = (calificación: number) => {
+    const getCalificacionColor = (calificacion: number) => {
         if (calificacion >= 9) return 'text-green-600';
         if (calificacion >= 7) return 'text-primary';
         return 'text-yellow-600';
