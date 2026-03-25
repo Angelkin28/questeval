@@ -111,7 +111,7 @@ List<QuizQuestion> _generateQuiz(String projectName) {
     ),
     QuizQuestion(
       question: '¿Cuál es el máximo score posible en una evaluación?',
-      options: ['50', '100', '200', '10'],
+      options: ['50', '60', '100', '10'],
       correctIndex: 1,
     ),
   ];

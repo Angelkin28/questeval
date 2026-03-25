@@ -73,7 +73,7 @@ class _EvaluationSuccessScreenState
 
   void _scanAnother() {
     ref.read(evaluationProvider.notifier).reset();
-    context.go('/scan');
+    context.push('/scan');
   }
 
   @override

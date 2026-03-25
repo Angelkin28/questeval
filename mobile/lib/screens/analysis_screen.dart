@@ -50,6 +50,13 @@ class _ComparisonTab extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final statsAsync = ref.watch(statsProvider);
+    final criteriaAsync = ref.watch(criteriaProvider);
+    
+    final maxTotal = criteriaAsync.when(
+      data: (list) => list.isEmpty ? 60.0 : list.fold(0.0, (sum, c) => sum + c.max),
+      loading: () => 60.0,
+      error: (_, __) => 60.0,
+    );
 
     return statsAsync.when(
       data: (stats) {
@@ -67,10 +74,10 @@ class _ComparisonTab extends ConsumerWidget {
                 child: BarChart(
                   BarChartData(
                     alignment: BarChartAlignment.spaceAround,
-                    maxY: 100,
+                    maxY: maxTotal,
                     barGroups: [
                       BarChartGroupData(x: 0, barRods: [BarChartRodData(toY: intAvg, color: AppColors.gold, width: 40, borderRadius: BorderRadius.circular(8))]),
-                      BarChartGroupData(x: 1, barRods: [BarChartRodData(toY: gameAvg, color: AppColors.neonPink, width: 40, borderRadius: BorderRadius.circular(8))]),
+                      BarChartGroupData(x: 1, barRods: [BarChartRodData(toY: gameAvg, color: AppColors.neonCyan, width: 40, borderRadius: BorderRadius.circular(8))]),
                     ],
                     titlesData: FlTitlesData(
                       bottomTitles: AxisTitles(
@@ -110,6 +117,13 @@ class _RankingList extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final rankingsAsync = ref.watch(rankingProvider(type));
+    final criteriaAsync = ref.watch(criteriaProvider);
+
+    final maxTotal = criteriaAsync.when(
+      data: (list) => list.isEmpty ? 60.0 : list.fold(0.0, (sum, c) => sum + c.max),
+      loading: () => 60.0, 
+      error: (_, __) => 60.0,
+    );
 
     return rankingsAsync.when(
       data: (rankings) {
@@ -118,16 +132,16 @@ class _RankingList extends ConsumerWidget {
         }
 
         final top = Project.fromJson(rankings.first);
-        final accentColor = type == 'Videojuegos' ? AppColors.neonGreen : AppColors.gold;
+        final accentColor = type == 'Videojuegos' ? AppColors.neonCyan : AppColors.gold;
 
         return ListView(
           padding: const EdgeInsets.all(20),
           children: [
-            _buildTopProject(top, accentColor),
+            _buildTopProject(top, accentColor, maxTotal),
             const SizedBox(height: 30),
             const Text('Ranking Global', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
             const SizedBox(height: 15),
-            ...List.generate(rankings.length, (i) => _buildRow(context, Project.fromJson(rankings[i]), i + 1, accentColor)),
+            ...List.generate(rankings.length, (i) => _buildRow(context, Project.fromJson(rankings[i]), i + 1, accentColor, maxTotal)),
           ],
         );
       },
@@ -136,7 +150,11 @@ class _RankingList extends ConsumerWidget {
     );
   }
 
-  Widget _buildTopProject(Project p, Color accent) {
+  Widget _buildTopProject(Project p, Color accent, double maxTotal) {
+    final scoreStr = p.score != null 
+        ? p.score!.toStringAsFixed(p.score! % 1 == 0 ? 0 : 1) 
+        : '--';
+        
     return Container(
       padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
@@ -151,21 +169,28 @@ class _RankingList extends ConsumerWidget {
           const Text('MEJOR CALIFICADO', style: TextStyle(fontWeight: FontWeight.bold, letterSpacing: 1.5)),
           const SizedBox(height: 10),
           Text(p.title, style: const TextStyle(fontSize: 20, fontWeight: FontWeight.bold), textAlign: TextAlign.center),
-          Text('${p.score?.toInt() ?? 0} / 100', style: TextStyle(fontSize: 32, fontWeight: FontWeight.bold, color: accent)),
+          Text('$scoreStr / ${maxTotal.toInt()}', style: TextStyle(fontSize: 32, fontWeight: FontWeight.bold, color: accent)),
         ],
       ),
     );
   }
 
-  Widget _buildRow(BuildContext context, Project p, int pos, Color accent) {
+  Widget _buildRow(BuildContext context, Project p, int pos, Color accent, double maxTotal) {
     final scoreValue = p.score ?? 0.0;
-    final status = scoreValue >= 90 ? 'SOBRESALIENTE' : 'APROBADO';
+    // Umbral de estatus dinámico (Sobresaliente si >= 90% del total)
+    final isSobresaliente = maxTotal > 0 && (scoreValue / maxTotal) >= 0.9;
+    final status = isSobresaliente ? 'SOBRESALIENTE' : 'APROBADO';
+    
+    final scoreStr = p.score != null 
+        ? p.score!.toStringAsFixed(p.score! % 1 == 0 ? 0 : 1) 
+        : '0';
+
     return ListTile(
       contentPadding: EdgeInsets.zero,
       leading: CircleAvatar(backgroundColor: accent, child: Text('#$pos', style: const TextStyle(color: Colors.white))),
       title: Text(p.title, style: const TextStyle(fontWeight: FontWeight.bold)),
       subtitle: Text(status, style: TextStyle(color: accent, fontSize: 10, fontWeight: FontWeight.bold)),
-      trailing: Text('${p.score?.toInt() ?? 0}', style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
+      trailing: Text(scoreStr, style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
     );
   }
 }

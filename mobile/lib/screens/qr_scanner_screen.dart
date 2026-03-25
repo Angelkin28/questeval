@@ -33,10 +33,14 @@ class _QrScannerScreenState extends ConsumerState<QrScannerScreen>
   void initState() {
     super.initState();
     _setupAnimations();
+    _isProcessing = false; // Siempre limpiar al abrir pantalla
     // Resetear el estado de evaluación para que no quede atascado en uno anterior
     WidgetsBinding.instance.addPostFrameCallback((_) {
       ref.read(evaluationProvider.notifier).reset();
     });
+    // Siempre disponer y recrear el controller al abrir la pantalla
+    _cameraController?.dispose();
+    _cameraController = null;
     _requestCameraPermission();
   }
 
@@ -68,27 +72,30 @@ class _QrScannerScreenState extends ConsumerState<QrScannerScreen>
   }
 
   Future<void> _requestCameraPermission() async {
-    // Si el permiso ya fue dado, crear el controller de inmediato (evita pantalla negra)
     final current = await Permission.camera.status;
     if (current.isGranted) {
-      if (mounted) {
-        setState(() {
-          _hasPermission = true;
-          _cameraController ??= _buildCameraController();
-        });
-      }
+      if (!mounted) return;
+      setState(() => _hasPermission = true);
+      _startCamera();
       return;
     }
 
-    // Pedir permiso por primera vez
     final status = await Permission.camera.request();
-    if (mounted) {
-      final granted = status.isGranted;
-      if (granted) {
-        _cameraController ??= _buildCameraController();
-      }
-      setState(() => _hasPermission = granted);
+    if (!mounted) return;
+    if (status.isGranted) {
+      setState(() => _hasPermission = status.isGranted);
+      _startCamera();
+    } else {
+      setState(() => _hasPermission = false);
     }
+  }
+
+  /// Crea el controller con un pequeño delay para que Android libere
+  /// el hardware de la sesión anterior antes de iniciar la cámara.
+  Future<void> _startCamera() async {
+    await Future.delayed(const Duration(milliseconds: 500));
+    if (!mounted) return;
+    setState(() => _cameraController = _buildCameraController());
   }
 
   @override
@@ -115,6 +122,9 @@ class _QrScannerScreenState extends ConsumerState<QrScannerScreen>
     if (!mounted) return;
     final state = ref.read(evaluationProvider);
     if (state is EvaluationSessionLoaded) {
+      // Resetear _isProcessing ANTES de navegar para que al volver
+      // el overlay no bloquee la pantalla ni el botón de regreso
+      setState(() => _isProcessing = false);
       context.push('/evaluation');
     } else if (state is EvaluationError) {
       _showError(state);
@@ -270,24 +280,6 @@ class _QrScannerScreenState extends ConsumerState<QrScannerScreen>
             ),
           ),
 
-        // Botón modo dev (solo en debug builds)
-        if (kDebugMode)
-          Positioned(
-            bottom: 60,
-            left: 0,
-            right: 0,
-            child: Center(
-              child: TextButton.icon(
-                onPressed: _isProcessing ? null : _devSkip,
-                icon: const Icon(Icons.developer_mode,
-                    color: Colors.white54, size: 18),
-                label: const Text(
-                  'Modo desarrollo',
-                  style: TextStyle(color: Colors.white54, fontSize: 13),
-                ),
-              ),
-            ),
-          ),
       ],
     );
   }

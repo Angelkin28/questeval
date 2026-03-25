@@ -1,7 +1,15 @@
+double? _toDouble(dynamic value) {
+  if (value == null) return null;
+  if (value is num) return value.toDouble();
+  if (value is String) return double.tryParse(value);
+  return null;
+}
+
 class Project {
+  // ... (keep fields as they are)
   final String id;
   final String title;
-  final String type; // 'Integrador' or 'Videojuegos'
+  final String type;
   final DateTime date;
   final bool isEvaluated;
   final double? score;
@@ -14,9 +22,8 @@ class Project {
   final List<String> objectives;
   final List<String> technologies;
   final List<String> teamMembers;
-  final List<String> competencies; // Restored to avoid hot reload crash
+  final List<String> competencies;
   final bool isEvaluatedByUser;
-
   final List<ComprehensionQuestion> questions;
 
   const Project({
@@ -41,29 +48,47 @@ class Project {
   });
 
   factory Project.fromJson(Map<String, dynamic> json) {
-    return Project(
-      id: json['id'] ?? json['projectId'] ?? '',
-      title: json['name'] ?? '',
-      type: json['category'] ?? 'Integrador',
-      date: json['createdAt'] != null ? DateTime.parse(json['createdAt']) : DateTime.now(),
-      isEvaluated: json['status'] == 'EVALUADO',
-      score: json['score']?.toDouble() ?? (json['finalScore']?.toDouble()),
-      criteriaScores: json['criteriaScores'] != null
-          ? Map<String, double>.from(json['criteriaScores'].map((k, v) => MapEntry(k, v.toDouble())))
-          : null,
-      teamMembers: json['teamMembers'] != null ? List<String>.from(json['teamMembers']) : [],
-      competencies: [],
-      description: json['description'] ?? '',
-      videoUrl: json['videoUrl'],
-      thumbnailUrl: json['thumbnailUrl'],
-      galleryImages: json['galleryImages'] != null ? List<String>.from(json['galleryImages']) : [],
-      objectives: json['objectives'] != null ? List<String>.from(json['objectives']) : [],
-      technologies: json['technologies'] != null ? List<String>.from(json['technologies']) : [],
-      questions: json['comprehensionQuestions'] != null 
-          ? (json['comprehensionQuestions'] as List).map((q) => ComprehensionQuestion.fromJson(q)).toList()
-          : [],
-      isEvaluatedByUser: json['isEvaluatedByUser'] ?? false,
-    );
+    try {
+      Map<String, double>? parsedCriteriaScores;
+      if (json['criteriaScores'] != null && json['criteriaScores'] is Map) {
+        parsedCriteriaScores = {};
+        (json['criteriaScores'] as Map).forEach((k, v) {
+          final val = _toDouble(v);
+          if (val != null) parsedCriteriaScores![k.toString()] = val;
+        });
+      }
+
+      return Project(
+        id: (json['id'] ?? json['projectId'] ?? '').toString(),
+        title: (json['name'] ?? '').toString(),
+        type: (json['category'] ?? 'Integrador').toString(),
+        date: json['createdAt'] != null ? DateTime.tryParse(json['createdAt'].toString()) ?? DateTime.now() : DateTime.now(),
+        isEvaluated: json['status'] == 'EVALUADO',
+        score: _toDouble(json['score']) ?? _toDouble(json['finalScore']),
+        criteriaScores: parsedCriteriaScores,
+        teamMembers: json['teamMembers'] != null ? List<String>.from(json['teamMembers']) : [],
+        competencies: [],
+        description: (json['description'] ?? '').toString(),
+        videoUrl: json['videoUrl']?.toString(),
+        thumbnailUrl: json['thumbnailUrl']?.toString(),
+        galleryImages: json['galleryImages'] != null ? List<String>.from(json['galleryImages']) : [],
+        objectives: json['objectives'] != null ? List<String>.from(json['objectives']) : [],
+        technologies: json['technologies'] != null ? List<String>.from(json['technologies']) : [],
+        questions: json['comprehensionQuestions'] != null 
+            ? (json['comprehensionQuestions'] as List).map((q) => ComprehensionQuestion.fromJson(q)).toList()
+            : [],
+        isEvaluatedByUser: json['isEvaluatedByUser'] ?? false,
+      );
+    } catch (e) {
+      print('Error parsing Project: $e');
+      // Return a skeleton project to avoid breaking the whole list
+      return Project(
+        id: 'error',
+        title: 'Error de carga',
+        type: 'Integrador',
+        date: DateTime.now(),
+      );
+    }
   }
 
   Project copyWith({
@@ -107,9 +132,9 @@ class ComprehensionQuestion {
 
   factory ComprehensionQuestion.fromJson(Map<String, dynamic> json) {
     return ComprehensionQuestion(
-      question: json['question'] ?? '',
+      question: (json['question'] ?? '').toString(),
       options: json['options'] != null ? List<String>.from(json['options']) : [],
-      correctIndex: json['correctAnswerIndex'] ?? 0,
+      correctIndex: (json['correctAnswerIndex'] as num?)?.toInt() ?? 0,
     );
   }
 }
@@ -123,9 +148,9 @@ class Criterion {
 
   factory Criterion.fromJson(Map<String, dynamic> json) {
     return Criterion(
-      id: json['criteriaId'] ?? '',
-      label: json['name'] ?? '',
-      max: (json['maxScore'] ?? json['MaxScore'])?.toDouble() ?? 100.0,
+      id: (json['criteriaId'] ?? '').toString(),
+      label: (json['name'] ?? '').toString(),
+      max: _toDouble(json['maxScore'] ?? json['MaxScore']) ?? 10.0,
     );
   }
 }
