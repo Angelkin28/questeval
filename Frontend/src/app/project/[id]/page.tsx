@@ -22,6 +22,7 @@ import {
     Pencil,
     Trash2,
 } from 'lucide-react';
+import { isVideoUrl } from '@/lib/mediaUtils';
 
 export default function ProjectDetailsPage() {
     const router = useRouter();
@@ -81,7 +82,13 @@ export default function ProjectDetailsPage() {
 
     if (!project) return <div className="p-8 text-center">Proyecto no encontrado</div>;
 
-    const gallery = project.galleryImages?.filter(Boolean) ?? [];
+    // Sort gallery so videos appear first
+    const gallery = (project.galleryImages?.filter(Boolean) ?? []).sort((a, b) => {
+        const aIsVideo = isVideoUrl(a) ? 1 : 0;
+        const bIsVideo = isVideoUrl(b) ? 1 : 0;
+        return bIsVideo - aIsVideo;
+    });
+
     const hasVideo = !!project.videoUrl;
     const isDirectVideo = hasVideo && (
         project.videoUrl!.includes('.supabase.co/storage') ||
@@ -302,12 +309,23 @@ export default function ProjectDetailsPage() {
 
                             {/* Main carousel image */}
                             <div className="relative rounded-2xl overflow-hidden border border-border shadow-md bg-black aspect-video w-full">
-                                <img
-                                    key={galleryIndex}
-                                    src={gallery[galleryIndex]}
-                                    alt={`Imagen ${galleryIndex + 1}`}
-                                    className="w-full h-full object-contain transition-opacity duration-300"
-                                />
+                                {isVideoUrl(gallery[galleryIndex]) ? (
+                                    <video
+                                        key={`vid-${galleryIndex}`}
+                                        src={gallery[galleryIndex]}
+                                        controls
+                                        playsInline
+                                        preload="metadata"
+                                        className="w-full h-full object-contain transition-opacity duration-300"
+                                    />
+                                ) : (
+                                    <img
+                                        key={`img-${galleryIndex}`}
+                                        src={gallery[galleryIndex]}
+                                        alt={`Imagen ${galleryIndex + 1}`}
+                                        className="w-full h-full object-contain transition-opacity duration-300"
+                                    />
+                                )}
                                 {gallery.length > 1 && (
                                     <>
                                         <button
@@ -343,13 +361,22 @@ export default function ProjectDetailsPage() {
                                         <button
                                             key={i}
                                             onClick={() => setGalleryIndex(i)}
-                                            className={`flex-1 h-16 rounded-xl overflow-hidden border-2 transition-all duration-200 ${
+                                            className={`flex-1 h-16 rounded-xl overflow-hidden border-2 transition-all duration-200 relative ${
                                                 i === galleryIndex
                                                     ? 'border-primary shadow-md scale-[1.03]'
                                                     : 'border-transparent opacity-55 hover:opacity-90 hover:scale-[1.02]'
                                             }`}
                                         >
-                                            <img src={src} alt="" className="w-full h-full object-cover" />
+                                            {isVideoUrl(src) ? (
+                                                <>
+                                                    <video src={src} className="w-full h-full object-cover" />
+                                                    <div className="absolute inset-0 flex items-center justify-center bg-black/40">
+                                                        <Video className="w-5 h-5 text-white" />
+                                                    </div>
+                                                </>
+                                            ) : (
+                                                <img src={src} alt="" className="w-full h-full object-cover" />
+                                            )}
                                         </button>
                                     ))}
                                 </div>

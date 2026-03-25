@@ -216,6 +216,13 @@ export default function NewProjectPage() {
                 }
             }
 
+            // Sort before saving so videos appear first
+            galleryUrls.sort((a, b) => {
+                const aIsVideo = isVideoUrl(a) ? 1 : 0;
+                const bIsVideo = isVideoUrl(b) ? 1 : 0;
+                return bIsVideo - aIsVideo;
+            });
+
             // Llamada real a la API
             if (!selectedGroupId) {
                 alert('Debes seleccionar un grupo para este proyecto.');

@@ -14,7 +14,9 @@ import {
     X,
     Users,
     MessageSquare,
+    Video,
 } from 'lucide-react';
+import { isVideoUrl, isVideoFile } from '@/lib/mediaUtils';
 
 export default function EditProjectPage() {
     const router = useRouter();
@@ -113,9 +115,23 @@ export default function EditProjectPage() {
             }
 
             for (const img of newGalleryImages) {
-                const result = await api.storage.upload(img);
-                finalGalleryImages.push(result.url);
+                let resultUrl = '';
+                if (isVideoFile(img)) {
+                    const result = await api.storage.uploadVideo(img, setUploadProgress);
+                    resultUrl = result.url;
+                } else {
+                    const result = await api.storage.upload(img);
+                    resultUrl = result.url;
+                }
+                finalGalleryImages.push(resultUrl);
             }
+
+            // Sort before saving so videos appear first
+            finalGalleryImages.sort((a, b) => {
+                const aIsVideo = isVideoUrl(a) ? 1 : 0;
+                const bIsVideo = isVideoUrl(b) ? 1 : 0;
+                return bIsVideo - aIsVideo;
+            });
 
             await api.projects.update(id, {
                 name: formData.name,
@@ -233,24 +249,97 @@ export default function EditProjectPage() {
                         </div>
 
                         <div>
-                            <label className="text-sm font-medium mb-1 block">URL del Video (o sube archivo)</label>
+                            <label className="text-sm font-medium mb-2 flex items-center gap-2">
+                                <Video className="w-4 h-4" />
+                                Video Promocional
+                            </label>
+
+                            {/* Preview: new file selected takes priority, otherwise show existing */}
+                            {coverVideo ? (
+                                <div className="rounded-xl overflow-hidden border border-border mb-3 bg-black relative">
+                                    <video
+                                        src={URL.createObjectURL(coverVideo)}
+                                        controls
+                                        playsInline
+                                        preload="metadata"
+                                        className="w-full max-h-56 block"
+                                    />
+                                    <button
+                                        type="button"
+                                        onClick={() => setCoverVideo(null)}
+                                        className="absolute top-2 right-2 bg-black/70 text-white rounded-full w-7 h-7 flex items-center justify-center text-sm hover:bg-black/90 transition-colors"
+                                    >✕</button>
+                                    <div className="bg-black/60 text-white text-xs px-3 py-1 font-medium">
+                                        {coverVideo.name} — {(coverVideo.size / (1024 * 1024)).toFixed(1)} MB
+                                    </div>
+                                </div>
+                            ) : formData.videoUrl ? (
+                                <div className="rounded-xl overflow-hidden border border-border mb-3 bg-black">
+                                    <video
+                                        src={formData.videoUrl}
+                                        controls
+                                        playsInline
+                                        preload="metadata"
+                                        className="w-full max-h-56 block"
+                                    />
+                                    <p className="text-xs text-muted-foreground px-3 py-1.5 truncate">
+                                        Video actual guardado
+                                    </p>
+                                </div>
+                            ) : null}
+
+                            {/* Upload area */}
+                            <label
+                                htmlFor="edit-project-video"
+                                className="border-2 border-dashed border-muted-foreground/25 rounded-lg p-5 text-center hover:bg-secondary/20 transition-colors cursor-pointer block mb-2"
+                            >
+                                <Video className="w-6 h-6 mx-auto mb-1 text-muted-foreground" />
+                                <p className="text-sm font-medium">
+                                    {coverVideo ? 'Cambiar video' : formData.videoUrl ? 'Reemplazar video' : 'Subir video'}
+                                </p>
+                                <p className="text-xs text-muted-foreground">MP4, WebM, MOV — máx. 500 MB</p>
+                                <input
+                                    id="edit-project-video"
+                                    type="file"
+                                    accept="video/mp4,video/webm,video/quicktime,video/x-msvideo"
+                                    className="hidden"
+                                    onChange={(e) => {
+                                        const file = e.target.files?.[0];
+                                        if (!file) return;
+                                        if (file.size > 500 * 1024 * 1024) {
+                                            alert(`El video supera 500 MB (${(file.size / (1024 * 1024)).toFixed(1)} MB).`);
+                                            e.target.value = '';
+                                            return;
+                                        }
+                                        setCoverVideo(file);
+                                        setFormData(p => ({ ...p, videoUrl: '' }));
+                                    }}
+                                />
+                            </label>
+
+                            {/* Optional URL override */}
                             <Input
                                 value={formData.videoUrl}
-                                onChange={(e) => setFormData(p => ({ ...p, videoUrl: e.target.value }))}
-                                placeholder="https://..."
-                                className="mb-2"
-                            />
-                            <Input
-                                type="file"
-                                accept="video/*"
                                 onChange={(e) => {
-                                    if (e.target.files?.[0]) setCoverVideo(e.target.files[0]);
+                                    setFormData(p => ({ ...p, videoUrl: e.target.value }));
+                                    if (e.target.value) setCoverVideo(null);
                                 }}
+                                placeholder="O pega una URL de video..."
                             />
+
                             {isUploading && (
-                                <p className="text-xs text-primary mt-1 font-medium text-center">
-                                    Subiendo video... {uploadProgress}%
-                                </p>
+                                <div className="mt-2">
+                                    <div className="flex justify-between text-xs text-muted-foreground mb-1">
+                                        <span>Subiendo video...</span>
+                                        <span>{uploadProgress}%</span>
+                                    </div>
+                                    <div className="w-full bg-secondary rounded-full h-1.5">
+                                        <div
+                                            className="bg-primary h-1.5 rounded-full transition-all duration-300"
+                                            style={{ width: `${uploadProgress}%` }}
+                                        />
+                                    </div>
+                                </div>
                             )}
                         </div>
 
@@ -259,8 +348,17 @@ export default function EditProjectPage() {
                             {formData.galleryImages.length > 0 && (
                                 <div className="flex gap-2 mb-2 overflow-auto">
                                     {formData.galleryImages.map((src, i) => (
-                                        <div key={i} className="relative">
-                                            <img src={src} className="h-16 rounded opacity-80" />
+                                        <div key={i} className="relative aspect-square h-16 bg-black rounded overflow-hidden">
+                                            {isVideoUrl(src) ? (
+                                                <video src={src} className="w-full h-full object-cover opacity-80" />
+                                            ) : (
+                                                <img src={src} className="w-full h-full object-cover opacity-80" />
+                                            )}
+                                            {isVideoUrl(src) && (
+                                                <div className="absolute inset-0 flex items-center justify-center">
+                                                    <Video className="w-4 h-4 text-white" />
+                                                </div>
+                                            )}
                                             <button 
                                                 onClick={() => setFormData(p => ({...p, galleryImages: p.galleryImages.filter((_, idx)=>idx!==i)}))} 
                                                 className="absolute top-0 right-0 bg-red-500 text-white w-4 h-4 rounded-full flex items-center justify-center text-[10px]"
@@ -271,7 +369,7 @@ export default function EditProjectPage() {
                             )}
                             <Input
                                 type="file"
-                                accept="image/*"
+                                accept="image/*,video/mp4,video/webm,video/quicktime"
                                 multiple
                                 onChange={(e) => {
                                     if (e.target.files) {
