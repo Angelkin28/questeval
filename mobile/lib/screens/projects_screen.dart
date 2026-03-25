@@ -168,9 +168,9 @@ class _ProjectCard extends ConsumerWidget {
     // Obtener el puntaje máximo dinámico de los criterios
     final criteriaAsync = ref.watch(criteriaProvider);
     final maxTotal = criteriaAsync.when(
-      data: (list) => list.isEmpty ? 60.0 : list.fold(0.0, (sum, c) => sum + c.max),
-      loading: () => 60.0, 
-      error: (_, __) => 60.0,
+      data: (list) => list.isEmpty ? 100.0 : list.fold(0.0, (sum, c) => sum + c.max),
+      loading: () => 100.0, 
+      error: (_, __) => 100.0,
     );
 
     return Card(
