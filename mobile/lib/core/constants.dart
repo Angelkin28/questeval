@@ -18,20 +18,21 @@ class AppConstants {
   static String get baseUrl {
     if (_apiHostOverride.isNotEmpty) return '$_apiHostOverride/api';
 
-    // URL productiva en Render (descomenta para producción):
-    // return 'https://questeval-api.onrender.com/api';
+    // URL productiva en Render:
+    return 'https://questeval-api.onrender.com/api';
 
-    // Para pruebas locales:
-    if (kIsWeb) return 'http://localhost:5122/api';
-    try {
-      if (Platform.isAndroid) return 'http://10.0.2.2:5122/api';
-    } catch (_) {}
-    return 'http://localhost:5122/api';
+    // Para pruebas locales (comenta la línea de arriba y descomenta las de abajo):
+    // if (kIsWeb) return 'http://localhost:5122/api';
+    // try {
+    //   if (Platform.isAndroid) return 'http://10.0.2.2:5122/api';
+    // } catch (_) {}
+    // return 'http://localhost:5122/api';
   }
 
   // ── Timeouts ────────────────────────────────────────────────────
-  /// Timeout general para llamadas HTTP (ferias con red lenta)
-  static const Duration httpTimeout = Duration(seconds: 12);
+  /// Timeout general para llamadas HTTP
+  /// 45s para tolerar cold-starts de Render (servicio gratuito se duerme)
+  static const Duration httpTimeout = Duration(seconds: 45);
 
   // ── Rutas de navegación ─────────────────────────────────────────
   static const String routeProjects = '/projects';

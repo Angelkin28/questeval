@@ -94,7 +94,7 @@ class ProjectsScreen extends ConsumerWidget {
         children: [
           _CategoryPill(
             label: 'Integrador',
-            isSelected: selected == 'Integrador',
+            isSelected: selected == AppCategory.integrador,
             color: AppColors.gold,
             onTap: () {
               ref.read(categoryFilterProvider.notifier).state = 'Integrador';
@@ -104,9 +104,8 @@ class ProjectsScreen extends ConsumerWidget {
           const SizedBox(width: 15),
           _CategoryPill(
             label: 'Videojuegos',
-            isSelected: selected == 'Videojuegos',
-            color: AppColors.neonPink,
-            isNeon: true,
+            isSelected: selected == AppCategory.videojuegos,
+            color: AppColors.neonCyan,
             onTap: () {
               ref.read(categoryFilterProvider.notifier).state = 'Videojuegos';
               ref.read(themeProvider.notifier).setCategory(AppCategory.videojuegos);
@@ -157,14 +156,22 @@ class _CategoryPill extends StatelessWidget {
   }
 }
 
-class _ProjectCard extends StatelessWidget {
+class _ProjectCard extends ConsumerWidget {
   final Project project;
   const _ProjectCard({required this.project});
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     final isNeon = project.type == 'Videojuegos';
     final accentColor = isNeon ? AppColors.neonCyan : AppColors.gold;
+
+    // Obtener el puntaje máximo dinámico de los criterios
+    final criteriaAsync = ref.watch(criteriaProvider);
+    final maxTotal = criteriaAsync.when(
+      data: (list) => list.isEmpty ? 60.0 : list.fold(0.0, (sum, c) => sum + c.max),
+      loading: () => 60.0, 
+      error: (_, __) => 60.0,
+    );
 
     return Card(
       margin: const EdgeInsets.only(bottom: 20),
@@ -181,26 +188,28 @@ class _ProjectCard extends StatelessWidget {
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
-                  Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
-                    decoration: BoxDecoration(
-                      color: project.isEvaluatedByUser ? Colors.green.withOpacity(0.2) : Colors.orange.withOpacity(0.2),
-                      borderRadius: BorderRadius.circular(8),
-                    ),
-                    child: Text(
-                      project.isEvaluatedByUser ? 'EVALUADO' : 'PENDIENTE',
-                      style: TextStyle(
-                        color: project.isEvaluatedByUser ? Colors.green : Colors.orange,
-                        fontSize: 10,
-                        fontWeight: FontWeight.bold,
-                      ),
-                    ),
-                  ),
-                  Text(
-                    project.score != null ? '${project.score!.toInt()}/100' : '--/100',
-                    style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold, color: accentColor),
-                  ),
-                ],
+                   Container(
+                     padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                     decoration: BoxDecoration(
+                       color: project.isEvaluatedByUser ? Colors.green.withOpacity(0.2) : Colors.orange.withOpacity(0.2),
+                       borderRadius: BorderRadius.circular(8),
+                     ),
+                     child: Text(
+                       project.isEvaluatedByUser ? 'EVALUADO' : 'PENDIENTE',
+                       style: TextStyle(
+                         color: project.isEvaluatedByUser ? Colors.green : Colors.orange,
+                         fontSize: 10,
+                         fontWeight: FontWeight.bold,
+                       ),
+                     ),
+                   ),
+                   Text(
+                     project.score != null 
+                        ? '${project.score!.toStringAsFixed(project.score! % 1 == 0 ? 0 : 1)}/${maxTotal.toInt()}' 
+                        : '--/${maxTotal.toInt()}',
+                     style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold, color: accentColor),
+                   ),
+                 ],
               ),
               const SizedBox(height: 15),
               Text(project.title, style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),

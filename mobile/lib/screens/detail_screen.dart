@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 // import 'package:carousel_slider/carousel_slider.dart';
 import 'package:go_router/go_router.dart';
+import 'package:video_player/video_player.dart';
 import '../providers/data_provider.dart';
 import '../providers/theme_provider.dart';
 import '../providers/auth_provider.dart';
@@ -295,10 +296,10 @@ class _ProjectDetailScreenState extends ConsumerState<ProjectDetailScreen> {
 
     return Column(
       children: [
-        // Main Image Area
+        // Main Image/Video Area
         Container(
           width: double.infinity,
-          height: 200,
+          height: 220,
           decoration: BoxDecoration(
             color: Colors.black,
             borderRadius: BorderRadius.circular(16),
@@ -307,19 +308,26 @@ class _ProjectDetailScreenState extends ConsumerState<ProjectDetailScreen> {
           ),
           child: Stack(
             children: [
-              Center(
-                child: ClipRRect(
-                  borderRadius: BorderRadius.circular(16),
-                  child: AnimatedSwitcher(
-                    duration: const Duration(milliseconds: 300),
-                    child: Image.network(
-                      images[_galleryIndex],
-                      key: ValueKey<int>(_galleryIndex),
-                      fit: BoxFit.contain,
-                      width: double.infinity,
-                      height: double.infinity,
-                    ),
-                  ),
+              ClipRRect(
+                borderRadius: BorderRadius.circular(16),
+                child: AnimatedSwitcher(
+                  duration: const Duration(milliseconds: 300),
+                  child: _isVideoUrl(images[_galleryIndex])
+                      ? _GalleryVideoPlayer(
+                          key: ValueKey<String>(images[_galleryIndex]),
+                          videoUrl: images[_galleryIndex],
+                          accentColor: accentColor,
+                        )
+                      : Image.network(
+                          images[_galleryIndex],
+                          key: ValueKey<int>(_galleryIndex),
+                          fit: BoxFit.contain,
+                          width: double.infinity,
+                          height: double.infinity,
+                          errorBuilder: (_, __, ___) => const Center(
+                            child: Icon(Icons.broken_image, color: Colors.white38, size: 40),
+                          ),
+                        ),
                 ),
               ),
               if (images.length > 1) ...[
@@ -395,6 +403,7 @@ class _ProjectDetailScreenState extends ConsumerState<ProjectDetailScreen> {
             child: Row(
               children: images.asMap().entries.map((entry) {
                 final isSelected = _galleryIndex == entry.key;
+                final isVideo = _isVideoUrl(entry.value);
                 return Expanded(
                   child: GestureDetector(
                     onTap: () => setState(() => _galleryIndex = entry.key),
@@ -402,6 +411,7 @@ class _ProjectDetailScreenState extends ConsumerState<ProjectDetailScreen> {
                       height: 50,
                       margin: EdgeInsets.only(right: entry.key == images.length - 1 ? 0 : 4.0),
                       decoration: BoxDecoration(
+                        color: Colors.black,
                         borderRadius: BorderRadius.circular(8),
                         border: Border.all(
                           color: isSelected ? accentColor : Colors.transparent,
@@ -410,13 +420,31 @@ class _ProjectDetailScreenState extends ConsumerState<ProjectDetailScreen> {
                       ),
                       child: ClipRRect(
                         borderRadius: BorderRadius.circular(6),
-                        child: AnimatedOpacity(
-                          duration: const Duration(milliseconds: 200),
-                          opacity: isSelected ? 1.0 : 0.5,
-                          child: Image.network(
-                            entry.value,
-                            fit: BoxFit.cover,
-                          ),
+                        child: Stack(
+                          fit: StackFit.expand,
+                          children: [
+                            AnimatedOpacity(
+                              duration: const Duration(milliseconds: 200),
+                              opacity: isSelected ? 1.0 : 0.55,
+                              child: isVideo
+                                  ? Container(
+                                      color: Colors.grey[900],
+                                      child: const Icon(Icons.videocam, color: Colors.white54, size: 22),
+                                    )
+                                  : Image.network(
+                                      entry.value,
+                                      fit: BoxFit.cover,
+                                      errorBuilder: (_, __, ___) => Container(
+                                        color: Colors.grey[800],
+                                        child: const Icon(Icons.broken_image, color: Colors.white38, size: 18),
+                                      ),
+                                    ),
+                            ),
+                            if (isVideo)
+                              const Center(
+                                child: Icon(Icons.play_circle_fill, color: Colors.white70, size: 24),
+                              ),
+                          ],
                         ),
                       ),
                     ),
@@ -427,6 +455,15 @@ class _ProjectDetailScreenState extends ConsumerState<ProjectDetailScreen> {
           ),
       ],
     );
+  }
+
+  /// Returns true if the URL points to a video file (mp4, webm, mov, avi).
+  bool _isVideoUrl(String url) {
+    final lower = url.toLowerCase().split('?').first;
+    return lower.endsWith('.mp4') ||
+        lower.endsWith('.webm') ||
+        lower.endsWith('.mov') ||
+        lower.endsWith('.avi');
   }
 
   Widget _buildSlider(Criterion c, Color accent) {
@@ -550,3 +587,120 @@ class _QrEvaluateButton extends StatelessWidget {
   }
 }
 
+// ─────────────────────────────────────────────────────────────────────
+// Widget de video inline para el carrusel de galería
+// ─────────────────────────────────────────────────────────────────────
+
+class _GalleryVideoPlayer extends StatefulWidget {
+  final String videoUrl;
+  final Color accentColor;
+
+  const _GalleryVideoPlayer({
+    super.key,
+    required this.videoUrl,
+    required this.accentColor,
+  });
+
+  @override
+  State<_GalleryVideoPlayer> createState() => _GalleryVideoPlayerState();
+}
+
+class _GalleryVideoPlayerState extends State<_GalleryVideoPlayer> {
+  late VideoPlayerController _controller;
+  bool _isInitialized = false;
+  bool _hasError = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _controller = VideoPlayerController.networkUrl(Uri.parse(widget.videoUrl))
+      ..initialize().then((_) {
+        if (mounted) setState(() => _isInitialized = true);
+      }).catchError((_) {
+        if (mounted) setState(() => _hasError = true);
+      });
+  }
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    if (_hasError) {
+      return const SizedBox(
+        width: double.infinity,
+        height: 220,
+        child: Center(
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Icon(Icons.error_outline, color: Colors.white38, size: 30),
+              SizedBox(height: 8),
+              Text('No se pudo cargar el video', style: TextStyle(color: Colors.white38, fontSize: 12)),
+            ],
+          ),
+        ),
+      );
+    }
+
+    if (!_isInitialized) {
+      return SizedBox(
+        width: double.infinity,
+        height: 220,
+        child: Center(child: CircularProgressIndicator(color: widget.accentColor)),
+      );
+    }
+
+    return GestureDetector(
+      behavior: HitTestBehavior.opaque,
+      onTap: () => setState(() {
+        _controller.value.isPlaying ? _controller.pause() : _controller.play();
+      }),
+      child: SizedBox(
+        width: double.infinity,
+        height: 220,
+        child: Stack(
+          alignment: Alignment.center,
+          children: [
+            Center(
+              child: AspectRatio(
+                aspectRatio: _controller.value.aspectRatio,
+                child: VideoPlayer(_controller),
+              ),
+            ),
+            AnimatedOpacity(
+              opacity: _controller.value.isPlaying ? 0.0 : 1.0,
+              duration: const Duration(milliseconds: 200),
+              child: Container(
+                padding: const EdgeInsets.all(14),
+                decoration: const BoxDecoration(color: Colors.black54, shape: BoxShape.circle),
+                child: Icon(
+                  _controller.value.isPlaying ? Icons.pause : Icons.play_arrow,
+                  color: Colors.white,
+                  size: 36,
+                ),
+              ),
+            ),
+            Positioned(
+              bottom: 0,
+              left: 0,
+              right: 0,
+              child: VideoProgressIndicator(
+                _controller,
+                allowScrubbing: true,
+                colors: VideoProgressColors(
+                  playedColor: widget.accentColor,
+                  bufferedColor: widget.accentColor.withValues(alpha: 0.3),
+                  backgroundColor: Colors.white24,
+                ),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
