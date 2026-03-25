@@ -693,10 +693,22 @@ export default function NewProjectPage() {
                                                     className="hidden"
                                                     onChange={(e) => {
                                                         const files = Array.from(e.target.files || []);
+                                                        
+                                                        if (formData.galleryImages.length + files.length > 4) {
+                                                            alert(`Solo puedes tener un máximo de 4 archivos en la galería. Tienes ${formData.galleryImages.length} guardados y seleccionaste ${files.length}.`);
+                                                            e.target.value = '';
+                                                            return;
+                                                        }
+
+                                                        const invalidVideo = files.find(f => f.type.startsWith('video/') && f.size > 500 * 1024 * 1024);
+                                                        if (invalidVideo) {
+                                                            alert(`El video "${invalidVideo.name}" supera el límite de 500 MB.`);
+                                                            e.target.value = '';
+                                                            return;
+                                                        }
+
                                                         setFormData(p => {
-                                                            const remaining = 4 - p.galleryImages.length;
-                                                            const toAdd = files.slice(0, remaining);
-                                                            return { ...p, galleryImages: [...p.galleryImages, ...toAdd] };
+                                                            return { ...p, galleryImages: [...p.galleryImages, ...files] };
                                                         });
                                                         e.target.value = '';
                                                     }}

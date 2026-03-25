@@ -15,6 +15,7 @@ import {
     Users,
     MessageSquare,
     Video,
+    CheckCircle2,
 } from 'lucide-react';
 import { isVideoUrl, isVideoFile } from '@/lib/mediaUtils';
 
@@ -54,6 +55,7 @@ export default function EditProjectPage() {
     const [newGalleryImages, setNewGalleryImages] = useState<File[]>([]);
     const [uploadProgress, setUploadProgress] = useState(0);
     const [isUploading, setIsUploading] = useState(false);
+    const [uploadStep, setUploadStep] = useState('');
 
     useEffect(() => {
         const load = async () => {
@@ -96,17 +98,20 @@ export default function EditProjectPage() {
     const handleSave = async () => {
         setSaving(true);
         setError('');
+        setUploadProgress(0);
         try {
             let finalVideoUrl = formData.videoUrl;
             let finalThumbnailUrl = formData.thumbnailUrl;
             let finalGalleryImages = [...formData.galleryImages];
 
             if (coverImage) {
+                setUploadStep('Subiendo portada...');
                 const uploadResult = await api.storage.upload(coverImage);
                 finalThumbnailUrl = uploadResult.url;
             }
 
             if (coverVideo) {
+                setUploadStep('Subiendo video promocional...');
                 setIsUploading(true);
                 setUploadProgress(0);
                 const videoResult = await api.storage.uploadVideo(coverVideo, setUploadProgress);
@@ -114,10 +119,14 @@ export default function EditProjectPage() {
                 setIsUploading(false);
             }
 
-            for (const img of newGalleryImages) {
+            for (let i = 0; i < newGalleryImages.length; i++) {
+                const img = newGalleryImages[i];
+                setUploadStep(`Subiendo galería (${i + 1}/${newGalleryImages.length})...`);
                 let resultUrl = '';
                 if (isVideoFile(img)) {
+                    setIsUploading(true);
                     const result = await api.storage.uploadVideo(img, setUploadProgress);
+                    setIsUploading(false);
                     resultUrl = result.url;
                 } else {
                     const result = await api.storage.upload(img);
@@ -133,6 +142,7 @@ export default function EditProjectPage() {
                 return bIsVideo - aIsVideo;
             });
 
+            setUploadStep('Guardando proyecto...');
             await api.projects.update(id, {
                 name: formData.name,
                 description: formData.description,
@@ -152,6 +162,7 @@ export default function EditProjectPage() {
             setError(err.message || 'Error al guardar');
         } finally {
             setSaving(false);
+            setUploadStep('');
         }
     };
 
@@ -178,6 +189,61 @@ export default function EditProjectPage() {
 
     return (
         <div className="min-h-screen bg-background pb-20">
+
+            {/* ── LOADING OVERLAY ── */}
+            {saving && (
+                <div className="fixed inset-0 z-50 flex flex-col items-center justify-center bg-background/95 backdrop-blur-sm">
+                    <div className="w-full max-w-sm px-8 text-center">
+                        <div className="mb-6">
+                            <div className="w-16 h-16 rounded-full bg-primary/10 flex items-center justify-center mx-auto mb-4">
+                                <Loader2 className="w-8 h-8 text-primary animate-spin" />
+                            </div>
+                            <h2 className="text-xl font-bold mb-1">Guardando cambios</h2>
+                            <p className="text-sm text-muted-foreground">
+                                {isUploading
+                                    ? `Subiendo archivo... ${uploadProgress}%`
+                                    : uploadStep || 'Procesando...'}
+                            </p>
+                        </div>
+
+                        {/* Barra de progreso */}
+                        <div className="w-full bg-secondary rounded-full h-2 mb-3 overflow-hidden">
+                            <div
+                                className="bg-primary h-2 rounded-full transition-all duration-500 ease-out"
+                                style={{ width: `${isUploading ? uploadProgress : 85}%` }}
+                            />
+                        </div>
+                        <p className="text-xs text-muted-foreground">
+                            {isUploading ? `${uploadProgress}%` : 'Casi listo...'}
+                        </p>
+
+                        {/* Steps */}
+                        <div className="mt-6 space-y-2 text-left">
+                            {coverImage && (
+                                <div className="flex items-center gap-2 text-xs text-muted-foreground">
+                                    <CheckCircle2 className="w-3.5 h-3.5 text-green-500 shrink-0" />
+                                    <span>Portada procesada</span>
+                                </div>
+                            )}
+                            {coverVideo && (
+                                <div className="flex items-center gap-2 text-xs text-muted-foreground">
+                                    {isUploading && uploadStep.includes('promocional')
+                                        ? <Loader2 className="w-3.5 h-3.5 text-primary animate-spin shrink-0" />
+                                        : <CheckCircle2 className="w-3.5 h-3.5 text-green-500 shrink-0" />}
+                                    <span>Video promocional</span>
+                                </div>
+                            )}
+                            {newGalleryImages.length > 0 && (
+                                <div className="flex items-center gap-2 text-xs text-muted-foreground">
+                                    <Loader2 className="w-3.5 h-3.5 text-primary animate-spin shrink-0" />
+                                    <span>Subiendo {newGalleryImages.length} archivo(s) de galería...</span>
+                                </div>
+                            )}
+                        </div>
+                    </div>
+                </div>
+            )}
+
             <Header title="Editar Proyecto" showBack />
 
             <main className="container mx-auto px-4 py-6 max-w-3xl space-y-6">
@@ -367,16 +433,49 @@ export default function EditProjectPage() {
                                     ))}
                                 </div>
                             )}
-                            <Input
-                                type="file"
-                                accept="image/*,video/mp4,video/webm,video/quicktime"
-                                multiple
-                                onChange={(e) => {
-                                    if (e.target.files) {
-                                        setNewGalleryImages(Array.from(e.target.files));
-                                    }
-                                }}
-                            />
+                            <label
+                                htmlFor="gallery-edit-input"
+                                className="border-2 border-dashed border-muted-foreground/25 rounded-lg p-5 text-center hover:bg-secondary/20 transition-colors cursor-pointer block"
+                            >
+                                <p className="text-sm font-medium">Agregar más imágenes o videos</p>
+                                <p className="text-xs text-muted-foreground">PNG, JPG, MP4, WebM — máximo 4 en total</p>
+                                <input
+                                    id="gallery-edit-input"
+                                    type="file"
+                                    accept="image/*,video/mp4,video/webm,video/quicktime"
+                                    multiple
+                                    className="hidden"
+                                    onChange={(e) => {
+                                        if (e.target.files) {
+                                            const files = Array.from(e.target.files);
+                                            const total = formData.galleryImages.length + files.length;
+                                            
+                                            if (total > 4) {
+                                                alert(`Solo puedes tener un máximo de 4 archivos en la galería. Tienes ${formData.galleryImages.length} guardados y seleccionaste ${files.length}.`);
+                                                e.target.value = '';
+                                                return;
+                                            }
+
+                                            // 500MB limit for videos
+                                            const invalidVideo = files.find(f => f.type.startsWith('video/') && f.size > 500 * 1024 * 1024);
+                                            if (invalidVideo) {
+                                                alert(`El video "${invalidVideo.name}" supera el límite de 500 MB.`);
+                                                e.target.value = '';
+                                                return;
+                                            }
+
+                                            setNewGalleryImages(files);
+                                        }
+                                    }}
+                                />
+                            </label>
+                            
+                            {/* Mostrar nuevos archivos a modo texto/resumen */}
+                            {newGalleryImages.length > 0 && (
+                                <p className="text-xs text-muted-foreground mt-2 italic">
+                                    {newGalleryImages.length} archivo(s) nuevo(s) listo(s) para subir.
+                                </p>
+                            )}
                         </div>
                     </CardContent>
                 </Card>
